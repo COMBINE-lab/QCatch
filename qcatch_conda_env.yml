@@ -1,0 +1,14 @@
+name: qcatch
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.12
+  - numpy
+  - scipy
+  - pandas
+  - beautifulsoup4
+  - pyroe
+  - scanpy
+  - plotly

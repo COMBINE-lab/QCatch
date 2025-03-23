@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "qcatch"
+version = "0.1.0"
+description = "QCatch: Quality Control downstream of alevin-fry / simpleaf. "
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Yuan Gao", email = "ygao61@umd.edu" }]
+dependencies = [
+    "numpy",
+    "pandas",
+    "scanpy",
+    "scipy",
+    "pyroe",
+    "plotly",
+    "beautifulsoup4",
+
+]
+requires-python = ">=3.12"
+
+[project.urls]
+Homepage = "https://github.com/COMBINE-lab/QCatch"
+Source = "https://github.com/COMBINE-lab/QCatch"
+
+[tool.hatch.build.targets.wheel]
+packages = ["QCatch"]

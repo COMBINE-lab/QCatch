@@ -1,0 +1,481 @@
+import os
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objs as go
+from pyroe import load_fry
+import logging
+import scanpy as sc
+
+# Configure logging to show timestamps and message level
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+def apply_uniform_style(fig):
+    """Apply a consistent style with a solid background matching the container."""
+    fig.update_layout(
+        title_x=0.5,
+        margin=dict(t =40, l=30, r=30, b=30),
+        plot_bgcolor='rgba(0,0,0,0)',  # Fully transparent background
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(family="Arial, sans-serif", size=14, color="#2c3e50"),
+        title_font=dict(size=16, color="#34495e"),
+        xaxis=dict(showgrid=True, gridcolor='lightgrey', linecolor='#34495e', tickfont=dict(size=14, color='#34495e')),
+        yaxis=dict(showgrid=True, gridcolor='lightgrey', linecolor='#34495e', tickfont=dict(size=14, color='#34495e')),
+    )
+    return fig
+
+# set up width and height for the plots in horizontal 
+width = 480
+height = 360
+opacity = 0.5
+
+def generate_knee_plots(data):
+    width=  360
+    height= 480
+    
+    # 1.1 Knee Plot 1: Rank vs UMI Counts
+    fig_knee_1 = px.scatter(
+        data,
+        x="Rank",
+        y="DeduplicatedReads",
+        log_y=True,
+        title="UMI Counts vs Cell Rank",
+        labels={"Rank": "Cell Rank", "DeduplicatedReads": "UMI Counts"},
+        width=width,
+        height=height,
+        opacity=opacity
+    )
+    
+    
+    # 1.2 Knee Plot 2: Rank vs Genes Detected
+    fig_knee_2 = px.scatter(
+    data,
+    x="Rank",
+    y="NumGenesExpressed",
+    log_y=True,
+    title="Genes Detected against Cell Rank",
+    labels={"Rank": "Cell Rank", "NumGenesExpressed": "Number of Detected Genes"},
+    width=width,
+    height=height,
+    opacity=opacity
+    )
+    return apply_uniform_style(fig_knee_1), apply_uniform_style(fig_knee_2)
+
+def generate_gene_histogram(data):
+    # set up width and height for the plots in horizontal&1 fig per tab
+    
+    gene_detected = data["NumGenesExpressed"].tolist()
+
+    # Create a histogram plot
+    fig_hist_genes = go.Figure(
+        data=[go.Histogram(
+            x=gene_detected,
+            name="Number of detected genes",
+            opacity=0.8,
+            autobinx=False
+        )],
+        layout=go.Layout(
+            title="Histogram of detected genes per cell",
+            xaxis=dict(
+                title="Number of detected genes",
+                autorange=True
+            ),
+            yaxis=dict(title="Count", type='log', dtick=1),
+            width=width,
+            height=height,
+            bargap=0.05
+        )
+    )
+    return apply_uniform_style(fig_hist_genes)
+
+def generate_seq_saturation(data):
+    # Sequencing Saturation. x = meanReadsPerCell; y = seq saturation 
+    data = data.sort_values(by="CorrectedReads")
+
+    # Get the reads per cell array
+    unfiltered_correct_reads_array = data["CorrectedReads"].tolist()
+
+    # Calculate Sequencing Saturation (1 - Deduplication Rate)
+    dedup_rate_array = data["DedupRate"].tolist()
+    unfiltered_seq_saturation_array = [1 - x for x in dedup_rate_array]
+
+    # Filter out cells with less than 20 genes detected
+    filtered_indices = [i for i, val in enumerate(unfiltered_correct_reads_array) if val >= 20]
+    # handle case where no cells have 20 genes detected
+    if filtered_indices:
+        idx_start = filtered_indices[0]
+    else:
+        idx_start = len(unfiltered_correct_reads_array)
+
+    correct_reads_array = unfiltered_correct_reads_array[idx_start:]
+    seq_saturation_array = unfiltered_seq_saturation_array[idx_start:]
+
+    # Calculate average sequencing saturation value for all filtered cells
+    seq_saturation_value = sum(seq_saturation_array) / len(seq_saturation_array) if seq_saturation_array else 0
+    seq_saturation_percent = round(seq_saturation_value * 100, 2)
+
+    # Down-sampling for Sequencing Saturation
+    accumu_read_per_cell_array = [0]
+    accumu_seq_saturation_array = [0]
+    bins = 10
+    num_of_cells = len(correct_reads_array)
+
+    for i in range(1, num_of_cells // bins):
+        downsample_correct_reads_array = correct_reads_array[:bins * i]
+        downsample_seq_saturation_array = seq_saturation_array[:bins * i]
+
+        down_mean_reads_per_cell = sum(downsample_correct_reads_array) / len(downsample_correct_reads_array)
+        down_seq_saturation_value = sum(downsample_seq_saturation_array) / len(downsample_seq_saturation_array)
+
+        accumu_read_per_cell_array.append(down_mean_reads_per_cell)
+        accumu_seq_saturation_array.append(down_seq_saturation_value)
+
+    # Plot for Sequencing Saturation
+    fig_seq_saturation = px.scatter(
+        x=accumu_read_per_cell_array,
+        y=accumu_seq_saturation_array,
+        title="Sequencing Saturation vs Mean Reads Per Cell",
+        labels={"x": "Mean Reads per Cell", "y": "Sequencing Saturation"},
+        width=width,
+        height=height,
+        opacity=opacity
+    )
+    # Update the trace mode to include lines
+    fig_seq_saturation.update_traces(mode="lines+markers")
+
+    return apply_uniform_style(fig_seq_saturation), seq_saturation_percent
+
+def generate_SUA_plots(adata):
+    # TODO: do we want filtered out cells with less than some(20?) genes detected, THEN generated the SUA plots?
+
+    # calculate the sum count for S, U, A matrix separately
+
+    SUA_sum_list = []
+    for layer in ['spliced', 'unspliced', 'ambiguous']:
+        sum_count = int(adata.layers[layer].sum())
+        SUA_sum_list.append(sum_count)
+    # calculate the S/(S+U) ratio for each cell(row)
+    # get the gene-wise sum for S and U matrix
+
+    S_sum = adata.layers['spliced'].sum(axis=1).tolist()
+    U_sum = adata.layers['unspliced'].sum(axis=1).tolist()
+
+    # Ensure valid indices
+    denominator = np.array(S_sum) + np.array(U_sum)
+    valid_indices = (denominator != 0) & ~np.isnan(denominator)
+
+    # Calculate the ratio only for valid indices
+    S_ratio = np.array(S_sum)[valid_indices] / denominator[valid_indices]
+
+    # Convert to a Python list
+    S_list = S_ratio.tolist()
+    # # plot the barplot for S, U, A sum count
+
+    # Create the barplot
+    labels = ['Spliced', 'Unspliced', 'Ambiguous']
+    fig_SUA_bar = go.Figure(
+        data=[go.Bar(
+            x=labels,
+            y=SUA_sum_list,
+            marker=dict(
+                color=['#636EFA', '#EF553B', '#00CC96'] ,
+                line=dict(color='grey', width=1.5)  # Add a border to bars
+            ),
+            text=SUA_sum_list,  # Display numbers on top of bars
+            textposition='outside'  # Position the numbers outside the bars
+        )]
+    )
+    # Customize the layout
+    fig_SUA_bar.update_layout(
+        # title="Total Counts for S, U, A Matrix ",
+        xaxis=dict(title="RNA splicing status"),
+        yaxis=dict(title="Total Counts"),
+        # plot_bgcolor='rgba(240,240,240,0.9)',  # Light background
+        bargap=0.30,  # Spacing between bars
+        margin=dict(t=40),
+        width=width,
+        title_x=0.5, 
+
+    )
+    apply_uniform_style(fig_SUA_bar)
+    # Convert the barplot to HTML
+    fig_SUA_bar_html = fig_SUA_bar.to_html(full_html=False, include_plotlyjs="cdn")
+
+    # plot the histogram for S/(S+U) ratio
+    fig_S_ratio = go.Figure(
+        data=[go.Histogram(
+            x=S_list,
+        )]
+    )
+
+    # Customize the layout
+    fig_S_ratio.update_layout(
+        # title="Histogram of S/(S+U) Ratio",
+        xaxis=dict(title="S/(S+U) Ratio"),
+        yaxis=dict(title="Count"),
+        bargap=0.1,  # Space between bars
+        title_x=0.5,
+        margin=dict(t=40)
+    )
+    apply_uniform_style(fig_S_ratio)
+    # Convert the histogram to HTML
+    fig_S_ratio_html = fig_S_ratio.to_html(full_html=False, include_plotlyjs="cdn")
+
+    return fig_SUA_bar_html, fig_S_ratio_html
+
+def barcode_collapse(data):
+    opacity = 0.5
+    # we will use scatter plot to show the reads per CB before and after collapsing
+    
+    before_clap = np.array(data["MappedReads"])
+    after_clap = np.array(data["CorrectedReads"])
+
+    # Compute the gain_rate safely (avoid division by zero)
+    gain_rate = (after_clap - before_clap) / before_clap
+    mean_gain_rate = round(np.mean(gain_rate)*100, 4)
+    # Plot for Barcode Collapse
+    fig_barcode_collapse = px.scatter(
+        x=before_clap,
+        y=after_clap,
+        title="Barcode Collapsing (Retained Cells Only)",
+        labels={"x": "Reads per Cell before collapsing", "y": "Reads per Cell after collapsing"},
+        width=width,
+        height=height,
+        opacity=opacity
+    )
+    # Add y = x reference line
+    min_val = min(before_clap.min(), after_clap.min())  # Get min value from both axes
+    max_val = max(before_clap.max(), after_clap.max())  # Get max value from both axes
+    fig_barcode_collapse.add_trace(
+        go.Scatter(
+            x=[min_val, max_val],
+            y=[min_val, max_val],
+            mode="lines",
+            line=dict(color="#ed8888", width=2),
+            showlegend=False,
+            # name="y = x Line"
+        )
+    )
+    
+    
+    return apply_uniform_style(fig_barcode_collapse), mean_gain_rate
+
+def barcode_frequency_plots(data):
+    # scatter plot for reads per CB v.s. UMI counts in this CB
+    width = 550
+    height = 380
+    opacity = 0.5
+
+    fig_bc_freq_UMI = px.scatter(
+        data, 
+        x="CorrectedReads", 
+        y="DeduplicatedReads", 
+        # log_y=True,
+        title="Barcode frequency vs UMI Counts(All processed Cells)", 
+        labels={"CorrectedReads": "Barcode frequency", "DeduplicatedReads": "UMI Counts"},
+        width=width,
+        height=height,
+        opacity=opacity)
+    
+    # scatter plot for barcode frequency v.s. number of genes detected
+    fig_bc_freq_gene= px.scatter(
+        data, 
+        x="CorrectedReads", 
+        y="NumGenesExpressed", 
+        # log_y=True, 
+        title="Barcode frequency vs Number of Genes Detected(All processed Cells)", 
+        labels={"CorrectedReads": "Barcode frequency", "NumGenesExpressed": "Number of Genes Detected"},
+        width=width,
+        height=height,
+        opacity=opacity)
+    
+    # UMI Counts vs Number of Detected Genes
+    fig_gene_UMI = px.scatter(
+        data,
+        x="DeduplicatedReads",
+        y="NumGenesExpressed",
+        # log_y=True,
+        title="UMI Counts vs Number of Detected Genes(All processed Cells)",
+        labels={"DeduplicatedReads": "UMI Counts", "NumGenesExpressed": "Number of Detected Genes"},
+        width=width,
+        height=height,
+        opacity=opacity
+        )
+    
+    return apply_uniform_style(fig_bc_freq_UMI), apply_uniform_style(fig_bc_freq_gene), apply_uniform_style(fig_gene_UMI)
+    
+def mitochondria_plot(adata):
+    """Generates a properly aligned Plotly violin plot for mitochondrial content."""
+    width = 550
+    height = 400
+    dot_size = 2
+    dot_opacity = 0.3  # Adjust opacity of the dots
+    violin_color = '#559364'  # Change color of the violin plot
+    scatter_color = '#4F69C2'  # Change color of the scatter plot
+
+    sc.settings.verbosity = 0
+    # we have to filter out cells with less than 20 genes detected, otherwise will will have many cells with high mitochondrial content, which may be misleading of the distribution for valid data.
+    sc.pp.filter_cells(adata, min_genes=20)
+    
+    # Identify mitochondrial genes
+    adata.var["mt"] = adata.var['symbol'].str.startswith("MT-") | adata.var['symbol'].str.startswith("mt-") 
+    if adata.var["mt"].sum() > 0:
+        # Compute QC metrics
+        sc.pp.calculate_qc_metrics(adata, qc_vars=["mt"], inplace=True, percent_top=[20], log1p=True)   
+        df = adata.obs[['pct_counts_mt']].copy()
+    else:
+        logging.info("Warning: No mitochondrial genes found.")
+        # Create an empty DataFrame to generate a blank violin plot
+        df = pd.DataFrame({"pct_counts_mt": [], "Sample": []})
+
+    # Convert to Pandas DataFrame
+    
+    df["Sample"] = "Cells"  # Ensure a single category for violin plot
+    df["Sample"] = df["Sample"].astype(str)  # Ensure categorical behavior
+
+    # Create the violin plot
+    fig_mito = px.violin(
+        df, 
+        x="Sample",
+        y="pct_counts_mt",
+        box=True,  # Show box plot inside violin
+        points=False,  # Don't show points here (we'll add manually)
+        title="Mitochondrial Content(%) for All Processed Cells",
+        labels={"pct_counts_mt": "Percentage of Mitochondrial Counts"},
+        width=width,
+        height=height,
+        color_discrete_sequence=[violin_color]  # Set color of the violin plot
+    )
+
+    # Create the scatter (dot) plot manually
+    scatter = px.strip(
+        df, 
+        x="Sample",
+        y="pct_counts_mt",
+    )
+
+    # Add scatter points to the violin plot
+    for trace in scatter.data:
+        trace.marker.size = dot_size  # Set dot size
+        trace.marker.opacity = dot_opacity  # Set dot opacity
+        trace.marker.color = scatter_color  # Set dot color
+        fig_mito.add_trace(trace)
+
+    return apply_uniform_style(fig_mito)
+
+
+def show_quant_log_table(quant_json_data, permit_list_json_data):
+    """
+    Generate a Bootstrap-styled HTML table from the JSON data.
+    """
+    
+    collapse_threshold = 30
+    quant_table_content = ""
+    permit_list_table_content = ""
+
+    key_list_lv1 = list(quant_json_data.keys())
+    current_index = 1
+
+    for key_lv1 in key_list_lv1:
+        table_row = f"<tr><th scope='row'>{current_index}</th><td>{key_lv1}</td>"
+
+        if key_lv1 == "empty_resolved_cell_numbers" and len(quant_json_data[key_lv1]) > collapse_threshold:
+            # Format the list of numbers as a comma-separated string
+            formatted_content = ", ".join(map(str, quant_json_data[key_lv1]))
+
+            # Generate Bootstrap accordion for the content
+            accordion_content = f'''
+            <div class="accordion" id="accordion{current_index}">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{current_index}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{current_index}" aria-expanded="false" aria-controls="collapse{current_index}">
+                            Expand Content
+                        </button>
+                    </h2>
+                    <div id="collapse{current_index}" class="accordion-collapse collapse" aria-labelledby="heading{current_index}" data-bs-parent="#accordion{current_index}">
+                        <div class="accordion-body">
+                            {formatted_content}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            '''
+            quant_table_content += f"{table_row}<td>{accordion_content}</td></tr>"
+        else:
+            # Directly display the content for other cases
+            quant_table_content += f"{table_row}<td>{quant_json_data[key_lv1]}</td></tr>"
+
+        current_index += 1
+
+    # Create Permit List Table 
+    if permit_list_json_data:
+        permit_list_table_content = ""
+        for key, value in permit_list_json_data.items():
+            permit_list_table_content += f"<tr><th scope='row'>{current_index}</th><td>{key}</td><td>{value}</td></tr>"
+            current_index += 1
+    else: 
+        permit_list_table_content = "<tr><td colspan='3'>No permit list data available.</td></tr>"
+
+    return quant_table_content, permit_list_table_content
+
+
+def generate_summary_table(raw_data, valid_bcs, total_detected_genes):
+    """
+    Generate a summary table with total corrected reads, total UMI, and total number of cells, etc.
+    in a 4-column (two key-value pairs per row) Bootstrap table.
+    """
+    total_cells = len(raw_data['CorrectedReads'])
+    # filter with valid barcodes
+    data = raw_data[raw_data['CB'].isin(valid_bcs)]
+    mean_reads_per_cell = int(np.nan_to_num(data['CorrectedReads'].mean(), nan=0))
+    median_umi_per_cell = int(np.nan_to_num(data['DeduplicatedReads'].median(), nan=0))
+    median_genes_per_cell = int(np.nan_to_num(data['NumGenesExpressed'].median(), nan=0))
+
+    # total_correct_reads = sum(data['CorrectedReads'])
+    # total_UMI = sum(data['DeduplicatedReads'])
+    summary = {
+        "Number of retained cells": f"{len(valid_bcs):,}",
+        "Number of all processed cells": f"{total_cells:,}",
+        "Mean reads per retained cell": f"{mean_reads_per_cell:,}",
+        "Median UMI per retained cell": f"{median_umi_per_cell:,}",
+        "Median genes per retained cell": f"{median_genes_per_cell:,}",
+        "Total genes detected for retained cells": f"{total_detected_genes:,}",
+    }
+
+    # Convert summary dict to a list of (key, value) pairs
+    summary_items = list(summary.items())
+
+    summary_table_rows = ""
+    # Process pairs in steps of 2
+    for i in range(0, len(summary_items), 2):
+        # Left key-value
+        left_k, left_v = summary_items[i]
+
+        # Right key-value, if it exists
+        if i + 1 < len(summary_items):
+            right_k, right_v = summary_items[i + 1]
+        else:
+            # If there's an odd total, leave these blank
+            right_k, right_v = "", ""
+
+        # Build a single row (4 columns)
+        summary_table_rows += (
+            f"<tr>"
+            f"<td class='key-column'>{left_k}</td><td class='value-cell'>{left_v}</td>"
+            f"<td class='key-column'>{right_k}</td><td class='value-cell'>{right_v}</td>"
+            f"</tr>"
+        )
+
+    # Wrap rows in a Bootstrap .table
+    summary_html = f"""
+    <div class="table-responsive">
+      <table class="table">
+        <tbody>
+          {summary_table_rows}
+        </tbody>
+      </table>
+    </div>
+    """
+
+    return summary_html
+

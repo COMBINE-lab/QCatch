@@ -1,3 +1,7 @@
+# QCatch - Ignore local shell scripts
+run_main.sh
+tutorial.sh
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -172,3 +176,4 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+

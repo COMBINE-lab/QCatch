@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.5">
+    <title>QCatch</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+      <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+      .accordion-body {
+          word-wrap: break-word;
+      }
+
+      /* Custom styles for the question mark button */
+      .help-button {
+          color: #007bff;
+          /* Blue color for the icon */
+          cursor: pointer;
+          margin-left: 10px;
+      }
+
+      .help-button:hover {
+          color: #0056b3;
+          /* Darker blue on hover */
+      }
+
+      /* Add some spacing for the collapsible section */
+      .collapse {
+          margin-top: 10px;
+      }
+      .key-column {
+        font-size: 14px;
+      }
+      .value-cell {
+          color: #0E6EFE !important;
+          /* Use !important if Bootstrap overrides your color */
+          font-size: 18px;
+          /* font-family: Arial, sans-serif; */
+
+      }
+      #summary_table {
+        margin-bottom: 0 !important;
+      }
+
+      /* Floating Sidebar */
+      .floating-sidebar {
+          position: fixed;
+          top: 100px;
+          left: 20px;
+          width: 195px;
+          background: linear-gradient(135deg, #7652da, #88d3ce);
+          border-radius: 15px;
+          box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+          z-index: 1050;
+          padding: 20px 15px;
+          color: #fff;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .floating-sidebar ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+      }
+
+      .floating-sidebar ul li {
+          margin: 15px 0;
+      }
+
+      .floating-sidebar ul li a {
+          color: #fff;
+          text-decoration: none;
+          display: block;
+          padding: 10px;
+          border-radius: 8px;
+          transition: background 0.3s;
+      }
+
+      .floating-sidebar ul li a:hover {
+          background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Adjust the main container to prevent content overlap */
+      .main-content {
+          margin-left: 215px;
+      }
+
+      .nav-tabs .nav-link {
+          font-size: 16px !important;
+          /* 1.5rem ≈ 24px */
+      }
+
+      .nav-sidebar li a {
+          white-space: pre-line !important;
+      }
+    </style>
+</head>
+<body>
+  
+
+
+  <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-primary navbar-custom">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">QCatch</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarColor01">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">Home
+              <span class="visually-hidden">(current)</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="https://github.com/COMBINE-lab/QCatch" target="_blank">GitHub</a>
+          </li>
+          <!-- <li class="nav-item">
+            <a class="nav-link" href="#">FAQ</a>
+          </li> -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Resources</a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="https://combine-lab.github.io/quantaf/" target="_blank">Processed datasets collection</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="https://combine-lab.github.io/alevin-fry-tutorials/2023/simpleaf-piscem/" target="_blank">simpleaf tutorial</a>
+              <a class="dropdown-item" href="https://combine-lab.github.io/alevin-fry-tutorials/#blog" target="_blank">alevin-fry tutorials</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="https://github.com/COMBINE-lab/alevin-fry" target="_blank">alevin-fry GitHub</a>
+              <a class="dropdown-item" href="https://github.com/csoneson/alevinQC" target="_blank">alevinQC GitHub</a>
+              
+            </div>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="https://combine-lab.github.io" target="_blank">About Us</a>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </nav>
+  <!-- occupy the place for fixed-top -->
+  <div style="height: 70px;"></div>
+
+  <!-- Floating Sidebar for Tab1 (Plots) -->
+  <div id="sidebar-tab1" class="floating-sidebar hidden">
+    <ul class="nav-sidebar">
+        <li><a href="#section1">🦒 Knee Plots</a></li>
+        <li><a href="#section2">🔢 UMI Counts</a></li>
+        <li><a href="#section3">🧬 Gene Distribution</a></li>
+        <li><a href="#section4">🧽 Saturation <br>&nbsp;&nbsp;&nbsp;&nbsp;& Collapsing</a></li>
+        <li><a href="#section5">🧩 S/U/A counts</a></li>
+        <li><a href="#back-to-top1" class="back-to-top">⬆️ Back to Top</a></li>
+    </ul>
+  </div>
+
+  <!-- Floating Sidebar for Tab2 (Log Info) -->
+  <div id="sidebar-tab2" class="floating-sidebar hidden">
+    <ul class="nav-sidebar">
+        <li><a href="#section-log1">📜 Quant Log Info</a></li>
+        <li><a href="#section-log2">📝 Permit List Info</a></li>
+        <li><a href="#back-to-top2" class="back-to-top">⬆️ Back to Top</a></li>
+    </ul>
+  </div>
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container">
+      <div id="full_container" class="row">
+          <div id="main_page">
+            <div id="description"class="row" >
+              <div class="col col-md-5">
+                <div id="description" class="col">
+                  <h4> QCatch</h4>
+                  <p class="fw-medium"> This web provides functionality for generating QC reports summarizing the output of alevin-fry (He et al., Nature Methods 19, 316–322 (2022)).  </p>
+                </div>
+              </div>
+  
+              <div id="summary" class="col col-md-7">
+                    <h4>Summary</h4>
+                    <table class="table table-hover table-striped" id = "summary_table">
+                      <!-- Dynamic rows will be inserted here -->
+                    <tbody id="summary_tbody"></tbody>    
+                    </table>
+  
+              </div>
+            </div>
+  
+            <div id="all_plots"class="row" >
+              <div id="plotContainer" >
+                <ul class="nav nav-tabs" role="tablist">
+                  <li class="nav-item" role="presentation">
+                      <a class="nav-link active fs-4" data-bs-toggle="tab" href="#tab1" aria-selected="true" role="tab">Plots</a>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                      <a class="nav-link fs-4" data-bs-toggle="tab" href="#tab2" aria-selected="false" tabindex="-1" role="tab">Log info</a>
+                  </li>
+              </ul>
+              <!--Warning note-->
+              <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+                <strong>Note:</strong> For the following plots, the title will indicate if only the retained cells are used; otherwise, all processed cells are included.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+
+                    <div class="tab-content">
+                       <!-- Tab1, plots-->
+                      <div id="tab1" class="container tab-pane fade active show" role="tabpanel">
+                        <!-- Section1-->
+                        <div class="row mt-3 align-items-center">
+                          <div class="section" id = "section1">
+                            <h5>🦒 Knee Plots
+                              <button class="btn btn-link help-button" data-target="helpText1">
+                                <i class="bi bi-question-circle"></i>
+                              </button>
+                            </h5>
+                            <div class="collapse" id="helpText1">
+                              <div class="card card-body">
+                                <p class="mb-0">The <b>left plot</b> shows the number of UMIs against cell rank (ordered by UMI count). Knee plot can be used to filter low-quality cells with too less UMIs. <br> The <b>right plot</b> shows the number of detected genes against cell rank (ordered by UMI count). </p>
+                                <p class="mb-0"><b>Rank</b>: cells are ranked by number of UMIs. <br> <b>UMI count</b>: a.k.a number of deduplicated reads.</p>
+                              </div>
+                            </div>
+                            <div class="mt-3">
+                            </div>
+                          </div>
+                            <div class="col col-md-6">
+                              <div class="plot-container">
+                                <div class="plot-background">
+                                  <div id="knee_plot1-1"></div>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col col-md-6">
+                              <div id="knee_plot1-2"></div>
+                            </div>
+
+                        </div>
+                        <hr>
+                        <!-- Section2-->
+                        <div class="row align-items-center">
+                          <div class="section" id="section2">
+                            <h5>🔢 UMI Counts and Detected Cene across Cell Barcodes
+                              <button class="btn btn-link help-button" data-target="helpText2">
+                                <i class="bi bi-question-circle"></i>
+                              </button>
+                            </h5>
+                            <div class="collapse" id="helpText2">
+                              <div class="card card-body">
+                                <p class="mb-0"><b>Barcode frequency</b>: number of corrected reads per cell barcode. </p>
+                              </div>
+                            </div>
+                          </div>
+                            <div class="col col-md-6" >
+                              <div id="bc_freq_plot2-1"></div>
+                            </div>
+                            <div class="col col-md-6">
+                              <div id="bc_freq_plot2-2"></div>
+                            </div>
+                            <div class="col col-md-6">
+                              <div id="bc_freq_plot2-3"></div>
+                            </div>
+                        </div>
+                        <hr>
+                        <!-- Section3-->
+                        <div class="row align-items-center">
+                          <div class="section" id = "section3">
+                            <h5>🧬 Distribution of Detected Gene Count and Mitochondrial Percentage Plot.
+                              <button class="btn btn-link help-button" data-target="helpText3">
+                                <i class="bi bi-question-circle"></i>
+                              </button>
+                            </h5>
+                            <div class="collapse" id="helpText3">
+                              <div class="card card-body">
+                                <p class="mb-0">
+                                  The <b>left plot</b> depicts the distribution of detected gene counts. A knee plot can be used to filter out low-quality cells with too few UMIs. <br>
+                                  The <b>right plot</b> presents a violin plot displaying the percentage of mitochondrial genes for all unfiltered cells. Cells with a high mitochondrial gene percentage (>20%) are typically filtered out due to their low quality.
+                                </p>
+                              </div>
+                            </div>
+                            <div class="mt-3">
+                            </div>
+                          </div>
+                          <div class="col col-md-6">
+                            <div id="hist_gene3-1"></div>
+                          </div>
+                          <div class="col col-md-6">
+                            <div id="fig_mt3-2"></div>
+                          </div>
+                        </div>
+                        <hr>
+                         <!-- Section4-->
+                         <div class="container align-items-center">
+                          <div class="row">
+                            <div class="section" id="section4">
+                              <h5>🧽 Sequencing Saturation and Barcode Collapsing plot
+                                <button class="btn btn-link help-button" data-target="helpText4">
+                                  <i class="bi bi-question-circle"></i>
+                                </button>
+                              </h5>
+                              <div class="collapse" id="helpText4">
+                                <div class="card card-body">
+                                  <p class="mb-0">The <b>left plot</b> is the Sequencing Saturation plot, calculated by: <em>1 - (n_deduped_reads / n_reads)</em>. It measures the fraction of reads originating from an already-observed UMI. You may not always need high sequencing saturation, but having higher saturation ensures you can detect very lowly expressed transcripts. The slope near the endpoint indicates the added benefit (if any) of further increasing sequencing depth.  <br> The <b>right plot</b> shows the reads counts per cell against corrected reads count per cell (cellbarcode collapse). </p>
+                                  <p class="mb-0"><b>Correct reads </b>: correct the cellbarcode error for each read <br> <b>Cellbarcode collapse</b>: group the reads with same cellbarcode.</p>
+                                </div>
+                              </div>
+                              <div class="mt-3">
+                              </div>
+                            </div>
+                            <div class="col col-md-6">
+                              <div class ="align-items-center">
+                                <p id="seqSaturation"></p>
+                              </div>
+                              
+                              <div id="seq_saturation4-1"></div>
+                            </div>
+                            <div class="col col-md-6">
+                              <p id="meanGainRate"></p>
+                              <div id="barcode_collapse4-2"></div>
+                            </div>
+                          </div>
+  
+                        </div>
+                        <hr>
+                        <!-- Section5-->
+                        <div class="container align-items-center mb-50">
+                          <div class="row align-items-center">
+                            <div class="section" id="section5">
+                              <h5>🧩 Bar plot for S/U/A counts and S/(U+S) Ratio Plot
+                                <button class="btn btn-link help-button" data-target="helpText5">
+                                  <i class="bi bi-question-circle"></i>
+                                </button>
+                              </h5>
+                              <div class="collapse" id="helpText5">
+                                <div class="card card-body">
+                                  <p class="mb-0">The <b>left plot</b> shows the number of reads from three categories for RNA splicing status: Splice(S), Unsplice(U), and Ambiguous(A). <br> The <b>right plot</b> shows the histogram of S/(S+U) ratio. <b>Note</b>: cells with a sum gene count of (U + S) equal to zero were excluded in the S/(U+S) ratio plot. </p>
+                                  <p class="mb-0"><b>Rank</b>: cells are ranked by number of UMIs. <br> <b>UMI count</b>: number of deduplicated reads.</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="row">
+                          <div class="col-12 col-md-6">
+                            <div id="SUA_bar5-1"></div>
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <div id="S_ratio5-2"></div>
+                          </div>
+                          <br>
+                          
+                        </div>
+                        <hr>
+
+  
+
+
+                    
+                        </div>
+                          </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div id="tab2" class="container tab-pane fade">
+                        <div class="container" >
+                          <!-- Section 1: Quant Log Information -->
+                          <div class="section mt-3 mb-5" id = "section-log1">
+                            <h5>📜 Quant log information
+                              <button class="btn btn-link help-button" data-target="helpText6">
+                                <i class="bi bi-question-circle"></i>
+                              </button>
+                            </h5>
+                            <div class="collapse" id="helpText6">
+                              <div class="card card-body">
+                                <p class="mb-0">
+                                  <b>alt_resolved_cell_numbers</b>: A list of global cell indices where an alternative resolution strategy was applied for large connected components. If this list is empty, no cells used the alternative resolution strategy.<br>
+                                  <b>cmd</b>: The command line used for this af_quant process.<br>
+                                  <b>dump_eq</b>: Indicates whether equivalence class (EQ class) information was dumped.<br>
+                                  <b>empty_resolved_cell_numbers</b>: A list of global cell indices with no gene expression.<br>
+                                  <b>num_genes</b>: The total number of genes. When <code>usa_mode</code> is enabled, this count represents the sum of gene across three categories: unspliced(U), spliced(S), and ambiguous(A). <br>
+                                  <b>num_quantified_cells</b>: The number of cells that were quantified.<br>
+                                  <b>resolution_strategy</b>: The resolution strategy used for quantification.<br>
+                                  <b>usa_mode</b>: Indicates that data was processed in Unspliced-Spliced-Ambiguous (USA) mode to classify each transcript’s splicing state.<br>
+                                  <b>version_str</b>: The tool’s version number.<br>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                            <!-- Container for the table -->
+                          <div id="af_log_info_table" class="container mt-3 mb-5">
+                            <div id="log_info_table" style="width: 800px;"></div>
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr class="table-primary">
+                                        <th scope="col">#</th>
+                                        <th scope="col">Category</th>
+                                        <th scope="col">Content</th>
+                                    </tr>
+                                </thead>
+                                <!-- Dynamic rows will be inserted here by JavaScript -->
+                                <tbody id="table-body-quant-log-info"></tbody>
+                            </table>
+                          </div>
+
+                          <!-- Section 2: Permit List Log Info -->
+                          <div class="section mt-3 mb-5 " id="section-log2">
+                            <h5>📝 Permit List Log Information
+                              <button class="btn btn-link help-button" data-target="helpText7">
+                                <i class="bi bi-question-circle"></i>
+                              </button>
+                            </h5>
+                            <div class="collapse" id="helpText7">
+                              <div class="card card-body">
+                                <p class="mb-0">
+                                  <b>cmd</b>: The command-line input provided by users for generating the permit list.<br>
+                                  <b>expected_ori</b>: The expected alignment orientation for the sequencing chemistry being processed.<br>
+                                  <b>gpl_options</b>: The actual command line executed for the 'generate permit list' process, including pre-filled settings.<br>
+                                  <b>max-ambig-record</b>: The maximum number of reference sequences to which a read can be mapped.<br>
+                                  <b>permit-list-type</b>: The type of permit list being used.<br>
+                                  <b>velo_mode</b>: A placeholder parameter reserved for future integration with alevin-fry-Forseti; currently always set to false.<br>
+                                  <b>version_str</b>: The version number of the tool.<br>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Table for Permit List Log Info -->
+                          <div id="permit_list_log_table" class="container mt-3 mb-4 pb-5">
+                            <div id="permit_log_info_table" style="width: 800px;"></div>
+                            <table class="table table-hover table-striped">
+                              <thead>
+                                <tr class="table-primary">
+                                  <th scope="col">#</th>
+                                  <th scope="col">Category</th>
+                                  <th scope="col">Content</th>
+                                </tr>
+                              </thead>
+                              <!-- Dynamic rows will be inserted here by JavaScript -->
+                              <tbody id="table-body-permit-log-info"></tbody>
+                            </table>
+                          </div>
+
+                        </div>
+                      </div>
+            
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  
+
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"   integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8="   crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+  <script src="https://cdn.plot.ly/plotly-2.20.0.min.js" charset="utf-8"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.4/d3.min.js" integrity="sha512-nfUlp2ZWPKWlnAH/OsMeAqRSYBxOdPYeBXwceyw6QqqZ7uTT/s5/eS1hMKphjVBouk0jf/JQ8ULVJRnEqSHkXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script type="text/javascript" src="https://d3js.org/d3.v4.js"></script>
+  <script>
+    // Add event listeners to all help buttons
+    document.querySelectorAll('.help-button').forEach(button => {
+      button.addEventListener('click', () => {
+        const targetId = button.getAttribute('data-target');
+        const targetCollapse = new bootstrap.Collapse(`#${targetId}`, {
+          toggle: true // Toggle the collapsible section
+        });
+      });
+    });
+    // Smooth scrolling for sidebar links
+    document.addEventListener("DOMContentLoaded", function () {
+    const sidebarTab1 = document.getElementById("sidebar-tab1");
+    const sidebarTab2 = document.getElementById("sidebar-tab2");
+
+    function toggleSidebar(targetId) {
+        if (targetId === "tab1") {
+            sidebarTab1.classList.remove("hidden");
+            sidebarTab1.style.display = "block";  // Ensure visibility
+            sidebarTab2.classList.add("hidden");
+            sidebarTab2.style.display = "none";  // Hide
+        } else if (targetId === "tab2") {
+            sidebarTab2.classList.remove("hidden");
+            sidebarTab2.style.display = "block";  
+            sidebarTab1.classList.add("hidden");
+            sidebarTab1.style.display = "none";  
+        }
+    }
+
+    // Ensure only the active tab's sidebar is visible on page load
+    const activeTab = document.querySelector(".nav-tabs .nav-link.active");
+    if (activeTab) {
+        toggleSidebar(activeTab.getAttribute("href").substring(1));
+    }
+
+    // Attach event listener to detect tab switching
+    document.querySelectorAll('.nav-tabs a').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function (event) {
+            let target = event.target.getAttribute("href").substring(1);
+            toggleSidebar(target);
+        });
+    });
+
+    // Smooth scrolling for sidebar links
+    document.querySelectorAll('.floating-sidebar a').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - 70,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // "Back to Top" functionality
+    document.querySelectorAll(".back-to-top").forEach(btn => {
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+    });
+});
+  </script>
+
+</body>
+</html>
