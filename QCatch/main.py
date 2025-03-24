@@ -59,12 +59,12 @@ def main():
         help="(Optional) Directory containing the 'gene_id2name' file for converting Ensembl gene IDs to gene names. The file must be a CSV with two columns: 'gene_id' (e.g., ENSG00000284733) and 'gene_name' (e.g., OR4F29). If not provided, mitochondria plots will not be displayed."
     )
     parser.add_argument(
-        '--verbose', 
+        '--verbose', '-v',
         action='store_true', 
         help='Enable verbose logging with debug level messages')
     
     parser.add_argument(
-        '--overwrite_h5ad',
+        '--overwrite_h5ad', '-w',
         action='store_true',
         help="If set, modifies the original .h5ad file in place by overwriting it with the updated cell filtering results."
     )
@@ -199,7 +199,7 @@ def main():
     modify_html_with_plots(
         # report template
         soup=load_template(),
-        output_html_path=os.path.join(output_dir, f'{output_dir}/updated_report.html'),
+        output_html_path=os.path.join(output_dir, f'{output_dir}/QCatch_report.html'),
         plot_text_elements = plot_text_elements,
         quant_json_table_html = quant_json_table_html,
         permit_list_table_html = permit_list_table_html,
