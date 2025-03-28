@@ -20,7 +20,7 @@ from [Bioconda](https://bioconda.github.io/).
 ```
 
 ### PyPl
-`QCatch` is also availabel in PyPl.
+`QCatch` is also availabel in PyPI.
 ```bash
 # pip install QCatch (TODO)
 ``` -->
