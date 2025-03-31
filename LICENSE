@@ -35,5 +35,5 @@ However, the module located at `find_retained_cells/` is licensed under the
 GNU Affero General Public License, version 2 (AGPLv2). The full text
 of the AGPLv2 license is included at `find_retained_cells/README.md`.
 
-If you use or redistribute code from `find_retained_cells/`, you must comply
+If you modify or redistribute code from `find_retained_cells/`, you must comply
 with the terms of the AGPLv2.
