@@ -9,6 +9,7 @@ import logging
 import shutil
 
 from QCatch import templates
+from QCatch.utils import QuantInput, get_input
 from QCatch.plots_tables import show_quant_log_table
 from QCatch.input_processing import parse_quant_out_dir
 from QCatch.convert_plots import create_plotly_plots, modify_html_with_plots
@@ -24,14 +25,23 @@ def load_template():
     return soup
 
 def main():
-    
-    parser = argparse.ArgumentParser(description="alevinQC: Command-line Interface")
+    # Remove all existing handlers from the root logger
+    for handler in logging.getLogger().handlers[:]:
+        logging.getLogger().removeHandler(handler)
+
+    # Set logging level based on the verbose flag
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s :\n %(message)s"
+    )
+
+    parser = argparse.ArgumentParser(description="QCatch: Command-line Interface")
     # Add command-line arguments
     parser.add_argument(
         '--input', '-i', 
-        type=str, 
+        type=get_input, 
         required=True, 
-        help="Path to the input directory containing the quant output files"
+        help="Path to the input directory containing the quantification output files or to the HDF5 file itself."
     )
     
     parser.add_argument(
@@ -70,10 +80,16 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Set logging level based on the verbose flag
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.INFO,
+        format="%(asctime)s - %(levelname)s :\n %(message)s"
+    )
+
     # Set default output directory to the input file's directory
     if args.output is None:
-        input_path = Path(args.input)
-        args.output = input_path.as_posix()
+        args.output = args.input.dir.as_posix()
     
     input_dir = args.input
     output_dir = args.output
@@ -84,25 +100,14 @@ def main():
     overwrite_h5ad = args.overwrite_h5ad
     os.makedirs(os.path.join(output_dir), exist_ok=True)
     
-    # Remove all existing handlers from the root logger
-    for handler in logging.getLogger().handlers[:]:
-        logging.getLogger().removeHandler(handler)
-    # Set logging level based on the verbose flag
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(asctime)s - %(levelname)s :\n %(message)s"
-    )
     # Suppress Numba’s debug messages by raising its level to WARNING
     logging.getLogger('numba').setLevel(logging.WARNING)
     
     # Set up logging
     logger = logging.getLogger(__name__)
     
-    # Parse and prepare the input data
-    quant_json_data, perimit_list_json_data, feature_dump_data, mtx_data, usa_mode, is_h5ad = parse_quant_out_dir(input_dir)
-    
     # # Cell calling, get the number of non-ambient barcodes
-    matrix = CountMatrix.from_anndata(mtx_data)
+    matrix = CountMatrix.from_anndata(args.input.mtx_data)
     
     # # cell calling step1 - empty drop
     logger.info("🧬 Starting cell calling...")
@@ -142,22 +147,22 @@ def main():
             for bc in valid_bcs:
                 f.write(f"{bc}\n")
         
-        if is_h5ad:
+        if args.input.is_h5ad:
             # Update the h5ad file with the number of expected cells, contains original filtered cells and non-ambient cells
-            mtx_data.obs['initial_filtered_cell'] = mtx_data.obs['barcodes'].isin(converted_filtered_bcs)
-            mtx_data.obs['additional_non_ambient_cell'] = mtx_data.obs['barcodes'].isin(non_ambient_result.eval_bcs)
+            args.input.mtx_data.obs['initial_filtered_cell'] = args.input.mtx_data.obs['barcodes'].isin(converted_filtered_bcs)
+            args.input.mtx_data.obs['additional_non_ambient_cell'] = args.input.mtx_data.obs['barcodes'].isin(non_ambient_result.eval_bcs)
             # is non_ambient is True, fill with pvalue, otherwise fill with NaN
             # Create a mapping from barcodes to p-values
             barcode_to_pval = dict(zip(non_ambient_result.eval_bcs, non_ambient_result.pvalues))
 
             # Assign p-values only where 'non_ambient' is True, otherwise fill with NaN
-            mtx_data.obs['non_ambient_pvalue'] = mtx_data.obs['barcodes'].map(barcode_to_pval)
+            args.input.mtx_data.obs['non_ambient_pvalue'] = args.input.mtx_data.obs['barcodes'].map(barcode_to_pval)
             
-            mtx_data.obs['is_retained_cells'] = mtx_data.obs['barcodes'].isin(valid_bcs)
+            args.input.mtx_data.obs['is_retained_cells'] = args.input.mtx_data.obs['barcodes'].isin(valid_bcs)
             logger.info("🗂️ Saved 'cell calling result' to the h5ad file, check the new added columns in adata.obs .")
-            temp_file = os.path.join(input_dir, 'quants_with_cell_calling_info.h5ad')
+            temp_file = os.path.join(args.input.dir, 'quants_with_cell_calling_info.h5ad')
             # Save the modified file to a temporary file first
-            mtx_data.write_h5ad(temp_file, compression='gzip')
+            args.input.mtx_data.write_h5ad(temp_file, compression='gzip')
             if overwrite_h5ad:
                 # After successful saving, remove or rename the original
                 input_h5ad_file = os.path.join(input_dir, 'quants.h5ad')
@@ -190,20 +195,20 @@ def main():
     #         non_ambient_result = pickle.load(f)
 
     # plots and log, summary tables
-    plot_text_elements = create_plotly_plots(feature_dump_data, mtx_data, valid_bcs, gene_id2name_dir, usa_mode)
+    plot_text_elements = create_plotly_plots(args.input.feature_dump_data, args.input.mtx_data, valid_bcs, gene_id2name_dir, args.input.usa_mode)
     
-    quant_json_table_html, permit_list_table_html = show_quant_log_table(quant_json_data, perimit_list_json_data)
+    quant_json_table_html, permit_list_table_html = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
 
 
     # Modify HTML with plots
     modify_html_with_plots(
         # report template
         soup=load_template(),
-        output_html_path=os.path.join(output_dir, f'{output_dir}/QCatch_report.html'),
+        output_html_path=os.path.join(output_dir, f'QCatch_report.html'),
         plot_text_elements = plot_text_elements,
         quant_json_table_html = quant_json_table_html,
         permit_list_table_html = permit_list_table_html,
-        usa_mode=usa_mode
+        usa_mode=args.input.usa_mode
     )
 
 if __name__ == "__main__":

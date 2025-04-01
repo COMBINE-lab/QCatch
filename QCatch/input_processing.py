@@ -12,54 +12,69 @@ def parse_quant_out_dir(quant_out_dir):
     Detects the input format of the quantification output directory.
     return the loaded data
     """
-    used_simpleaf = None
-    if os.path.exists(os.path.join(quant_out_dir, 'simpleaf_quant')):
-        logger.info("✅ Detected: 'simpleaf' was used for the quantification result.")
-        used_simpleaf = True
-    elif os.path.exists(os.path.join(quant_out_dir, 'quant.json')):
-        logger.info("✅ Detected: 'alevin-fry' was used for the quantification result.")
-        used_simpleaf = False
-    else:
-        logger.warning(
-            "⚠️ Unable to recognize the quantification directory. "
-            "Ensure that the directory structure remains unchanged from the original output directory."
-        )
-    
-    # -----------------------------------
-    # Loads matrix data from the given quantification output directory.
-    mtx_dir_path = os.path.join(quant_out_dir, "simpleaf_quant", "af_quant") if used_simpleaf else quant_out_dir
-
-    if not os.path.exists(mtx_dir_path):
-        logger.error(f"❌ Error: Expected matrix directory '{mtx_dir_path}' not found. Please check the input directory structure.")
-        mtx_data = None
-        
-    is_h5ad = False
-    # -----------------------------------
-    # Check if quants.h5ad file exists in the parent directory
-    h5ad_file_path = os.path.join(quant_out_dir, 'quants.h5ad')
-    if os.path.exists(h5ad_file_path):
+    # check if input is a directory or a file
+    if os.path.isfile(quant_out_dir):
+        # it's a file and must be an H5AD file so we deal with that here
         is_h5ad = True
+        h5ad_file_path = quant_out_dir
         logger.info("✅ Loading the data from h5ad file...")
         mtx_data = sc.read_h5ad(h5ad_file_path)
         quant_json_data, permit_list_json_data = json.loads(mtx_data.uns['quant_info']), json.loads(mtx_data.uns['gpl_info'])
-        
+
         feature_dump_data = pd.DataFrame(mtx_data.obs)
         # rename the columns, align with the featureDump.txt
-        
+
         feature_dump_data.columns = ['CB', 'CorrectedReads', 'MappedReads', 'DeduplicatedReads', 'MappingRate', 'DedupRate', 'MeanByMax', 'NumGenesExpressed', 'NumGenesOverMean']
         usa_mode = quant_json_data['usa_mode']
-        
-    else:
-        mtx_data = load_fry(mtx_dir_path, output_format='raw')
-        # TODO: load the U+S+A mtx data, compute median gene per cell based on mtx
-        # USA_mtx_data = load_fry(mtx_dir_path, output_format='all')
-        
-        # Load  quant.json, generate_permit_list.json, and featureDump.txt
-        quant_json_data, permit_list_json_data, feature_dump_data = load_json_txt_file(quant_out_dir, used_simpleaf)
-        
-        # detect usa_mode
-        usa_mode = quant_json_data['usa_mode']
 
+    else:
+        used_simpleaf = None
+        if os.path.exists(os.path.join(quant_out_dir, 'simpleaf_quant')):
+            logger.info("✅ Detected: 'simpleaf' was used for the quantification result.")
+            used_simpleaf = True
+        elif os.path.exists(os.path.join(quant_out_dir, 'quant.json')):
+            logger.info("✅ Detected: 'alevin-fry' was used for the quantification result.")
+            used_simpleaf = False
+        else:
+            logger.warning(
+                "⚠️ Unable to recognize the quantification directory. "
+                "Ensure that the directory structure remains unchanged from the original output directory."
+            )
+        
+        # -----------------------------------
+        # Loads matrix data from the given quantification output directory.
+        mtx_dir_path = os.path.join(quant_out_dir, "simpleaf_quant", "af_quant") if used_simpleaf else quant_out_dir
+
+        if not os.path.exists(mtx_dir_path):
+            logger.error(f"❌ Error: Expected matrix directory '{mtx_dir_path}' not found. Please check the input directory structure.")
+            mtx_data = None
+            
+        is_h5ad = False
+        # -----------------------------------
+        # Check if quants.h5ad file exists in the parent directory
+        h5ad_file_path = os.path.join(quant_out_dir, 'quants.h5ad')
+        if os.path.exists(h5ad_file_path):
+            is_h5ad = True
+            logger.info("✅ Loading the data from h5ad file...")
+            mtx_data = sc.read_h5ad(h5ad_file_path)
+            quant_json_data, permit_list_json_data = json.loads(mtx_data.uns['quant_info']), json.loads(mtx_data.uns['gpl_info'])
+            
+            feature_dump_data = pd.DataFrame(mtx_data.obs)
+            # rename the columns, align with the featureDump.txt
+            
+            feature_dump_data.columns = ['CB', 'CorrectedReads', 'MappedReads', 'DeduplicatedReads', 'MappingRate', 'DedupRate', 'MeanByMax', 'NumGenesExpressed', 'NumGenesOverMean']
+            usa_mode = quant_json_data['usa_mode']
+            
+        else:
+            mtx_data = load_fry(mtx_dir_path, output_format='raw')
+            # TODO: load the U+S+A mtx data, compute median gene per cell based on mtx
+            # USA_mtx_data = load_fry(mtx_dir_path, output_format='all')
+            
+            # Load  quant.json, generate_permit_list.json, and featureDump.txt
+            quant_json_data, permit_list_json_data, feature_dump_data = load_json_txt_file(quant_out_dir, used_simpleaf)
+            
+            # detect usa_mode
+            usa_mode = quant_json_data['usa_mode']
     
     return quant_json_data, permit_list_json_data, feature_dump_data, mtx_data, usa_mode, is_h5ad
 
@@ -67,14 +82,14 @@ def load_json_txt_file(quant_out_dir, used_simpleaf):
     """
     Loads quant.json and generate_permit_list.json from the given directory.
     """
-    parent_dir = os.path.join(quant_out_dir, "simpleaf_quant", "af_quant") if used_simpleaf else quant_out_dir
+    parent_dir = Path(os.path.join(quant_out_dir, "simpleaf_quant", "af_quant")) if used_simpleaf else quant_out_dir
 
-    quant_json_data_path = os.path.join(parent_dir, "quant.json")
-    permit_list_path = os.path.join(parent_dir, "generate_permit_list.json")
-    feature_dump_path = os.path.join(parent_dir, "featureDump.txt")
+    quant_json_data_path = Path(os.path.join(parent_dir, "quant.json"))
+    permit_list_path = Path(os.path.join(parent_dir, "generate_permit_list.json"))
+    feature_dump_path = Path(os.path.join(parent_dir, "featureDump.txt"))
     
     # Check if quant.json exists
-    if not os.path.exists(quant_json_data_path):
+    if not quant_json_data_path.exists():
         logger.error(f"❌ Error: Missing required file: '{quant_json_data_path}'")
         quant_json_data = {}  
     else:
@@ -82,15 +97,17 @@ def load_json_txt_file(quant_out_dir, used_simpleaf):
             quant_json_data = json.load(f)
 
     # Check if generate_permit_list.json exists
-    if not os.path.exists(permit_list_path):
+    if not permit_list_path.exists():
         # logger.info(f"Permit list file is unavailable.")
         permit_list_json_data = {} 
     else:
         with open(permit_list_path, 'r') as f:
             permit_list_json_data = json.load(f)
+
     # Check if feature_dump.txt exists
-    if not os.path.exists(feature_dump_path):
+    if not feature_dump_path.exists():
         logger.error(f"❌ Error: Missing required file: '{feature_dump_path}'")
+        raise ValueError(f"Missing required file: '{feature_dump_path}'")
     else:
         feature_dump_data = pd.read_csv(feature_dump_path, sep='\t')
 
