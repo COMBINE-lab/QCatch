@@ -1,0 +1,37 @@
+USA mode: True
+Using pre-defined output format: raw
+Will populate output field X with sum of counts frorm ['S'].
+Will combine ['S'] into output layer spliced.
+Will combine ['U'] into output layer unspliced.
+Will combine ['A'] into output layer ambiguous.
+Number of distinct N supplied: 133
+Range of N: 1627
+Number of features: 19413
+....................................................................................................
+USA mode: True
+Using pre-defined output format: raw
+Will populate output field X with sum of counts frorm ['S'].
+Will combine ['S'] into output layer spliced.
+Will combine ['U'] into output layer unspliced.
+Will combine ['A'] into output layer ambiguous.
+Did not find a quant.json file, checking for older meta_info.json.
+USA mode: True
+Using pre-defined output format: raw
+Will populate output field X with sum of counts frorm ['S'].
+Will combine ['S'] into output layer spliced.
+Will combine ['U'] into output layer unspliced.
+Will combine ['A'] into output layer ambiguous.
+Number of distinct N supplied: 86
+Range of N: 559
+Number of features: 12702
+....................................................................................................
+USA mode: True
+Using pre-defined output format: raw
+Will populate output field X with sum of counts frorm ['S'].
+Will combine ['S'] into output layer spliced.
+Will combine ['U'] into output layer unspliced.
+Will combine ['A'] into output layer ambiguous.
+Number of distinct N supplied: 1897
+Range of N: 5235
+Number of features: 28075
+....................................................................................................

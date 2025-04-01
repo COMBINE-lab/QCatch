@@ -4,8 +4,55 @@ import json
 from pyroe import load_fry
 import logging
 import scanpy as sc
+from typing import List
 
 logger = logging.getLogger(__name__)
+
+# Define the standard snake_case columns - single source of truth
+STANDARD_COLUMNS: List[str] = [
+    'barcodes',
+    'corrected_reads',
+    'mapped_reads',
+    'deduplicated_reads',
+    'mapping_rate',
+    'dedup_rate',
+    'mean_by_max',
+    'num_expressed',
+    'num_genes_over_mean'
+]
+
+# Only need this mapping if input is in CamelCase
+CAMEL_TO_SNAKE_MAPPING = {
+    'barcodes': 'barcodes',  # stays the same
+    'CorrectedReads': 'corrected_reads',
+    'MappedReads': 'mapped_reads',
+    'DeduplicatedReads': 'deduplicated_reads',
+    'MappingRate': 'mapping_rate',
+    'DedupRate': 'dedup_rate',
+    'MeanByMax': 'mean_by_max',
+    'NumGenesExpressed': 'num_expressed',
+    'NumGenesOverMean': 'num_genes_over_mean'
+}
+
+def standardize_feature_dump_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Standardize feature dump columns to snake_case format.
+    If columns are already in snake_case, validates them.
+    If columns are in CamelCase, converts them to snake_case.
+    """
+    # Check if already in standard snake_case format
+    if set(df.columns) == set(STANDARD_COLUMNS):
+        return df[STANDARD_COLUMNS]  # just ensure column order
+    
+    # If not snake_case, try converting from CamelCase
+    if set(df.columns) == set(CAMEL_TO_SNAKE_MAPPING.keys()):
+        return df.rename(columns=CAMEL_TO_SNAKE_MAPPING)[STANDARD_COLUMNS]
+    
+    # If neither format matches, raise error
+    raise ValueError(
+        "Input columns must match either standard snake_case or expected CamelCase format. "
+        f"Expected snake_case columns: {STANDARD_COLUMNS}"
+    )
 
 def parse_quant_out_dir(quant_out_dir):
     """
@@ -44,9 +91,8 @@ def parse_quant_out_dir(quant_out_dir):
         quant_json_data, permit_list_json_data = json.loads(mtx_data.uns['quant_info']), json.loads(mtx_data.uns['gpl_info'])
         
         feature_dump_data = pd.DataFrame(mtx_data.obs)
-        # rename the columns, align with the featureDump.txt
-        
-        feature_dump_data.columns = ['CB', 'CorrectedReads', 'MappedReads', 'DeduplicatedReads', 'MappingRate', 'DedupRate', 'MeanByMax', 'NumGenesExpressed', 'NumGenesOverMean']
+        # Standardize feature dump columns to snake_case format
+        standardize_feature_dump_columns(feature_dump_data)
         usa_mode = quant_json_data['usa_mode']
         
     else:
@@ -59,9 +105,10 @@ def parse_quant_out_dir(quant_out_dir):
         
         # detect usa_mode
         usa_mode = quant_json_data['usa_mode']
-
+        
     
     return quant_json_data, permit_list_json_data, feature_dump_data, mtx_data, usa_mode, is_h5ad
+
 
 def load_json_txt_file(quant_out_dir, used_simpleaf):
     """
@@ -93,7 +140,8 @@ def load_json_txt_file(quant_out_dir, used_simpleaf):
         logger.error(f"❌ Error: Missing required file: '{feature_dump_path}'")
     else:
         feature_dump_data = pd.read_csv(feature_dump_path, sep='\t')
-
+        # rename the columns, align with the standard snake_case format
+        feature_dump_data.columns = STANDARD_COLUMNS
     return quant_json_data, permit_list_json_data, feature_dump_data
 
 def add_gene_symbol(adata, gene_id2name_dir):
