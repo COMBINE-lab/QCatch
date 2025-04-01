@@ -1,6 +1,7 @@
 # QCatch - Ignore local shell scripts
 run_main.sh
 tutorial.sh
+run_main_direct_input_file.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

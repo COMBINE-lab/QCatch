@@ -25,7 +25,7 @@ def load_template():
 
 def main():
     
-    parser = argparse.ArgumentParser(description="alevinQC: Command-line Interface")
+    parser = argparse.ArgumentParser(description="QCatch: Command-line Interface")
     # Add command-line arguments
     parser.add_argument(
         '--input', '-i', 
@@ -116,7 +116,7 @@ def main():
     # # Re-load the saved result from pkl file
     # with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
     #     non_ambient_result = pickle.load(f)
-        
+    
     if non_ambient_result is None:
         non_ambient_cells = 0
         valid_bcs = set(converted_filtered_bcs) 
@@ -184,6 +184,7 @@ def main():
                 pickle.dump(non_ambient_result, f)
             # save the cell calling result
             logger.info(f'🗂️ Saved cell calling result in the output directory: {output_dir}')
+    
     # if non_ambient_result is not None:
     #     # Load the result from pkl file
     #     with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
