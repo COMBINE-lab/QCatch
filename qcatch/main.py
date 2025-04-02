@@ -8,12 +8,12 @@ import pickle
 import logging
 import shutil
 
-from QCatch import templates
-from QCatch.plots_tables import show_quant_log_table
-from QCatch.input_processing import parse_quant_out_dir
-from QCatch.convert_plots import create_plotly_plots, modify_html_with_plots
-from QCatch.find_retained_cells.matrix import CountMatrix
-from QCatch.find_retained_cells.cell_calling import initial_filtering_OrdMag, find_nonambient_barcodes, NonAmbientBarcodeResult
+from qcatch import templates
+from qcatch.plots_tables import show_quant_log_table
+from qcatch.input_processing import parse_quant_out_dir
+from qcatch.convert_plots import create_plotly_plots, modify_html_with_plots
+from qcatch.find_retained_cells.matrix import CountMatrix
+from qcatch.find_retained_cells.cell_calling import initial_filtering_OrdMag, find_nonambient_barcodes, NonAmbientBarcodeResult
 
 
 def load_template():
@@ -25,7 +25,7 @@ def load_template():
 
 def main():
     
-    parser = argparse.ArgumentParser(description="QCatch: Command-line Interface")
+    parser = argparse.ArgumentParser(description="qcatch: Command-line Interface")
     # Add command-line arguments
     parser.add_argument(
         '--input', '-i', 
@@ -66,7 +66,7 @@ def main():
     parser.add_argument(
         '--overwrite_h5ad', '-w',
         action='store_true',
-        help="If enabled, QCatch will overwrite the original .h5ad file in place by appending cell filtering results to anndata.obs. No existing data or cells will be removed; only additional metadata columns are added."
+        help="If enabled, `qcatch` will overwrite the original .h5ad file in place by appending cell filtering results to anndata.obs. No existing data or cells will be removed; only additional metadata columns are added."
     )
 
     args = parser.parse_args()
