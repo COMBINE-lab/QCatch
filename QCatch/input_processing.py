@@ -169,11 +169,11 @@ def add_gene_symbol(adata, gene_id2name_dir):
 
     #  Integrate the Reordered Mapping into AnnData
     # Assign gene symbols to AnnData's .var attribute
-    adata.var['symbol'] = reordered_symbols
+    adata.var['gene_symbol'] = reordered_symbols
 
     # (Optional) Replace var_names with gene symbols
     # This can make plots and analyses more interpretable
-    adata.var_names = adata.var['symbol'].astype(str)
+    adata.var_names = adata.var['gene_symbol'].astype(str)
     # Ensure uniqueness of var_names after replacement
     adata.var_names_make_unique(join="-")
     

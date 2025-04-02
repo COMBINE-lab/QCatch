@@ -38,6 +38,21 @@ def load_hdf5(hdf5_path: Path) -> sc.AnnData:
 
 @dataclass
 class QuantInput:
+    def add_geneid_2_name_if_absent(gene_id_2_name_dir: Path) -> bool:
+        """
+        Checks if the underlying dataframe object already has a gene_symbol column and
+        if not, tries to populate it from the gene_id_2_name_dir provided
+        """
+        if 'gene_symbol' in self.mtx_data.var.columns:
+            self.has_gene_name_mapping = False
+            return True
+        elif gene_id_2_name_dir.exists():
+            self.mtx_data = add_gene_symbol(self.mtx_data, gene_id_2_name_dir)
+            return True
+        else:
+            self.has_gene_name_mapping = False
+            return False
+
     def __init__(self, input_str: str):
         """
         Detects the input format of the quantification output directory.
@@ -64,6 +79,7 @@ class QuantInput:
                 self.feature_dump_data,
                 self.usa_mode,
             ) = load_hdf5(self.file)
+
         else:
             self.dir = self.provided
             logger.info(
