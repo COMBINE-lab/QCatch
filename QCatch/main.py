@@ -49,7 +49,7 @@ def main():
         '--n_partitions', '-n', 
         type=int, 
         default=None,
-        help="Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specify the chemistry. Otherwise, you can specify the desired `n_partitions`. "
+        help="Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specified `--chemistry`. Only use `--n_partitions` when your experiment uses a custom chemistry not listed in the predefined chemistry options."
     )
     
     parser.add_argument(
@@ -66,7 +66,7 @@ def main():
     parser.add_argument(
         '--overwrite_h5ad', '-w',
         action='store_true',
-        help="If set, modifies the original .h5ad file in place by overwriting it with the updated cell filtering results."
+        help="If enabled, QCatch will overwrite the original .h5ad file in place by appending cell filtering results to anndata.obs. No existing data or cells will be removed; only additional metadata columns are added."
     )
 
     args = parser.parse_args()

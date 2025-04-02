@@ -2,7 +2,7 @@
 run_main.sh
 tutorial.sh
 run_main_direct_input_file.sh
-
+run_installed_pkg.sh
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "qcatch"
-version = "0.1.0"
+version = "0.1.1"
 description = "QCatch: Quality Control downstream of alevin-fry / simpleaf. "
-readme = "README.md"
+readme = "docs/index.md"
 license = { file = "LICENSE" }
 authors = [
     { name = "Yuan Gao", email = "ygao61@umd.edu" },
@@ -31,3 +31,6 @@ Source = "https://github.com/COMBINE-lab/QCatch"
 
 [tool.hatch.build.targets.wheel]
 packages = ["QCatch"]
+
+[project.scripts]
+qcatch = "QCatch.main:main"
