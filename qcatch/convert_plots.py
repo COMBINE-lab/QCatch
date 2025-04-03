@@ -15,7 +15,6 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, u
     
     # Load the featureDump data
     data = feature_dump_data
-    logger.info(f"🔍 feature_dump_data col names: {data.columns}")
     retained_data = data[data['barcodes'].isin(valid_bcs)]
     # Sort by "deduplicated_reads" and assign rank
     data = data.sort_values("deduplicated_reads", ascending=False).reset_index(drop=True)
@@ -38,7 +37,7 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, u
     fig_hist_genes = generate_gene_histogram(data)
     if gene_id2name_dir == None:
         fig_mt = None
-        logger.info(f"📣 Not found gene_id2name_dir, skip mitochondria_plot")
+        logger.warning(f"📣 Not found gene_id2name_dir, skip mitochondria_plot")
     else:
         adata = add_gene_symbol(adata, gene_id2name_dir)
         fig_mt = mitochondria_plot(adata)

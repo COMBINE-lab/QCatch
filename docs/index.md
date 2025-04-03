@@ -51,4 +51,4 @@ We highly recommend specifying the chemistry used in your experiment, although t
 | `--gene_id2name_dir` | `-g` | `str` (Optional) | Directory containing the `gene_id2name` file for converting Ensembl gene IDs to gene names. The file must be a CSV with two columns: `gene_id` and `gene_name`. If not provided, mitochondria plots requiring gene names will not be displayed. **Default**: `None`. |
 | `--verbose` | `-v` | `flag` (Optional) | Enable verbose logging with debug-level messages. |
 | `--overwrite_h5ad` | `-o` | `flag` (Optional) |If enabled, `QCatch` will overwrite the original `.h5ad` file in place by appending cell filtering results to `anndata.obs`. No existing data or cells will be removed; only additional metadata columns are added.|
-
+| `--save_filtered_h5ad` | `-s` | `flag` (Optional) | If enabled, `QCatch` will save a separate `.h5ad` file containing only the retained cells (i.e., those that passed filtering and cell-calling). |
