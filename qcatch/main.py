@@ -119,12 +119,12 @@ def main():
     logger.info(f"🔎 step1- number of inital filtered cells: {len(filtered_bcs)}")
     converted_filtered_bcs =  [x.decode() if isinstance(x, np.bytes_) else str(x) for x in filtered_bcs]
     
-    # # # cell calling step2 - empty drop
-    # non_ambient_result : NonAmbientBarcodeResult | None = find_nonambient_barcodes(matrix, filtered_bcs, chemistry, n_partitions, verbose = verbose)
+    # # cell calling step2 - empty drop
+    non_ambient_result : NonAmbientBarcodeResult | None = find_nonambient_barcodes(matrix, filtered_bcs, chemistry, n_partitions, verbose = verbose)
     
-    # Re-load the saved result from pkl file
-    with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
-        non_ambient_result = pickle.load(f)
+    # # Re-load the saved result from pkl file
+    # with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
+    #     non_ambient_result = pickle.load(f)
     
     if non_ambient_result is None:
         non_ambient_cells = 0
