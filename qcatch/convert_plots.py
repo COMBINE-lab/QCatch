@@ -7,7 +7,7 @@ from qcatch.input_processing import *
 
 logger = logging.getLogger(__name__)
 
-def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, usa_mode):
+def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, usa_mode, is_h5ad):
     """
     1.Load feature dump data from the alevin-frey quant output directory
     2.Create interactive Plotly plots
@@ -32,27 +32,39 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, u
     
     # ---------------- Tab2 - Barcode Frequency Plots ---------------
     fig_bc_freq_UMI, fig_bc_freq_gene, fig_gene_UMI = barcode_frequency_plots(data)
-
-    # ---------------- Tab3 - Histogram of Genes Detected ---------------
+    
+    # ---------------- Tab3 - Sequencing Saturation ---------------
+    fig_seq_saturation, seq_saturation_percent = generate_seq_saturation(retained_data)
+    # NOTE: use the retained data for barcode_collapse plot
+    fig_barcode_collapse, mean_gain_rate = barcode_collapse(retained_data)
+    
+    
+    # ---------------- Tab4 - Histogram of Genes Detected ---------------
     fig_hist_genes = generate_gene_histogram(data)
+    fig_hist_genes_filtered = generate_gene_histogram(retained_data)
+    filtered_adata = None
+    if usa_mode or gene_id2name_dir is not None:
+        # Filter retained cells depending on input format
+        filtered_mask = adata.obs['is_retained_cells'].values if is_h5ad else adata.obs_names.isin(valid_bcs)
+            # NOTE: safe but maybe time consuming
+        filtered_adata = adata[filtered_mask, :].copy()
+    
     if gene_id2name_dir == None:
         fig_mt = None
         logger.warning(f"📣 Not found gene_id2name_dir, skip mitochondria_plot")
     else:
         adata = add_gene_symbol(adata, gene_id2name_dir)
         fig_mt = mitochondria_plot(adata)
+        # for filtered data
+        filtered_adata = add_gene_symbol(filtered_adata, gene_id2name_dir)
+        fig_mt_filtered = mitochondria_plot(filtered_adata)
         
-    
-    # ---------------- Tab4 - Sequencing Saturation ---------------
-    fig_seq_saturation, seq_saturation_percent = generate_seq_saturation(data)
-    # NOTE: use the retained data for barcode_collapse plot
-    fig_barcode_collapse, mean_gain_rate = barcode_collapse(retained_data)
+    # ---------------- Tab5 - SUA plots ---------------
     if usa_mode:
-        # ---------------- Tab5 - SUA plots ---------------
         fig_SUA_bar_html, fig_S_ratio_html = generate_SUA_plots(adata)
+        fig_SUA_bar_filtered_html, fig_S_ratio_filtered_html = generate_SUA_plots(filtered_adata)
     
 
-    
     # Convert plots to HTML div strings
     plots = {
         # ----tab1----(
@@ -64,6 +76,8 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, u
         'bc_freq_plot2-3': fig_gene_UMI.to_html(full_html=False, include_plotlyjs='cdn'),
         # ----tab3----
         'hist_gene3-1':fig_hist_genes.to_html(full_html=False, include_plotlyjs="cdn"),
+        # filtered data
+        'hist_gene_filtered_3-1': fig_hist_genes_filtered.to_html(full_html=False, include_plotlyjs="cdn"),
         # ----tab4----
         'seq_saturation4-1': fig_seq_saturation.to_html(full_html=False, include_plotlyjs='cdn'),
         'barcode_collapse4-2': fig_barcode_collapse.to_html(full_html=False, include_plotlyjs='cdn'),
@@ -71,14 +85,18 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, u
         # 'plot7': mito_plot.to_html(full_html=False, include_plotlyjs=False),
         # 'plot4': splicing_plot.to_html(full_html=False, include_plotlyjs=False)
     }
-    if fig_mt is not None:
+    if fig_mt is not None or fig_mt_filtered is not None:
         #  2nd plot in tab3
         plots['fig_mt3-2'] = fig_mt.to_html(full_html=False, include_plotlyjs="cdn")
+        plots['fig_mt_filtered_3-2'] = fig_mt_filtered.to_html(full_html=False, include_plotlyjs="cdn")
+        
     # add key pair for SUA plots, is usa_mode is True
     if usa_mode:
         # ----tab5----
         plots['SUA_bar5-1'] = fig_SUA_bar_html
         plots['S_ratio5-2'] = fig_S_ratio_html
+        plots['SUA_bar_filtered_5-1'] = fig_SUA_bar_filtered_html
+        plots['S_ratio_filtered_5-2'] = fig_S_ratio_filtered_html
     texts = {
         'seqSaturation': f'Sequencing Saturation value: {seq_saturation_percent}%',
         'meanGainRate': f'Mean gain rate per CB: {mean_gain_rate}%'
