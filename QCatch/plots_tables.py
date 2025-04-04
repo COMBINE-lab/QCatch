@@ -318,7 +318,7 @@ def mitochondria_plot(adata):
     sc.pp.filter_cells(adata, min_genes=20)
     
     # Identify mitochondrial genes
-    adata.var["mt"] = adata.var['gene_symbol'].str.startswith("MT-") | adata.var['symbol'].str.startswith("mt-") 
+    adata.var["mt"] = adata.var['gene_symbol'].str.startswith("MT-") | adata.var['gene_symbol'].str.startswith("mt-")
     if adata.var["mt"].sum() > 0:
         # Compute QC metrics
         sc.pp.calculate_qc_metrics(adata, qc_vars=["mt"], inplace=True, percent_top=[20], log1p=True)   

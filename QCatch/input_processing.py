@@ -4,6 +4,7 @@ import json
 from pyroe import load_fry
 import logging
 import scanpy as sc
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 

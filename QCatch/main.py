@@ -64,7 +64,7 @@ def main():
     
     parser.add_argument(
         '--gene_id2name_dir', '-g', 
-        type=str,
+        type=Path,
         default=None,
         help="(Optional) Directory containing the 'gene_id2name' file for converting Ensembl gene IDs to gene names. The file must be a CSV with two columns: 'gene_id' (e.g., ENSG00000284733) and 'gene_name' (e.g., OR4F29). If not provided, mitochondria plots will not be displayed."
     )
