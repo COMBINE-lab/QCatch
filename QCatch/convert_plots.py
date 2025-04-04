@@ -35,11 +35,14 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, u
 
     # ---------------- Tab3 - Histogram of Genes Detected ---------------
     fig_hist_genes = generate_gene_histogram(data)
-    if gene_id2name_dir == None:
+    # if we don't have a gene_id2name_directory and our adata object doesn't
+    # already contain the gene symbol, then skip the mitochondrial plot.
+    if gene_id2name_dir == None and not ('gene_symbol' in adata.var.columns):
         fig_mt = None
-        logger.info(f"📣 Not found gene_id2name_dir, skip mitochondria_plot")
     else:
-        adata = add_gene_symbol(adata, gene_id2name_dir)
+        # NOTE: @Yuan --- now we should already have added these if supported so we 
+        # don't have to do it again here.
+        # adata = add_gene_symbol(adata, gene_id2name_dir)
         fig_mt = mitochondria_plot(adata)
         
     

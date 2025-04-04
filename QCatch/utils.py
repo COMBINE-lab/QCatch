@@ -12,7 +12,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 def load_hdf5(hdf5_path: Path) -> sc.AnnData:
     mtx_data = sc.read_h5ad(hdf5_path)
     quant_json_data, permit_list_json_data = (
@@ -46,12 +45,14 @@ class QuantInput:
         if not, tries to populate it from the gene_id_2_name_dir provided
         """
         if 'gene_symbol' in self.mtx_data.var.columns:
-            self.has_gene_name_mapping = False
+            self.has_gene_name_mapping = True
             return True
         elif gene_id_2_name_dir.exists():
             self.mtx_data = add_gene_symbol(self.mtx_data, gene_id_2_name_dir)
+            self.has_gene_name_mapping = True
             return True
         else:
+            logger.info(f"📣 Did not find gene_id2name_dir, and the 'gene_symbol' was not already present; will skip the mitochondria_plot")
             self.has_gene_name_mapping = False
             return False
 

@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import json
+import base64
+import hashlib
 from pyroe import load_fry
 import logging
 import scanpy as sc
@@ -114,6 +116,23 @@ def load_json_txt_file(quant_out_dir, used_simpleaf):
 
     return quant_json_data, permit_list_json_data, feature_dump_data
 
+# from https://ga4gh.github.io/refget/seqcols/
+def canonical_str(item: [list, dict]) -> bytes:
+    """Convert a list or dict into a canonicalized UTF8-encoded bytestring representation"""
+    return json.dumps(
+        item, separators=(",", ":"), ensure_ascii=False, allow_nan=False, sort_keys=True
+    ).encode("utf8")
+
+def sha512t24u_digest(seq: bytes) -> str:
+    """ GA4GH digest function """
+    offset = 24
+    digest = hashlib.sha512(seq).digest()
+    tdigest_b64us = base64.urlsafe_b64encode(digest[:offset])
+    return tdigest_b64us.decode("ascii")
+
+def get_name_digest(item: [list]) -> str:
+    return sha512t24u_digest(canonical_str(item))
+
 def add_gene_symbol(adata, gene_id2name_dir):
     if adata.var.index.names == ['gene_ids']:
         # from mtx data
@@ -130,6 +149,8 @@ def add_gene_symbol(adata, gene_id2name_dir):
     
     # check the species, then determine the gene_id2name_path
     all_gene_ids = pd.Series(all_gene_ids)  # Convert to Series
+    seqcol_digest = get_name_digest(list(sorted(all_gene_ids.to_list())))
+    logger.info(f"the seqcol digest for the sorted gene ids is : {seqcol_digest}")
     check_first_gene_id = all_gene_ids.iloc[0]  # Now this works
     # check_first_gene_id = all_gene_ids[0]
     if check_first_gene_id.startswith('ENSG'):
