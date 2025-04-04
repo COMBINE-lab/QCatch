@@ -119,12 +119,12 @@ def main():
     logger.info(f"🔎 step1- number of inital filtered cells: {len(filtered_bcs)}")
     converted_filtered_bcs =  [x.decode() if isinstance(x, np.bytes_) else str(x) for x in filtered_bcs]
     
-    # # cell calling step2 - empty drop
-    non_ambient_result : NonAmbientBarcodeResult | None = find_nonambient_barcodes(matrix, filtered_bcs, chemistry, n_partitions, verbose = verbose)
+    # # # cell calling step2 - empty drop
+    # non_ambient_result : NonAmbientBarcodeResult | None = find_nonambient_barcodes(matrix, filtered_bcs, chemistry, n_partitions, verbose = verbose)
     
-    # # Re-load the saved result from pkl file
-    # with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
-    #     non_ambient_result = pickle.load(f)
+    # Re-load the saved result from pkl file
+    with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
+        non_ambient_result = pickle.load(f)
     
     if non_ambient_result is None:
         non_ambient_cells = 0
@@ -178,7 +178,8 @@ def main():
                 logger.info(f"📋 Overwrited the original h5ad file with the new cell calling result.")
             if save_filtered_h5ad:
                 # filter the anndata , only keep the cells in valid_bcs
-                filter_mtx_data = mtx_data[mtx_data.obs['is_retained_cells'].values, :]
+                # NOTE: safe but maybe time consuming
+                filter_mtx_data = mtx_data[mtx_data.obs['is_retained_cells'].values, :].copy()
                 # Save the filtered anndata to a new file
                 filter_mtx_data_filename = os.path.join(output_dir, 'filtered_quants.h5ad')
                 filter_mtx_data.write_h5ad(filter_mtx_data_filename, compression='gzip')
@@ -211,7 +212,7 @@ def main():
             logger.info(f'🗂️ Saved cell calling result in the output directory: {output_dir}')
 
     # plots and log, summary tables
-    plot_text_elements = create_plotly_plots(feature_dump_data, mtx_data, valid_bcs, gene_id2name_dir, usa_mode)
+    plot_text_elements = create_plotly_plots(feature_dump_data, mtx_data, valid_bcs, gene_id2name_dir, usa_mode, is_h5ad)
     
     quant_json_table_html, permit_list_table_html = show_quant_log_table(quant_json_data, perimit_list_json_data)
 
