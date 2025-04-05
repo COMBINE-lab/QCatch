@@ -151,21 +151,26 @@ def add_gene_symbol(adata, gene_id2name_dir):
     all_gene_ids = pd.Series(all_gene_ids)  # Convert to Series
     seqcol_digest = get_name_digest(list(sorted(all_gene_ids.to_list())))
     logger.info(f"the seqcol digest for the sorted gene ids is : {seqcol_digest}")
-    check_first_gene_id = all_gene_ids.iloc[0]  # Now this works
-    # check_first_gene_id = all_gene_ids[0]
-    if check_first_gene_id.startswith('ENSG'):
-        species = 'human'
-    elif check_first_gene_id.startswith('ENSMUSG'):
-        species = 'mouse'
-    else :
-        print(f'first gene id: {check_first_gene_id}')
-        logger.error("❌ Error: The gene id format is not recognized. We only have human and mouse gene id2name mapping by default.")
-        species = 'unknown'
-        
-    if species == 'unknown':
+    ##
+    #check_first_gene_id = all_gene_ids.iloc[0]  # Now this works
+    ## check_first_gene_id = all_gene_ids[0]
+    #if check_first_gene_id.startswith('ENSG'):
+    #    species = 'human'
+    #elif check_first_gene_id.startswith('ENSMUSG'):
+    #    species = 'mouse'
+    #else :
+    #    print(f'first gene id: {check_first_gene_id}')
+    #    logger.error("❌ Error: The gene id format is not recognized. We only have human and mouse gene id2name mapping by default.")
+    #    species = 'unknown'
+    #    
+    #if species == 'unknown':
+    #    return adata
+    ## 
+    gene_id2name_path = os.path.join(gene_id2name_dir, f'{seqcol_digest}.csv')
+    if not Path(gene_id2name_path).exists():
+        logger.warn(f"No existing gene id to name mapping known for digest {seqcol_digest}; will not add mapping")
         return adata
-    
-    gene_id2name_path = os.path.join(gene_id2name_dir, f'{species}_gene_id2name.csv')
+
     # add the gene symbol, based on the gene id to symbol mapping
     gene_id_to_symbol = pd.read_csv(gene_id2name_path)
 
