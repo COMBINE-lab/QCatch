@@ -147,10 +147,17 @@ def add_gene_symbol(adata, gene_id2name_dir):
         else:
             logger.error("❌ Error: Neither 'gene_id' nor 'gene_ids' found in adata.var columns")
     
+    reg_file = os.path.sep.join([str(gene_id2name_dir), "id2name_registry.json"])
+    registry = json.load(open(reg_file, 'r'))
+
+
     # check the species, then determine the gene_id2name_path
     all_gene_ids = pd.Series(all_gene_ids)  # Convert to Series
     seqcol_digest = get_name_digest(list(sorted(all_gene_ids.to_list())))
     logger.info(f"the seqcol digest for the sorted gene ids is : {seqcol_digest}")
+    
+    if seqcol_digest in registry:
+        logger.info(f"entry for this digest is {registry[seqcol_digest]}")
     ##
     #check_first_gene_id = all_gene_ids.iloc[0]  # Now this works
     ## check_first_gene_id = all_gene_ids[0]
