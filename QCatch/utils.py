@@ -39,7 +39,7 @@ def load_hdf5(hdf5_path: Path) -> sc.AnnData:
 
 @dataclass
 class QuantInput:
-    def add_geneid_2_name_if_absent(self, gene_id_2_name_dir: Path) -> bool:
+    def add_geneid_2_name_if_absent(self, gene_id_2_name_dir: Path, output_dir: Path) -> bool:
         """
         Checks if the underlying dataframe object already has a gene_symbol column and
         if not, tries to populate it from the gene_id_2_name_dir provided
@@ -48,7 +48,7 @@ class QuantInput:
             self.has_gene_name_mapping = True
             return True
         elif gene_id_2_name_dir.exists():
-            self.mtx_data = add_gene_symbol(self.mtx_data, gene_id_2_name_dir)
+            self.mtx_data = add_gene_symbol(self.mtx_data, gene_id_2_name_dir, output_dir)
             self.has_gene_name_mapping = True
             return True
         else:

@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import base64
 import hashlib
+import requests
 from pyroe import load_fry
 import logging
 import scanpy as sc
@@ -133,7 +134,17 @@ def sha512t24u_digest(seq: bytes) -> str:
 def get_name_digest(item: [list]) -> str:
     return sha512t24u_digest(canonical_str(item))
 
-def add_gene_symbol(adata, gene_id2name_dir):
+def get_name_mapping_file_from_registry(seqcol_digest: str):
+    REGISTRY_URL = "https://raw.githubusercontent.com/COMBINE-lab/QCatch/refs/heads/rob-dev/resources/id2name_registry.json"
+    r = requests.get(REGISTRY_URL)
+    if r.ok:
+        reg = r.json()
+        if seqcol_digest in reg:
+            return reg[seqcol_digest]
+        else:
+            return None
+
+def add_gene_symbol(adata, gene_id2name_dir: Path | None):
     if adata.var.index.names == ['gene_ids']:
         # from mtx data
         all_gene_ids = adata.var.index
@@ -145,20 +156,48 @@ def add_gene_symbol(adata, gene_id2name_dir):
             # from original simpleaf mtx data
             all_gene_ids = adata.var['gene_ids']
         else:
-            logger.error("❌ Error: Neither 'gene_id' nor 'gene_ids' found in adata.var columns")
-    
-    reg_file = os.path.sep.join([str(gene_id2name_dir), "id2name_registry.json"])
-    registry = json.load(open(reg_file, 'r'))
-
-
-    # check the species, then determine the gene_id2name_path
+            logger.error("❌ Error: Neither 'gene_id' nor 'gene_ids' found in adata.var columns; cannot add mapping")
+            return
+ 
+    # check the digest for this adata object
     all_gene_ids = pd.Series(all_gene_ids)  # Convert to Series
     seqcol_digest = get_name_digest(list(sorted(all_gene_ids.to_list())))
     logger.info(f"the seqcol digest for the sorted gene ids is : {seqcol_digest}")
-    
-    if seqcol_digest in registry:
-        logger.info(f"entry for this digest is {registry[seqcol_digest]}")
-    ##
+  
+    # What we will try to get the mapping
+    # 
+    # 1) if the user provided nothing, check the registry and see if 
+    # we can fetch an associated file. If so, fetch and use it
+    # 
+    # 2) if the user provided a file directly, make sure that 
+    # the digest of the file matches what is expected and then use the mapping.
+    #
+    # 3) if the user provided a directory, check if the directory contains 
+    # a file with a name matching what the registry says we should have
+    gene_id2name_path = None
+
+    if gene_id2name_dir is None:
+        name_mapping = get_name_mapping_from_registry(secol_digest)
+
+    # check if the gene_id2_name path exists
+    if gene_id2name_dir.exists():
+        # check if the user gave a file
+        if gene_id2name_dir.is_file():
+            # try to use this file directly
+            gene_id2name_path = gene_id2name_dir
+        # otherwise if it's a directory, look for the corresponding file
+        elif gene_id2_name.is_dir(): 
+            reg_file = os.path.sep.join([str(gene_id2name_dir), "id2name_registry.json"])
+            registry = json.load(open(reg_file, 'r'))
+            
+            if seqcol_digest in registry:
+                logger.info(f"entry for this digest is {registry[seqcol_digest]}")
+                gene_id2name_path = Path(os.path.join(gene_id2name_dir, f'{seqcol_digest}.csv'))
+
+    if gene_id2name_path.is_file():
+
+
+   ##
     #check_first_gene_id = all_gene_ids.iloc[0]  # Now this works
     ## check_first_gene_id = all_gene_ids[0]
     #if check_first_gene_id.startswith('ENSG'):
@@ -173,7 +212,6 @@ def add_gene_symbol(adata, gene_id2name_dir):
     #if species == 'unknown':
     #    return adata
     ## 
-    gene_id2name_path = os.path.join(gene_id2name_dir, f'{seqcol_digest}.csv')
     if not Path(gene_id2name_path).exists():
         logger.warn(f"No existing gene id to name mapping known for digest {seqcol_digest}; will not add mapping")
         return adata

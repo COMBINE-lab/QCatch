@@ -1,10 +1,12 @@
 {
   "7Tn1lP7lOdoyz8Tv8fFjoUmgXk90unjo" : {
     "species" : "human",
-    "label" : "CellRanger 2020-A"
+    "label" : "CellRanger 2020-A",
+    "url" : "https://umd.box.com/shared/static/lodqzh4jzuwh5yeudbbih2zko5tdemlk"
   },
   "QB_VKeL9pVvRDD0udDRidpXqA2Qj0QHS" : {
     "species" : "mouse",
-    "label" : "CellRanger 2020-A"
+    "label" : "CellRanger 2020-A",
+    "url" : "https://umd.box.com/shared/static/9iaj4va07p8ajb7b3isnm9cwpbcywu14"
   }
 }

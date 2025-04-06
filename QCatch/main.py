@@ -110,7 +110,8 @@ def main():
     matrix = CountMatrix.from_anndata(args.input.mtx_data)
 
     # add gene_id_2_name if we don't yet have it
-    args.input.add_geneid_2_name_if_absent(gene_id2name_dir)
+    output_path = Path(args.output)
+    args.input.add_geneid_2_name_if_absent(gene_id2name_dir, output_path)
     
     # # cell calling step1 - empty drop
     logger.info("🧬 Starting cell calling...")
