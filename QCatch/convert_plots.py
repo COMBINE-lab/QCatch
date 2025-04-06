@@ -7,7 +7,7 @@ from QCatch.input_processing import *
 
 logger = logging.getLogger(__name__)
 
-def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, usa_mode):
+def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode):
     """
     1.Load feature dump data from the alevin-frey quant output directory
     2.Create interactive Plotly plots
@@ -37,7 +37,7 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, gene_id2name_dir, u
     fig_hist_genes = generate_gene_histogram(data)
     # if we don't have a gene_id2name_directory and our adata object doesn't
     # already contain the gene symbol, then skip the mitochondrial plot.
-    if gene_id2name_dir == None and not ('gene_symbol' in adata.var.columns):
+    if ('gene_symbol' not in adata.var.columns):
         fig_mt = None
     else:
         # NOTE: @Yuan --- now we should already have added these if supported so we 

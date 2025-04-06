@@ -134,17 +134,33 @@ def sha512t24u_digest(seq: bytes) -> str:
 def get_name_digest(item: [list]) -> str:
     return sha512t24u_digest(canonical_str(item))
 
-def get_name_mapping_file_from_registry(seqcol_digest: str):
-    REGISTRY_URL = "https://raw.githubusercontent.com/COMBINE-lab/QCatch/refs/heads/rob-dev/resources/id2name_registry.json"
+def get_name_mapping_file_from_registry(seqcol_digest: str, output_dir: Path) -> Path | None:
+    """
+    Based on `seqcol_digest`, this function will attempt to access the remote registry and 
+    look for a known id-to-symbol mapping that matches the digest.  If this is successful, it 
+    will download the file and return the path to the downloaded file.  Otherwise, it will return None.
+    """
+    output_file = output_dir / f"{seqcol_digest}.csv"
+    REGISTRY_URL = "https://raw.githubusercontent.com/COMBINE-lab/QCatch-resources/refs/heads/main/resources/registries/id2name.json"
     r = requests.get(REGISTRY_URL)
     if r.ok:
         reg = r.json()
         if seqcol_digest in reg:
-            return reg[seqcol_digest]
+            file_url = reg[seqcol_digest]['url']
+            logger.info(f"✅ found entry for {seqcol_digest} in registry; fetching file from {file_url}")
+            r = requests.get(file_url, stream=True)
+            with open(output_file, mode="wb") as file:
+                for chunk in r.iter_content(chunk_size=10 * 1024):
+                    file.write(chunk)
+
+            if not output_file.exists():
+                logger.error("❌ downloaded file not found")
+                return None
+            return output_file
         else:
             return None
 
-def add_gene_symbol(adata, gene_id2name_dir: Path | None):
+def add_gene_symbol(adata, gene_id2name_file: Path | None, output_dir: Path):
     if adata.var.index.names == ['gene_ids']:
         # from mtx data
         all_gene_ids = adata.var.index
@@ -171,49 +187,17 @@ def add_gene_symbol(adata, gene_id2name_dir: Path | None):
     # 
     # 2) if the user provided a file directly, make sure that 
     # the digest of the file matches what is expected and then use the mapping.
-    #
-    # 3) if the user provided a directory, check if the directory contains 
-    # a file with a name matching what the registry says we should have
     gene_id2name_path = None
 
-    if gene_id2name_dir is None:
-        name_mapping = get_name_mapping_from_registry(secol_digest)
-
-    # check if the gene_id2_name path exists
-    if gene_id2name_dir.exists():
-        # check if the user gave a file
-        if gene_id2name_dir.is_file():
-            # try to use this file directly
-            gene_id2name_path = gene_id2name_dir
-        # otherwise if it's a directory, look for the corresponding file
-        elif gene_id2_name.is_dir(): 
-            reg_file = os.path.sep.join([str(gene_id2name_dir), "id2name_registry.json"])
-            registry = json.load(open(reg_file, 'r'))
-            
-            if seqcol_digest in registry:
-                logger.info(f"entry for this digest is {registry[seqcol_digest]}")
-                gene_id2name_path = Path(os.path.join(gene_id2name_dir, f'{seqcol_digest}.csv'))
-
-    if gene_id2name_path.is_file():
-
-
-   ##
-    #check_first_gene_id = all_gene_ids.iloc[0]  # Now this works
-    ## check_first_gene_id = all_gene_ids[0]
-    #if check_first_gene_id.startswith('ENSG'):
-    #    species = 'human'
-    #elif check_first_gene_id.startswith('ENSMUSG'):
-    #    species = 'mouse'
-    #else :
-    #    print(f'first gene id: {check_first_gene_id}')
-    #    logger.error("❌ Error: The gene id format is not recognized. We only have human and mouse gene id2name mapping by default.")
-    #    species = 'unknown'
-    #    
-    #if species == 'unknown':
-    #    return adata
-    ## 
-    if not Path(gene_id2name_path).exists():
-        logger.warn(f"No existing gene id to name mapping known for digest {seqcol_digest}; will not add mapping")
+    if gene_id2name_file is None:
+        gene_id2name_path = get_name_mapping_file_from_registry(seqcol_digest, output_dir)
+        if gene_id2name_path is None:
+            logger.warn(f"Failed to properly obtain gene id-to-name mapping; will not add mapping")
+            return adata
+    elif gene_id2name_file.exists() and gene_id2name_file.is_file():
+        gene_id2name_path = gene_id2name_file
+    else:
+        logger.warn(f"If gene id-to-name mapping is provided, it should be a file, but a directory was provided; will not add mapping")
         return adata
 
     # add the gene symbol, based on the gene id to symbol mapping

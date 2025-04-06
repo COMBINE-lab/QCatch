@@ -12,6 +12,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def load_hdf5(hdf5_path: Path) -> sc.AnnData:
     mtx_data = sc.read_h5ad(hdf5_path)
     quant_json_data, permit_list_json_data = (
@@ -39,22 +40,23 @@ def load_hdf5(hdf5_path: Path) -> sc.AnnData:
 
 @dataclass
 class QuantInput:
-    def add_geneid_2_name_if_absent(self, gene_id_2_name_dir: Path, output_dir: Path) -> bool:
+    def add_geneid_2_name_if_absent(
+        self, gene_id_2_name_file: Path, output_dir: Path
+    ) -> bool:
         """
         Checks if the underlying dataframe object already has a gene_symbol column and
         if not, tries to populate it from the gene_id_2_name_dir provided
         """
-        if 'gene_symbol' in self.mtx_data.var.columns:
-            self.has_gene_name_mapping = True
-            return True
-        elif gene_id_2_name_dir.exists():
-            self.mtx_data = add_gene_symbol(self.mtx_data, gene_id_2_name_dir, output_dir)
+        if "gene_symbol" in self.mtx_data.var.columns:
             self.has_gene_name_mapping = True
             return True
         else:
-            logger.info(f"📣 Did not find gene_id2name_dir, and the 'gene_symbol' was not already present; will skip the mitochondria_plot")
-            self.has_gene_name_mapping = False
-            return False
+            self.mtx_data = add_gene_symbol(
+                self.mtx_data, gene_id_2_name_file, output_dir
+            )
+            ret = "gene_symbol" in self.mtx_data.var.columns
+            self.has_gene_name_mapping = ret
+            return ret
 
     def __init__(self, input_str: str):
         """
@@ -139,7 +141,7 @@ class QuantInput:
                     logger.error(f"Error calling load_fry :: {e}")
                 # TODO: load the U+S+A mtx data, compute median gene per cell based on mtx
                 # USA_mtx_data = load_fry(mtx_dir_path, output_format='all')
-                self.mtx_data.var['gene_id'] = self.mtx_data.var.index
+                self.mtx_data.var["gene_id"] = self.mtx_data.var.index
 
                 # Load  quant.json, generate_permit_list.json, and featureDump.txt
                 (

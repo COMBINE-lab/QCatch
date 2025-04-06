@@ -63,10 +63,10 @@ def main():
     )
     
     parser.add_argument(
-        '--gene_id2name_dir', '-g', 
+        '--gene_id2name_file', '-g', 
         type=Path,
         default=None,
-        help="(Optional) Directory containing the 'gene_id2name' file for converting Ensembl gene IDs to gene names. The file must be a CSV with two columns: 'gene_id' (e.g., ENSG00000284733) and 'gene_name' (e.g., OR4F29). If not provided, mitochondria plots will not be displayed."
+        help="(Optional) File containing the 'gene_id2name' mapping for converting gene ID to a gene names. The file must be a CSV with two columns: 'gene_id' (e.g., ENSG00000284733) and 'gene_name' (e.g., OR4F29). If not provided, an attempt will be made to look up the mapping in a remote registry. If that lookup fails the mitochondria plots will not be displayed."
     )
     parser.add_argument(
         '--verbose', '-v',
@@ -95,7 +95,7 @@ def main():
     output_dir = args.output
     chemistry = args.chemistry 
     n_partitions = args.n_partitions
-    gene_id2name_dir = args.gene_id2name_dir
+    gene_id2name_file = args.gene_id2name_file
     verbose = args.verbose
     overwrite_h5ad = args.overwrite_h5ad
     os.makedirs(os.path.join(output_dir), exist_ok=True)
@@ -111,7 +111,7 @@ def main():
 
     # add gene_id_2_name if we don't yet have it
     output_path = Path(args.output)
-    args.input.add_geneid_2_name_if_absent(gene_id2name_dir, output_path)
+    args.input.add_geneid_2_name_if_absent(gene_id2name_file, output_path)
     
     # # cell calling step1 - empty drop
     logger.info("🧬 Starting cell calling...")
@@ -199,7 +199,7 @@ def main():
     #         non_ambient_result = pickle.load(f)
 
     # plots and log, summary tables
-    plot_text_elements = create_plotly_plots(args.input.feature_dump_data, args.input.mtx_data, valid_bcs, gene_id2name_dir, args.input.usa_mode)
+    plot_text_elements = create_plotly_plots(args.input.feature_dump_data, args.input.mtx_data, valid_bcs, args.input.usa_mode)
     
     quant_json_table_html, permit_list_table_html = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
 
