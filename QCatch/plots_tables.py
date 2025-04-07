@@ -36,11 +36,11 @@ def generate_knee_plots(data):
     # 1.1 Knee Plot 1: Rank vs UMI Counts
     fig_knee_1 = px.scatter(
         data,
-        x="Rank",
-        y="DeduplicatedReads",
+        x="rank",
+        y="deduplicated_reads",
         log_y=True,
         title="UMI Counts vs Cell Rank",
-        labels={"Rank": "Cell Rank", "DeduplicatedReads": "UMI Counts"},
+        labels={"rank": "Cell Rank", "deduplicated_reads": "UMI Counts"},
         width=width,
         height=height,
         opacity=opacity
@@ -50,11 +50,11 @@ def generate_knee_plots(data):
     # 1.2 Knee Plot 2: Rank vs Genes Detected
     fig_knee_2 = px.scatter(
     data,
-    x="Rank",
-    y="NumGenesExpressed",
+    x="rank",
+    y="num_expressed",
     log_y=True,
     title="Genes Detected against Cell Rank",
-    labels={"Rank": "Cell Rank", "NumGenesExpressed": "Number of Detected Genes"},
+    labels={"rank": "Cell Rank", "num_expressed": "Number of Detected Genes"},
     width=width,
     height=height,
     opacity=opacity
@@ -64,7 +64,7 @@ def generate_knee_plots(data):
 def generate_gene_histogram(data):
     # set up width and height for the plots in horizontal&1 fig per tab
     
-    gene_detected = data["NumGenesExpressed"].tolist()
+    gene_detected = data["num_expressed"].tolist()
 
     # Create a histogram plot
     fig_hist_genes = go.Figure(
@@ -90,13 +90,13 @@ def generate_gene_histogram(data):
 
 def generate_seq_saturation(data):
     # Sequencing Saturation. x = meanReadsPerCell; y = seq saturation 
-    data = data.sort_values(by="CorrectedReads")
+    data = data.sort_values(by="corrected_reads")
 
     # Get the reads per cell array
-    unfiltered_correct_reads_array = data["CorrectedReads"].tolist()
+    unfiltered_correct_reads_array = data["corrected_reads"].tolist()
 
     # Calculate Sequencing Saturation (1 - Deduplication Rate)
-    dedup_rate_array = data["DedupRate"].tolist()
+    dedup_rate_array = data["dedup_rate"].tolist()
     unfiltered_seq_saturation_array = [1 - x for x in dedup_rate_array]
 
     # Filter out cells with less than 20 genes detected
@@ -227,8 +227,8 @@ def barcode_collapse(data):
     opacity = 0.5
     # we will use scatter plot to show the reads per CB before and after collapsing
     
-    before_clap = np.array(data["MappedReads"])
-    after_clap = np.array(data["CorrectedReads"])
+    before_clap = np.array(data["mapped_reads"])
+    after_clap = np.array(data["corrected_reads"])
 
     # Compute the gain_rate safely (avoid division by zero)
     gain_rate = (after_clap - before_clap) / before_clap
@@ -268,11 +268,11 @@ def barcode_frequency_plots(data):
 
     fig_bc_freq_UMI = px.scatter(
         data, 
-        x="CorrectedReads", 
-        y="DeduplicatedReads", 
+        x="corrected_reads", 
+        y="deduplicated_reads", 
         # log_y=True,
         title="Barcode frequency vs UMI Counts(All processed Cells)", 
-        labels={"CorrectedReads": "Barcode frequency", "DeduplicatedReads": "UMI Counts"},
+        labels={"corrected_reads": "Barcode frequency", "deduplicated_reads": "UMI Counts"},
         width=width,
         height=height,
         opacity=opacity)
@@ -280,11 +280,11 @@ def barcode_frequency_plots(data):
     # scatter plot for barcode frequency v.s. number of genes detected
     fig_bc_freq_gene= px.scatter(
         data, 
-        x="CorrectedReads", 
-        y="NumGenesExpressed", 
+        x="corrected_reads", 
+        y="num_expressed", 
         # log_y=True, 
         title="Barcode frequency vs Number of Genes Detected(All processed Cells)", 
-        labels={"CorrectedReads": "Barcode frequency", "NumGenesExpressed": "Number of Genes Detected"},
+        labels={"corrected_reads": "Barcode frequency", "num_expressed": "Number of Genes Detected"},
         width=width,
         height=height,
         opacity=opacity)
@@ -292,11 +292,11 @@ def barcode_frequency_plots(data):
     # UMI Counts vs Number of Detected Genes
     fig_gene_UMI = px.scatter(
         data,
-        x="DeduplicatedReads",
-        y="NumGenesExpressed",
+        x="deduplicated_reads",
+        y="num_expressed",
         # log_y=True,
         title="UMI Counts vs Number of Detected Genes(All processed Cells)",
-        labels={"DeduplicatedReads": "UMI Counts", "NumGenesExpressed": "Number of Detected Genes"},
+        labels={"deduplicated_reads": "UMI Counts", "num_expressed": "Number of Detected Genes"},
         width=width,
         height=height,
         opacity=opacity
@@ -318,7 +318,7 @@ def mitochondria_plot(adata):
     sc.pp.filter_cells(adata, min_genes=20)
     
     # Identify mitochondrial genes
-    adata.var["mt"] = adata.var['gene_symbol'].str.startswith("MT-") | adata.var['gene_symbol'].str.startswith("mt-")
+    adata.var["mt"] = adata.var['gene_symbol'].str.startswith("MT-") | adata.var['gene_symbol'].str.startswith("mt-") 
     if adata.var["mt"].sum() > 0:
         # Compute QC metrics
         sc.pp.calculate_qc_metrics(adata, qc_vars=["mt"], inplace=True, percent_top=[20], log1p=True)   
@@ -330,13 +330,13 @@ def mitochondria_plot(adata):
 
     # Convert to Pandas DataFrame
     
-    df["Sample"] = "Cells"  # Ensure a single category for violin plot
-    df["Sample"] = df["Sample"].astype(str)  # Ensure categorical behavior
+    df["sample"] = "Cells"  # Ensure a single category for violin plot
+    df["sample"] = df["sample"].astype(str)  # Ensure categorical behavior
 
     # Create the violin plot
     fig_mito = px.violin(
         df, 
-        x="Sample",
+        x="sample",
         y="pct_counts_mt",
         box=True,  # Show box plot inside violin
         points=False,  # Don't show points here (we'll add manually)
@@ -350,7 +350,7 @@ def mitochondria_plot(adata):
     # Create the scatter (dot) plot manually
     scatter = px.strip(
         df, 
-        x="Sample",
+        x="sample",
         y="pct_counts_mt",
     )
 
@@ -424,15 +424,15 @@ def generate_summary_table(raw_data, valid_bcs, total_detected_genes):
     Generate a summary table with total corrected reads, total UMI, and total number of cells, etc.
     in a 4-column (two key-value pairs per row) Bootstrap table.
     """
-    total_cells = len(raw_data['CorrectedReads'])
+    total_cells = len(raw_data['corrected_reads'])
     # filter with valid barcodes
-    data = raw_data[raw_data['CB'].isin(valid_bcs)]
-    mean_reads_per_cell = int(np.nan_to_num(data['CorrectedReads'].mean(), nan=0))
-    median_umi_per_cell = int(np.nan_to_num(data['DeduplicatedReads'].median(), nan=0))
-    median_genes_per_cell = int(np.nan_to_num(data['NumGenesExpressed'].median(), nan=0))
+    data = raw_data[raw_data['barcodes'].isin(valid_bcs)]
+    mean_reads_per_cell = int(np.nan_to_num(data['corrected_reads'].mean(), nan=0))
+    median_umi_per_cell = int(np.nan_to_num(data['deduplicated_reads'].median(), nan=0))
+    median_genes_per_cell = int(np.nan_to_num(data['num_expressed'].median(), nan=0))
 
-    # total_correct_reads = sum(data['CorrectedReads'])
-    # total_UMI = sum(data['DeduplicatedReads'])
+    # total_correct_reads = sum(data['corrected_reads'])
+    # total_UMI = sum(data['deduplicated_reads'])
     summary = {
         "Number of retained cells": f"{len(valid_bcs):,}",
         "Number of all processed cells": f"{total_cells:,}",
@@ -478,4 +478,3 @@ def generate_summary_table(raw_data, valid_bcs, total_detected_genes):
     """
 
     return summary_html
-

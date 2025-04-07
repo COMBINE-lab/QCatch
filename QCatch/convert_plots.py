@@ -15,10 +15,10 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode):
     
     # Load the featureDump data
     data = feature_dump_data
-    retained_data = data[data['CB'].isin(valid_bcs)]
-    # Sort by "DeduplicatedReads" and assign rank
-    data = data.sort_values("DeduplicatedReads", ascending=False).reset_index(drop=True)
-    data["Rank"] = data.index
+    retained_data = data[data['barcodes'].isin(valid_bcs)]
+    # Sort by "deduplicated_reads" and assign rank
+    data = data.sort_values("deduplicated_reads", ascending=False).reset_index(drop=True)
+    data["rank"] = data.index
     
     # ---------------- Tab1 - Knee Plots ---------------
     fig_knee_1, fig_knee_2 = generate_knee_plots(data)
