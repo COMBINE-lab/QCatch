@@ -57,6 +57,7 @@ def standardize_feature_dump_columns(df: pd.DataFrame) -> pd.DataFrame:
         "Input columns must match either standard snake_case or expected CamelCase format. "
         f"Expected snake_case columns: {STANDARD_COLUMNS}"
     )
+
 def parse_quant_out_dir(quant_out_dir):
     """
     Detects the input format of the quantification output directory.
@@ -160,6 +161,7 @@ def load_json_txt_file(quant_out_dir, used_simpleaf):
         feature_dump_data = pd.read_csv(feature_dump_path, sep='\t')
         # rename the columns, align with the standard snake_case format
         feature_dump_data.columns = STANDARD_COLUMNS
+        logger.debug(f"feature_dump_data columns: {feature_dump_data.columns}")
 
     return quant_json_data, permit_list_json_data, feature_dump_data
 
