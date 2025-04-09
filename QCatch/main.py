@@ -152,10 +152,6 @@ def main():
         
         # Save the total retained cells to a txt file
         logger.info(f"✅ Total reatined cells after cell calling: {len(valid_bcs)}")
-        total_retained_cell_file = f'{output_dir}/total_retained_cells.txt'
-        with open(total_retained_cell_file, 'w') as f:
-            for bc in valid_bcs:
-                f.write(f"{bc}\n")
         
         if args.input.is_h5ad:
             # Update the h5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
@@ -224,7 +220,6 @@ def main():
     # plots and log, summary tables
     plot_text_elements = create_plotly_plots(args.input.feature_dump_data, args.input.mtx_data, valid_bcs, args.input.usa_mode)
     
-
     quant_json_table_html, permit_list_table_html = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
 
 

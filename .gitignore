@@ -1,7 +1,7 @@
 # QCatch - Ignore local shell scripts
 run_main.sh
 tutorial.sh
-run_main_direct_input_file.sh
+run_main_rob_dev.sh
 run_installed_pkg.sh
 *.temp.py
 # Byte-compiled / optimized / DLL files
