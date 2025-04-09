@@ -45,20 +45,20 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
     # NOTE: use the retained data for barcode_collapse plot
     fig_barcode_collapse, mean_gain_rate = barcode_collapse(retained_data)
     # ---------------- Tab4 - Histogram of Genes Detected ---------------
-    fig_hist_genes = generate_gene_histogram(data)
-    fig_hist_genes_filtered = generate_gene_histogram(retained_data)
+    fig_hist_genes = generate_gene_histogram(data,is_all_cells=True)
+    fig_hist_genes_filtered = generate_gene_histogram(retained_data,is_all_cells=False)
     # if our adata object doesn't already contain the gene symbol, then skip the mitochondrial plot.
     if ('gene_symbol' not in adata.var.columns):
         fig_mt = None
         fig_mt_filtered = None
     else:
-        fig_mt = mitochondria_plot(adata)
-        fig_mt_filtered = mitochondria_plot(filtered_adata)
+        fig_mt = mitochondria_plot(adata, is_all_cells=True)
+        fig_mt_filtered = mitochondria_plot(filtered_adata, is_all_cells=False)
         
     # ---------------- Tab5 - SUA plots ---------------
     if usa_mode:
-        fig_SUA_bar_html, fig_S_ratio_html = generate_SUA_plots(adata)
-        fig_SUA_bar_filtered_html, fig_S_ratio_filtered_html = generate_SUA_plots(filtered_adata)
+        fig_SUA_bar_html, fig_S_ratio_html = generate_SUA_plots(adata,is_all_cells=True)
+        fig_SUA_bar_filtered_html, fig_S_ratio_filtered_html = generate_SUA_plots(filtered_adata,is_all_cells=False)
         
     
     # Convert plots to HTML div strings

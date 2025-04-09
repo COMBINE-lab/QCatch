@@ -3,7 +3,7 @@ run_main.sh
 tutorial.sh
 run_main_rob_dev.sh
 run_installed_pkg.sh
-*.temp.py
+*.temp.*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

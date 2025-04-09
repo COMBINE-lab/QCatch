@@ -24,6 +24,8 @@ def apply_uniform_style(fig):
     )
     return fig
 
+def get_cell_label(is_all_cells):
+    return " (All Cells)" if is_all_cells else " (Retained Cells Only)"
 # set up width and height for the plots in horizontal 
 width = 480
 height = 360
@@ -63,21 +65,21 @@ def generate_knee_plots(data):
     )
     return apply_uniform_style(fig_knee_1), apply_uniform_style(fig_knee_2)
 
-def generate_gene_histogram(data):
+def generate_gene_histogram(data, is_all_cells):
     # set up width and height for the plots in horizontal&1 fig per tab
     
     gene_detected = data["num_expressed"].tolist()
-
+    title_suffix = get_cell_label(is_all_cells)
+    
     # Create a histogram plot
     fig_hist_genes = go.Figure(
         data=[go.Histogram(
             x=gene_detected,
             name="Number of detected genes",
             opacity=0.8,
-            autobinx=False
         )],
         layout=go.Layout(
-            title="Histogram of detected genes per cell",
+            title="Histogram of detected genes per cell"+title_suffix,
             xaxis=dict(
                 title="Number of detected genes",
                 autorange=True
@@ -167,9 +169,7 @@ def generate_seq_saturation(data):
 
     return apply_uniform_style(fig_seq_saturation), seq_saturation_percent
 
-def generate_SUA_plots(adata):
-    # TODO: do we want filtered out cells with less than some(20?) genes detected, THEN generated the SUA plots?
-
+def generate_SUA_plots(adata, is_all_cells):
     # calculate the sum count for S, U, A matrix separately
 
     SUA_sum_list = []
@@ -207,9 +207,10 @@ def generate_SUA_plots(adata):
             textposition='outside'  # Position the numbers outside the bars
         )]
     )
-
+    title_suffix = get_cell_label(is_all_cells)
+    
     fig_SUA_bar.update_layout(
-        title="Bar plot for S, U, A counts",
+        title="Bar plot for S, U, A counts"+title_suffix,
         xaxis=dict(title="RNA splicing status"),
         yaxis=dict(title="Total Counts"),
         # plot_bgcolor='rgba(240,240,240,0.9)',  # Light background
@@ -232,7 +233,7 @@ def generate_SUA_plots(adata):
 
     # Customize the layout
     fig_S_ratio.update_layout(
-        title="Histogram of S/(S+U) Ratio",
+        title="Histogram of S/(S+U) Ratio"+title_suffix,
         xaxis=dict(title="S/(S+U) Ratio"),
         yaxis=dict(title="Count"),
         bargap=0.1,  # Space between bars
@@ -326,7 +327,7 @@ def barcode_frequency_plots(data):
     
     return apply_uniform_style(fig_bc_freq_UMI), apply_uniform_style(fig_bc_freq_gene), apply_uniform_style(fig_gene_UMI)
     
-def mitochondria_plot(adata):
+def mitochondria_plot(adata,is_all_cells):
     """Generates a properly aligned Plotly violin plot for mitochondrial content."""
     dot_size = 2
     dot_opacity = 0.3  # Adjust opacity of the dots
@@ -353,6 +354,7 @@ def mitochondria_plot(adata):
     df["sample"] = "Cells"  # Ensure a single category for violin plot
     df["sample"] = df["sample"].astype(str)  # Ensure categorical behavior
 
+    title_suffix = get_cell_label(is_all_cells)
     # Create the violin plot
     fig_mito = px.violin(
         df, 
@@ -360,7 +362,7 @@ def mitochondria_plot(adata):
         y="pct_counts_mt",
         box=True,  # Show box plot inside violin
         points=False,  # Don't show points here (we'll add manually)
-        title="Mitochondrial Content(%)",
+        title="Mitochondrial Content(%)"+title_suffix,
         labels={"pct_counts_mt": "Percentage of Mitochondrial Counts"},
         width=width,
         height=height,

@@ -47,7 +47,8 @@ def main():
     parser.add_argument(
         '--output', '-o', 
         type=str, 
-        help="Path to the output directory (default: same directory as input file)"
+        required=True,
+        help="Path to the desired output directory."
     )
 
     parser.add_argument(
@@ -69,20 +70,19 @@ def main():
         help="(Optional) File containing the 'gene_id2name' mapping for converting gene ID to a gene names. The file must be a CSV with two columns: 'gene_id' (e.g., ENSG00000284733) and 'gene_name' (e.g., OR4F29). If not provided, an attempt will be made to look up the mapping in a remote registry. If that lookup fails the mitochondria plots will not be displayed."
     )
     parser.add_argument(
-        '--verbose', '-v',
-        action='store_true', 
-        help='Enable verbose logging with debug level messages')
-    
+        '--save_filtered_h5ad', '-s',
+        action='store_true',
+        help="If enabled, `qcatch` will save a separate `.h5ad` file containing only the retained cells."
+    )
     parser.add_argument(
         '--overwrite_h5ad', '-w',
         action='store_true',
         help="If enabled, `qcatch` will overwrite the original `.h5ad` file in place by appending cell filtering results to anndata.obs. No existing data or cells will be removed; only additional metadata columns are added."
     )
     parser.add_argument(
-        '--save_filtered_h5ad', '-s',
-        action='store_true',
-        help="If enabled, `qcatch` will save a separate `.h5ad` file containing only the retained cells."
-    )
+        '--verbose', '-v',
+        action='store_true', 
+        help='Enable verbose logging with debug level messages')
 
     args = parser.parse_args()
 
@@ -91,10 +91,6 @@ def main():
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(asctime)s - %(levelname)s :\n %(message)s"
     )
-
-    # Set default output directory to the input file's directory
-    if args.output is None:
-        args.output = args.input.dir.as_posix()
     
     input_dir = args.input
     output_dir = args.output
