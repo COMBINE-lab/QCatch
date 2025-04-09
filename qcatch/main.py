@@ -8,13 +8,13 @@ import pickle
 import logging
 import shutil
 
-from QCatch import templates
-from QCatch.utils import QuantInput, get_input
-from QCatch.plots_tables import show_quant_log_table
-from QCatch.input_processing import parse_quant_out_dir
-from QCatch.convert_plots import create_plotly_plots, modify_html_with_plots
-from QCatch.find_retained_cells.matrix import CountMatrix
-from QCatch.find_retained_cells.cell_calling import initial_filtering_OrdMag, find_nonambient_barcodes, NonAmbientBarcodeResult
+from qcatch import templates
+from qcatch.utils import QuantInput, get_input
+from qcatch.plots_tables import show_quant_log_table
+from qcatch.input_processing import parse_quant_out_dir
+from qcatch.convert_plots import create_plotly_plots, modify_html_with_plots
+from qcatch.find_retained_cells.matrix import CountMatrix
+from qcatch.find_retained_cells.cell_calling import initial_filtering_OrdMag, find_nonambient_barcodes, NonAmbientBarcodeResult
 
 
 def load_template():
@@ -67,7 +67,7 @@ def main():
         '--gene_id2name_file', '-g', 
         type=Path,
         default=None,
-        help="(Optional) File containing the 'gene_id2name' mapping for converting gene ID to a gene names. The file must be a CSV with two columns: 'gene_id' (e.g., ENSG00000284733) and 'gene_name' (e.g., OR4F29). If not provided, an attempt will be made to look up the mapping in a remote registry. If that lookup fails the mitochondria plots will not be displayed."
+        help="(Optional) File provides a mapping from gene IDs to gene names. The file must be a CSV file contains two columns with headers: 'gene_id' (e.g., ENSG00000284733) and 'gene_name' (e.g., OR4F29). If not provided, an attempt will be made to look up the mapping in a remote registry. If that lookup fails the mitochondria plots will not be displayed."
     )
     parser.add_argument(
         '--save_filtered_h5ad', '-s',

@@ -127,11 +127,10 @@ def parse_quant_out_dir(quant_out_dir):
     
     return quant_json_data, permit_list_json_data, feature_dump_data, mtx_data, usa_mode, is_h5ad
 
-def load_json_txt_file(quant_out_dir, used_simpleaf):
+def load_json_txt_file(parent_dir):
     """
     Loads quant.json and generate_permit_list.json from the given directory.
     """
-    parent_dir = Path(os.path.join(quant_out_dir, "simpleaf_quant", "af_quant")) if used_simpleaf else quant_out_dir
 
     quant_json_data_path = Path(os.path.join(parent_dir, "quant.json"))
     permit_list_path = Path(os.path.join(parent_dir, "generate_permit_list.json"))

@@ -2,8 +2,8 @@ import os
 from bs4 import BeautifulSoup
 import logging
 
-from QCatch.plots_tables import *
-from QCatch.input_processing import *
+from qcatch.plots_tables import *
+from qcatch.input_processing import *
 
 logger = logging.getLogger(__name__)
 

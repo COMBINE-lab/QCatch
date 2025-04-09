@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pyroe import load_fry
 from typing import List
 
-from QCatch.input_processing import load_json_txt_file, add_gene_symbol, STANDARD_COLUMNS, CAMEL_TO_SNAKE_MAPPING, standardize_feature_dump_columns
+from qcatch.input_processing import load_json_txt_file, add_gene_symbol, STANDARD_COLUMNS, CAMEL_TO_SNAKE_MAPPING, standardize_feature_dump_columns
 
 
 import logging
@@ -56,7 +56,6 @@ class QuantInput:
         self.provided = Path(input_str)
         if not self.provided.exists():
             raise ValueError(f"The provided input path {self.provided} did not exist")
-
         # it exists
         if self.provided.is_file():
             self.file = self.provided
@@ -80,33 +79,41 @@ class QuantInput:
             logger.info(
                 f"Input {self.provided} inferred to be a directory; searching for valid input file"
             )
+            self.mtx_dir_path = None
             if os.path.exists(os.path.join(self.dir, "simpleaf_quant")):
                 logger.info(
                     "✅ Detected: 'simpleaf' was used for the quantification result."
                 )
                 self.from_simpleaf = True
+                self.mtx_dir_path = os.path.join(
+                    self.dir, "simpleaf_quant", "af_quant"
+                )
+            # elif (self.dir / "af_quant").exists():
+            elif os.path.exists(os.path.join(self.dir, "af_quant")):
+                logger.info(
+                    "✅ Detected: 'simpleaf' was used for the quantification result."
+                )
+                self.from_simpleaf = True
+                self.mtx_dir_path = os.path.join(self.dir, "af_quant")
             elif os.path.exists(os.path.join(self.dir, "quant.json")):
                 logger.info(
                     "✅ Detected: 'alevin-fry' was used for the quantification result."
                 )
                 self.from_simpleaf = False
+                self.mtx_dir_path = self.dir
             else:
                 logger.warning(
                     "⚠️ Unable to recognize the quantification directory. "
                     "Ensure that the directory structure remains unchanged from the original output directory."
                 )
+                
 
             # -----------------------------------
             # Loads matrix data from the given quantification output directory.
-            mtx_dir_path = Path(
-                os.path.join(self.dir, "simpleaf_quant", "af_quant")
-                if self.from_simpleaf
-                else self.dir
-            )
 
-            if not mtx_dir_path.exists():
+            if not self.mtx_dir_path:
                 logger.error(
-                    f"❌ Error: Expected matrix directory '{mtx_dir_path}' not found. Please check the input directory structure."
+                    "❌ Error: Expected matrix directory not found in either 'simpleaf_quant/af_quant' or 'af_quant'."
                 )
                 mtx_data = None
 
@@ -126,7 +133,7 @@ class QuantInput:
                 ) = load_hdf5(self.file)
             else:
                 try:
-                    self.mtx_data = load_fry(str(mtx_dir_path), output_format="raw")
+                    self.mtx_data = load_fry(str(self.mtx_dir_path), output_format="raw")
                 except Exception as e:
                     logger.error(f"Error calling load_fry :: {e}")
                 # TODO: load the U+S+A mtx data, compute median gene per cell based on mtx
@@ -138,7 +145,7 @@ class QuantInput:
                     self.quant_json_data,
                     self.permit_list_json_data,
                     self.feature_dump_data,
-                ) = load_json_txt_file(self.dir, self.from_simpleaf)
+                ) = load_json_txt_file(self.mtx_dir_path)
 
                 # detect usa_mode
                 self.usa_mode = self.quant_json_data["usa_mode"]
