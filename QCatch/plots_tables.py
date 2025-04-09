@@ -30,16 +30,17 @@ height = 360
 opacity = 0.5
 
 def generate_knee_plots(data):
-    width=  360
-    height= 480
+    width=  400
+    height= 400
     
     # 1.1 Knee Plot 1: Rank vs UMI Counts
     fig_knee_1 = px.scatter(
         data,
         x="rank",
         y="deduplicated_reads",
+        log_x=True,
         log_y=True,
-        title="UMI Counts vs Cell Rank",
+        title="UMI Counts vs Cell Rank (All Cells)",
         labels={"rank": "Cell Rank", "deduplicated_reads": "UMI Counts"},
         width=width,
         height=height,
@@ -52,8 +53,9 @@ def generate_knee_plots(data):
     data,
     x="rank",
     y="num_expressed",
+    log_x=True,
     log_y=True,
-    title="Genes Detected against Cell Rank",
+    title="Genes Detected against Cell Rank (All Cells)",
     labels={"rank": "Cell Rank", "num_expressed": "Number of Detected Genes"},
     width=width,
     height=height,
@@ -129,19 +131,39 @@ def generate_seq_saturation(data):
 
         accumu_read_per_cell_array.append(down_mean_reads_per_cell)
         accumu_seq_saturation_array.append(down_seq_saturation_value)
-
-    # Plot for Sequencing Saturation
-    fig_seq_saturation = px.scatter(
-        x=accumu_read_per_cell_array,
-        y=accumu_seq_saturation_array,
-        title="Sequencing Saturation vs Mean Reads Per Cell",
-        labels={"x": "Mean Reads per Cell", "y": "Sequencing Saturation"},
+        
+    # for the accumulated arrays, only use 15 dots for plotting
+    num_dots = 20
+    # avoid the case where the number of points is less than num_dots
+    step = max(1, len(accumu_read_per_cell_array) // num_dots)
+    accumu_read_per_cell_array = accumu_read_per_cell_array[::step]
+    accumu_seq_saturation_array = accumu_seq_saturation_array[::step]
+    # Plot for Sequencing Saturation using go.Scatter with smooth line
+    fig_seq_saturation = go.Figure(
+        data=go.Scatter(
+            x=accumu_read_per_cell_array,
+            y=accumu_seq_saturation_array,
+            mode='lines',
+            line=dict(color='#636EFA', width=3)
+        )
+    )
+    fig_seq_saturation.update_layout(
+        title="Sequencing Saturation Plot (Retained Cells Only)",
+        xaxis_title="Mean Reads per Cell",
+        yaxis=dict(title="Sequencing Saturation", range=[0, 1]),
         width=width,
         height=height,
-        opacity=opacity
+        margin=dict(t=40)
     )
-    # Update the trace mode to include lines
-    fig_seq_saturation.update_traces(mode="lines+markers")
+    fig_seq_saturation.add_shape(
+        type="line",
+        x0=min(accumu_read_per_cell_array),
+        x1=max(accumu_read_per_cell_array),
+        y0=0.9,
+        y1=0.9,
+        line=dict(color="lightgrey", width=2, dash="dash"),
+        layer="below"
+    )
 
     return apply_uniform_style(fig_seq_saturation), seq_saturation_percent
 
@@ -185,9 +207,9 @@ def generate_SUA_plots(adata):
             textposition='outside'  # Position the numbers outside the bars
         )]
     )
-    # Customize the layout
+
     fig_SUA_bar.update_layout(
-        # title="Total Counts for S, U, A Matrix ",
+        title="Bar plot for S, U, A counts",
         xaxis=dict(title="RNA splicing status"),
         yaxis=dict(title="Total Counts"),
         # plot_bgcolor='rgba(240,240,240,0.9)',  # Light background
@@ -210,7 +232,7 @@ def generate_SUA_plots(adata):
 
     # Customize the layout
     fig_S_ratio.update_layout(
-        # title="Histogram of S/(S+U) Ratio",
+        title="Histogram of S/(S+U) Ratio",
         xaxis=dict(title="S/(S+U) Ratio"),
         yaxis=dict(title="Count"),
         bargap=0.1,  # Space between bars
@@ -262,7 +284,7 @@ def barcode_collapse(data):
 
 def barcode_frequency_plots(data):
     # scatter plot for reads per CB v.s. UMI counts in this CB
-    width = 550
+    # width = 550
     height = 380
     opacity = 0.5
 
@@ -271,7 +293,7 @@ def barcode_frequency_plots(data):
         x="corrected_reads", 
         y="deduplicated_reads", 
         # log_y=True,
-        title="Barcode frequency vs UMI Counts(All processed Cells)", 
+        title="Barcode frequency vs UMI Counts(All Cells)", 
         labels={"corrected_reads": "Barcode frequency", "deduplicated_reads": "UMI Counts"},
         width=width,
         height=height,
@@ -283,7 +305,7 @@ def barcode_frequency_plots(data):
         x="corrected_reads", 
         y="num_expressed", 
         # log_y=True, 
-        title="Barcode frequency vs Number of Genes Detected(All processed Cells)", 
+        title="Barcode frequency vs Number of Genes Detected(All Cells)", 
         labels={"corrected_reads": "Barcode frequency", "num_expressed": "Number of Genes Detected"},
         width=width,
         height=height,
@@ -295,7 +317,7 @@ def barcode_frequency_plots(data):
         x="deduplicated_reads",
         y="num_expressed",
         # log_y=True,
-        title="UMI Counts vs Number of Detected Genes(All processed Cells)",
+        title="UMI Counts vs Number of Detected Genes(All Cells)",
         labels={"deduplicated_reads": "UMI Counts", "num_expressed": "Number of Detected Genes"},
         width=width,
         height=height,
@@ -306,8 +328,6 @@ def barcode_frequency_plots(data):
     
 def mitochondria_plot(adata):
     """Generates a properly aligned Plotly violin plot for mitochondrial content."""
-    width = 550
-    height = 400
     dot_size = 2
     dot_opacity = 0.3  # Adjust opacity of the dots
     violin_color = '#559364'  # Change color of the violin plot
@@ -340,7 +360,7 @@ def mitochondria_plot(adata):
         y="pct_counts_mt",
         box=True,  # Show box plot inside violin
         points=False,  # Don't show points here (we'll add manually)
-        title="Mitochondrial Content(%) for All Processed Cells",
+        title="Mitochondrial Content(%)",
         labels={"pct_counts_mt": "Percentage of Mitochondrial Counts"},
         width=width,
         height=height,

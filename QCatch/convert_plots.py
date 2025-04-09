@@ -7,7 +7,7 @@ from QCatch.input_processing import *
 
 logger = logging.getLogger(__name__)
 
-def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode):
+def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
     """
     1.Load feature dump data from the alevin-frey quant output directory
     2.Create interactive Plotly plots
@@ -16,9 +16,16 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode):
     # Load the featureDump data
     data = feature_dump_data
     retained_data = data[data['barcodes'].isin(valid_bcs)]
+    
     # Sort by "deduplicated_reads" and assign rank
     data = data.sort_values("deduplicated_reads", ascending=False).reset_index(drop=True)
     data["rank"] = data.index
+    
+    # get filtered adata if needed
+    if usa_mode or 'gene_symbol' in adata.var.columns:
+        filtered_mask = adata.obs['is_retained_cells'].values if is_h5ad else adata.obs_names.isin(valid_bcs)
+            # NOTE: safe but maybe time consuming
+        filtered_adata = adata[filtered_mask, :].copy()
     
     # ---------------- Tab1 - Knee Plots ---------------
     fig_knee_1, fig_knee_2 = generate_knee_plots(data)
@@ -33,28 +40,26 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode):
     # ---------------- Tab2 - Barcode Frequency Plots ---------------
     fig_bc_freq_UMI, fig_bc_freq_gene, fig_gene_UMI = barcode_frequency_plots(data)
 
-    # ---------------- Tab3 - Histogram of Genes Detected ---------------
-    fig_hist_genes = generate_gene_histogram(data)
-    # if we don't have a gene_id2name_directory and our adata object doesn't
-    # already contain the gene symbol, then skip the mitochondrial plot.
-    if ('gene_symbol' not in adata.var.columns):
-        fig_mt = None
-    else:
-        # NOTE: @Yuan --- now we should already have added these if supported so we 
-        # don't have to do it again here.
-        # adata = add_gene_symbol(adata, gene_id2name_dir)
-        fig_mt = mitochondria_plot(adata)
-        
-    
-    # ---------------- Tab4 - Sequencing Saturation ---------------
-    fig_seq_saturation, seq_saturation_percent = generate_seq_saturation(data)
+    # ---------------- Tab3 - Sequencing Saturation ---------------
+    fig_seq_saturation, seq_saturation_percent = generate_seq_saturation(retained_data)
     # NOTE: use the retained data for barcode_collapse plot
     fig_barcode_collapse, mean_gain_rate = barcode_collapse(retained_data)
+    # ---------------- Tab4 - Histogram of Genes Detected ---------------
+    fig_hist_genes = generate_gene_histogram(data)
+    fig_hist_genes_filtered = generate_gene_histogram(retained_data)
+    # if our adata object doesn't already contain the gene symbol, then skip the mitochondrial plot.
+    if ('gene_symbol' not in adata.var.columns):
+        fig_mt = None
+        fig_mt_filtered = None
+    else:
+        fig_mt = mitochondria_plot(adata)
+        fig_mt_filtered = mitochondria_plot(filtered_adata)
+        
+    # ---------------- Tab5 - SUA plots ---------------
     if usa_mode:
-        # ---------------- Tab5 - SUA plots ---------------
         fig_SUA_bar_html, fig_S_ratio_html = generate_SUA_plots(adata)
-    
-
+        fig_SUA_bar_filtered_html, fig_S_ratio_filtered_html = generate_SUA_plots(filtered_adata)
+        
     
     # Convert plots to HTML div strings
     plots = {
@@ -67,21 +72,26 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode):
         'bc_freq_plot2-3': fig_gene_UMI.to_html(full_html=False, include_plotlyjs='cdn'),
         # ----tab3----
         'hist_gene3-1':fig_hist_genes.to_html(full_html=False, include_plotlyjs="cdn"),
+        # filtered data
+        'hist_gene_filtered_3-1': fig_hist_genes_filtered.to_html(full_html=False, include_plotlyjs="cdn"),
+
         # ----tab4----
         'seq_saturation4-1': fig_seq_saturation.to_html(full_html=False, include_plotlyjs='cdn'),
         'barcode_collapse4-2': fig_barcode_collapse.to_html(full_html=False, include_plotlyjs='cdn'),
-        
-        # 'plot7': mito_plot.to_html(full_html=False, include_plotlyjs=False),
-        # 'plot4': splicing_plot.to_html(full_html=False, include_plotlyjs=False)
+
     }
-    if fig_mt is not None:
+    if fig_mt or fig_mt_filtered:
         #  2nd plot in tab3
         plots['fig_mt3-2'] = fig_mt.to_html(full_html=False, include_plotlyjs="cdn")
+        plots['fig_mt_filtered_3-2'] = fig_mt_filtered.to_html(full_html=False, include_plotlyjs="cdn")
+        
     # add key pair for SUA plots, is usa_mode is True
     if usa_mode:
         # ----tab5----
         plots['SUA_bar5-1'] = fig_SUA_bar_html
         plots['S_ratio5-2'] = fig_S_ratio_html
+        plots['SUA_bar_filtered_5-1'] = fig_SUA_bar_filtered_html
+        plots['S_ratio_filtered_5-2'] = fig_S_ratio_filtered_html
     texts = {
         'seqSaturation': f'Sequencing Saturation value: {seq_saturation_percent}%',
         'meanGainRate': f'Mean gain rate per CB: {mean_gain_rate}%'
@@ -144,9 +154,6 @@ def modify_html_with_plots(soup, output_html_path, plot_text_elements, quant_jso
     with open(output_html_path, 'w', encoding='utf-8') as file:
         file.write(str(soup))
 
-    # Grouped logging
-    # if updated_sections:
-    #     logger.info(f"✅ Updated sections: {', '.join(updated_sections)}")
 
     if missing_sections:
         for missing in missing_sections:

@@ -7,58 +7,12 @@ from dataclasses import dataclass
 from pyroe import load_fry
 from typing import List
 
-from QCatch.input_processing import load_json_txt_file, add_gene_symbol
+from QCatch.input_processing import load_json_txt_file, add_gene_symbol, STANDARD_COLUMNS, CAMEL_TO_SNAKE_MAPPING, standardize_feature_dump_columns
+
 
 import logging
 
 logger = logging.getLogger(__name__)
-
-# Define the standard snake_case columns - single source of truth
-STANDARD_COLUMNS: List[str] = [
-    'barcodes',
-    'corrected_reads',
-    'mapped_reads',
-    'deduplicated_reads',
-    'mapping_rate',
-    'dedup_rate',
-    'mean_by_max',
-    'num_expressed',
-    'num_genes_over_mean'
-]
-
-# Only need this mapping if input is in CamelCase
-CAMEL_TO_SNAKE_MAPPING = {
-    'barcodes': 'barcodes',  # stays the same
-    'CorrectedReads': 'corrected_reads',
-    'MappedReads': 'mapped_reads',
-    'DeduplicatedReads': 'deduplicated_reads',
-    'MappingRate': 'mapping_rate',
-    'DedupRate': 'dedup_rate',
-    'MeanByMax': 'mean_by_max',
-    'NumGenesExpressed': 'num_expressed',
-    'NumGenesOverMean': 'num_genes_over_mean'
-}
-
-def standardize_feature_dump_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Standardize feature dump columns to snake_case format.
-    If columns are already in snake_case, validates them.
-    If columns are in CamelCase, converts them to snake_case.
-    """
-    # Check if already in standard snake_case format
-    if set(df.columns) == set(STANDARD_COLUMNS):
-        return df[STANDARD_COLUMNS]  # just ensure column order
-    
-    # If not snake_case, try converting from CamelCase
-    if set(df.columns) == set(CAMEL_TO_SNAKE_MAPPING.keys()):
-        return df.rename(columns=CAMEL_TO_SNAKE_MAPPING)[STANDARD_COLUMNS]
-    
-    # If neither format matches, raise error
-    raise ValueError(
-        "Input columns must match either standard snake_case or expected CamelCase format. "
-        f"Expected snake_case columns: {STANDARD_COLUMNS}"
-    )
-
 
 def load_hdf5(hdf5_path: Path) -> sc.AnnData:
     mtx_data = sc.read_h5ad(hdf5_path)

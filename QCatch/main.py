@@ -180,7 +180,7 @@ def main():
                 logger.info(f"📋 Overwrited the original h5ad file with the new cell calling result.")
             if save_filtered_h5ad:
                 # filter the anndata , only keep the cells in valid_bcs
-                filter_mtx_data = args.input.mtx_data[args.input.mtx_data.obs['is_retained_cells'].values, :]
+                filter_mtx_data = args.input.mtx_data[args.input.mtx_data.obs['is_retained_cells'].values, :].copy()
                 # Save the filtered anndata to a new file
                 filter_mtx_data_filename = os.path.join(output_dir, 'filtered_quants.h5ad')
                 filter_mtx_data.write_h5ad(filter_mtx_data_filename, compression='gzip')
@@ -218,7 +218,7 @@ def main():
     #         non_ambient_result = pickle.load(f)
 
     # plots and log, summary tables
-    plot_text_elements = create_plotly_plots(args.input.feature_dump_data, args.input.mtx_data, valid_bcs, args.input.usa_mode)
+    plot_text_elements = create_plotly_plots(args.input.feature_dump_data, args.input.mtx_data, valid_bcs, args.input.usa_mode, args.input.is_h5ad)
     
     quant_json_table_html, permit_list_table_html = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
 
