@@ -335,11 +335,13 @@ def mitochondria_plot(adata,is_all_cells):
     scatter_color = '#4F69C2'  # Change color of the scatter plot
 
     sc.settings.verbosity = 0
-    # we have to filter out cells with less than 20 genes detected, otherwise will will have many cells with high mitochondrial content, which may be misleading of the distribution for valid data.
-    sc.pp.filter_cells(adata, min_genes=20)
+    # # we have to filter out cells with less than 1 genes detected, otherwise will will have many cells with high mitochondrial content, which may be misleading of the distribution for valid data.
+    if is_all_cells:
+        sc.pp.filter_cells(adata, min_genes=10)
     
     # Identify mitochondrial genes
-    adata.var["mt"] = adata.var['gene_symbol'].str.startswith("MT-") | adata.var['gene_symbol'].str.startswith("mt-") 
+    # make it case insensitive, to avoid the NaN issue
+    adata.var["mt"] = adata.var_names.str.upper().str.startswith("MT-").astype(bool)
     if adata.var["mt"].sum() > 0:
         # Compute QC metrics
         sc.pp.calculate_qc_metrics(adata, qc_vars=["mt"], inplace=True, percent_top=[20], log1p=True)   
@@ -366,7 +368,7 @@ def mitochondria_plot(adata,is_all_cells):
         labels={"pct_counts_mt": "Percentage of Mitochondrial Counts"},
         width=width,
         height=height,
-        color_discrete_sequence=[violin_color]  # Set color of the violin plot
+        color_discrete_sequence=[violin_color]  
     )
 
     # Create the scatter (dot) plot manually
@@ -378,13 +380,78 @@ def mitochondria_plot(adata,is_all_cells):
 
     # Add scatter points to the violin plot
     for trace in scatter.data:
-        trace.marker.size = dot_size  # Set dot size
-        trace.marker.opacity = dot_opacity  # Set dot opacity
-        trace.marker.color = scatter_color  # Set dot color
+        trace.marker.size = dot_size 
+        trace.marker.opacity = dot_opacity  
+        trace.marker.color = scatter_color  
         fig_mito.add_trace(trace)
 
     return apply_uniform_style(fig_mito)
 
+def umap_tsne_plot(adata):
+    sc.settings.set_figure_params(dpi=200, facecolor="white")
+    
+    # Normalizing to median total counts
+    sc.pp.normalize_total(adata)
+    # Logarithmize the data
+    sc.pp.log1p(adata)
+    
+    # feature selection
+    sc.pp.highly_variable_genes(adata, n_top_genes=2000)
+    # dimensionality Reduction
+    sc.tl.pca(adata)
+    # nearest neighbor graph constuction and visualization
+    sc.pp.neighbors(adata)
+    sc.tl.umap(adata)
+    
+    # clustering
+    # Using the igraph implementation and a fixed number of iterations can be significantly faster, especially for larger datasets
+    sc.tl.leiden(adata, flavor="igraph", n_iterations=2)
+    sc.tl.tsne(adata)
+
+    # Create a Plotly-based UMAP scatter plot with Leiden clusters
+    umap_df = pd.DataFrame(adata.obsm["X_umap"], columns=["UMAP1", "UMAP2"])
+    umap_df["leiden"] = adata.obs["leiden"].values
+
+    # UMAP in plotly
+    opacity = 0.7
+    # modify dot size
+    dot_size = 3
+    fig_umap = px.scatter(
+        umap_df,
+        x="UMAP1",
+        y="UMAP2",
+        color="leiden",
+        title="UMAP with Leiden Clusters (Retained Cells Only)",
+        width=width,
+        height=height,
+        opacity=opacity
+    ).update_traces(marker=dict(size=dot_size))  # Set the dot size
+
+    # Center title and reduce margin
+    fig_umap.update_layout(
+        title_x=0.5,
+        margin=dict(t=30, l=10, r=10, b=20)
+    )
+    # t-SNE plot in plotly
+    tsne_df = pd.DataFrame(adata.obsm["X_tsne"], columns=["TSNE1", "TSNE2"])
+    tsne_df["leiden"] = adata.obs["leiden"].values
+
+    fig_tsne = px.scatter(
+        tsne_df,
+        x="TSNE1",
+        y="TSNE2",
+        color="leiden",
+        title="t-SNE with Leiden Clusters (Retained Cells Only)",
+        width=480,
+        height=360,
+        opacity=0.7
+    ).update_traces(marker=dict(size=3))
+
+    fig_tsne.update_layout(
+        title_x=0.5,
+        margin=dict(t=30, l=10, r=10, b=20)
+    )
+    return apply_uniform_style(fig_umap), apply_uniform_style(fig_tsne)
 
 def show_quant_log_table(quant_json_data, permit_list_json_data):
     """

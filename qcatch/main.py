@@ -121,7 +121,7 @@ def main():
     logger.info(f"🔎 step1- number of inital filtered cells: {len(filtered_bcs)}")
     converted_filtered_bcs =  [x.decode() if isinstance(x, np.bytes_) else str(x) for x in filtered_bcs]
     non_ambient_result =None
-    # # cell calling step2 - empty drop
+    # cell calling step2 - empty drop
     non_ambient_result : NonAmbientBarcodeResult | None = find_nonambient_barcodes(matrix, filtered_bcs, chemistry, n_partitions, verbose = verbose)
     
     # # Re-load the saved result from pkl file
@@ -213,6 +213,10 @@ def main():
     #     with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
     #         non_ambient_result = pickle.load(f)
 
+    # NOTE: The h5ad file has already been saved (if applicable).
+    # Any further modifications to `adata` below (for plotting purposes) 
+    # will not affect the h5ad files in disk.
+    
     # plots and log, summary tables
     plot_text_elements = create_plotly_plots(args.input.feature_dump_data, args.input.mtx_data, valid_bcs, args.input.usa_mode, args.input.is_h5ad)
     

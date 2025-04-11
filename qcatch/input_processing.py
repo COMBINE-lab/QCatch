@@ -239,12 +239,12 @@ def add_gene_symbol(adata, gene_id2name_file: Path | None, output_dir: Path):
     if gene_id2name_file is None:
         gene_id2name_path = get_name_mapping_file_from_registry(seqcol_digest, output_dir)
         if gene_id2name_path is None:
-            logger.warn(f"Failed to properly obtain gene id-to-name mapping; will not add mapping")
+            logger.warning(f"Failed to properly obtain gene id-to-name mapping; will not add mapping")
             return adata
     elif gene_id2name_file.exists() and gene_id2name_file.is_file():
         gene_id2name_path = gene_id2name_file
     else:
-        logger.warn(f"If gene id-to-name mapping is provided, it should be a file, but a directory was provided; will not add mapping")
+        logger.warning(f"If gene id-to-name mapping is provided, it should be a file, but a directory was provided; will not add mapping")
         return adata
 
     # add the gene symbol, based on the gene id to symbol mapping

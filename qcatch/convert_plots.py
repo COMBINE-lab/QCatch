@@ -22,7 +22,7 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
     data["rank"] = data.index
     
     # get filtered adata if needed
-    if usa_mode or 'gene_symbol' in adata.var.columns:
+    if usa_mode or 'gene_symbol' in adata.var.columns or True:
         filtered_mask = adata.obs['is_retained_cells'].values if is_h5ad else adata.obs_names.isin(valid_bcs)
             # NOTE: safe but maybe time consuming
         filtered_adata = adata[filtered_mask, :].copy()
@@ -54,12 +54,13 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
     else:
         fig_mt = mitochondria_plot(adata, is_all_cells=True)
         fig_mt_filtered = mitochondria_plot(filtered_adata, is_all_cells=False)
-        
+    
     # ---------------- Tab5 - SUA plots ---------------
     if usa_mode:
         fig_SUA_bar_html, fig_S_ratio_html = generate_SUA_plots(adata,is_all_cells=True)
         fig_SUA_bar_filtered_html, fig_S_ratio_filtered_html = generate_SUA_plots(filtered_adata,is_all_cells=False)
-        
+    # ---------------- Tab6 - UMAP ---------------
+    fig_umap, fig_tsne = umap_tsne_plot(filtered_adata)
     
     # Convert plots to HTML div strings
     plots = {
@@ -78,6 +79,10 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
         # ----tab4----
         'seq_saturation4-1': fig_seq_saturation.to_html(full_html=False, include_plotlyjs='cdn'),
         'barcode_collapse4-2': fig_barcode_collapse.to_html(full_html=False, include_plotlyjs='cdn'),
+        
+        # ---tab6----
+        'umap_plot6-1': fig_umap.to_html(full_html=False, include_plotlyjs='cdn'),
+        'tsne_plot6-2': fig_tsne.to_html(full_html=False, include_plotlyjs='cdn'),
 
     }
     if fig_mt or fig_mt_filtered:
