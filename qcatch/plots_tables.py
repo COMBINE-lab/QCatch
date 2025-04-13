@@ -7,8 +7,7 @@ from pyroe import load_fry
 import logging
 import scanpy as sc
 
-# Configure logging to show timestamps and message level
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 def apply_uniform_style(fig):
     """Apply a consistent style with a solid background matching the container."""
@@ -341,13 +340,13 @@ def mitochondria_plot(adata,is_all_cells):
     
     # Identify mitochondrial genes
     # make it case insensitive, to avoid the NaN issue
-    adata.var["mt"] = adata.var_names.str.upper().str.startswith("MT-").astype(bool)
+    adata.var["mt"] = adata.var['gene_symbol'].str.startswith("MT-") | adata.var['gene_symbol'].str.startswith("mt-")
     if adata.var["mt"].sum() > 0:
         # Compute QC metrics
         sc.pp.calculate_qc_metrics(adata, qc_vars=["mt"], inplace=True, percent_top=[20], log1p=True)   
         df = adata.obs[['pct_counts_mt']].copy()
     else:
-        logging.info("Warning: No mitochondrial genes found.")
+        logger.warning("No mitochondrial genes found.")
         # Create an empty DataFrame to generate a blank violin plot
         df = pd.DataFrame({"pct_counts_mt": [], "Sample": []})
 

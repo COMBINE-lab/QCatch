@@ -4,6 +4,7 @@ tutorial.sh
 run_main_NEW.sh
 run_installed_pkg.sh
 *.temp.*
+.github/workflows/publish.yml
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

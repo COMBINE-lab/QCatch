@@ -11,7 +11,6 @@ import shutil
 from qcatch import templates
 from qcatch.utils import QuantInput, get_input
 from qcatch.plots_tables import show_quant_log_table
-from qcatch.input_processing import parse_quant_out_dir
 from qcatch.convert_plots import create_plotly_plots, modify_html_with_plots
 from qcatch.find_retained_cells.matrix import CountMatrix
 from qcatch.find_retained_cells.cell_calling import initial_filtering_OrdMag, find_nonambient_barcodes, NonAmbientBarcodeResult
@@ -121,12 +120,16 @@ def main():
     logger.info(f"🔎 step1- number of inital filtered cells: {len(filtered_bcs)}")
     converted_filtered_bcs =  [x.decode() if isinstance(x, np.bytes_) else str(x) for x in filtered_bcs]
     non_ambient_result =None
-    # cell calling step2 - empty drop
-    non_ambient_result : NonAmbientBarcodeResult | None = find_nonambient_barcodes(matrix, filtered_bcs, chemistry, n_partitions, verbose = verbose)
     
-    # # Re-load the saved result from pkl file
-    # with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
-    #     non_ambient_result = pickle.load(f)
+    quick_test_mode_init = False
+    quick_test_mode = False
+    if quick_test_mode:
+        # Re-load the saved result from pkl file
+        with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
+            non_ambient_result = pickle.load(f)
+    else:
+        # cell calling step2 - empty drop
+        non_ambient_result : NonAmbientBarcodeResult | None = find_nonambient_barcodes(matrix, filtered_bcs, chemistry, n_partitions, verbose = verbose)
     
     if non_ambient_result is None:
         non_ambient_cells = 0
@@ -136,8 +139,9 @@ def main():
     else:
         non_ambient_cells = len(non_ambient_result.eval_bcs)
         logger.debug(f"step2- Empty drop: number of all potential non-ambient cells: {non_ambient_cells}")
-        with open(f'{output_dir}/non_ambient_result.pkl', 'wb') as f:
-            pickle.dump(non_ambient_result, f)
+        if quick_test_mode_init:
+            with open(f'{output_dir}/non_ambient_result.pkl', 'wb') as f:
+                pickle.dump(non_ambient_result, f)
         
         # extract the non-ambient cells from eval_bcs from a binary array
         is_nonambient_bcs = [str(bc) for bc, boolean_non_ambient in zip(non_ambient_result.eval_bcs, non_ambient_result.is_nonambient) if boolean_non_ambient]
