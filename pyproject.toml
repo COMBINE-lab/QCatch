@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "qcatch"
-version = "0.2.1"
+version = "0.2.2"
 description = "QCatch: Quality Control downstream of alevin-fry / simpleaf. "
 readme = "docs/index.md"
 license = { file = "LICENSE" }

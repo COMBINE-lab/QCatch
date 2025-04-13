@@ -336,7 +336,7 @@ def mitochondria_plot(adata,is_all_cells):
     sc.settings.verbosity = 0
     # # we have to filter out cells with less than 1 genes detected, otherwise will will have many cells with high mitochondrial content, which may be misleading of the distribution for valid data.
     if is_all_cells:
-        sc.pp.filter_cells(adata, min_genes=10)
+        sc.pp.filter_cells(adata, min_genes=20)
     
     # Identify mitochondrial genes
     # make it case insensitive, to avoid the NaN issue

@@ -15,6 +15,12 @@ from qcatch.convert_plots import create_plotly_plots, modify_html_with_plots
 from qcatch.find_retained_cells.matrix import CountMatrix
 from qcatch.find_retained_cells.cell_calling import initial_filtering_OrdMag, find_nonambient_barcodes, NonAmbientBarcodeResult
 
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("qcatch")
+except PackageNotFoundError:
+    __version__ = "unknown"
 
 def load_template():
     # Open the template file and parse it with BeautifulSoup
@@ -82,6 +88,12 @@ def main():
         '--verbose', '-v',
         action='store_true', 
         help='Enable verbose logging with debug level messages')
+    
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f"qcatch version {__version__}"
+    )
 
     args = parser.parse_args()
 
@@ -122,7 +134,7 @@ def main():
     non_ambient_result =None
     
     quick_test_mode_init = False
-    quick_test_mode = False
+    quick_test_mode = True
     if quick_test_mode:
         # Re-load the saved result from pkl file
         with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
@@ -164,6 +176,12 @@ def main():
             args.input.mtx_data.obs['non_ambient_pvalue'] = args.input.mtx_data.obs['barcodes'].map(barcode_to_pval).astype('float')
             
             args.input.mtx_data.obs['is_retained_cells'] = args.input.mtx_data.obs['barcodes'].isin(valid_bcs)
+            
+            # add qcatch version
+            qcatch_log = {
+                "version":__version__,
+            }
+            args.input.mtx_data.uns['qc_info'] = qcatch_log
             
             logger.info("🗂️ Saved 'cell calling result' to the h5ad file, check the new added columns in adata.obs .")
             temp_file = os.path.join(args.input.dir, 'quants_after_QC.h5ad')
@@ -212,21 +230,16 @@ def main():
             # Logging the cell calling result path
             logger.info(f'🗂️ Saved cell calling result in the output directory: {output_dir}')
     
-    # if non_ambient_result is not None:
-    #     # Load the result from pkl file
-    #     with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
-    #         non_ambient_result = pickle.load(f)
 
     # NOTE: The h5ad file has already been saved (if applicable).
     # Any further modifications to `adata` below (for plotting purposes) 
     # will not affect the h5ad files in disk.
-    
+    logger.info("🎨 Generating plots and tables...")
     # plots and log, summary tables
     plot_text_elements = create_plotly_plots(args.input.feature_dump_data, args.input.mtx_data, valid_bcs, args.input.usa_mode, args.input.is_h5ad)
     
     quant_json_table_html, permit_list_table_html = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
-
-
+    
     # Modify HTML with plots
     modify_html_with_plots(
         # report template
