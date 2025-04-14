@@ -116,9 +116,6 @@ def parse_quant_out_dir(quant_out_dir):
             
         else:
             mtx_data = load_fry(mtx_dir_path, output_format='raw')
-            # TODO: load the U+S+A mtx data, compute median gene per cell based on mtx
-            # USA_mtx_data = load_fry(mtx_dir_path, output_format='all')
-            
             # Load  quant.json, generate_permit_list.json, and featureDump.txt
             quant_json_data, permit_list_json_data, feature_dump_data = load_json_txt_file(quant_out_dir, used_simpleaf)
             

@@ -48,6 +48,7 @@ We highly recommend specifying the chemistry used in your experiment. By default
 | `--n_partitions` | `-n` | `int` (Optional) | Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specified `--chemistry`. Only use `--n_partitions` when your experiment uses a custom chemistry not listed in the predefined chemistry options.|
 | `--gene_id2name_file` | `-g` | `str` (Optional) | Fail provides a mapping from gene IDs to gene names. The file must be a TSV containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)—without a header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed.|
 | `--save_filtered_h5ad` | `-s` | `flag` (Optional) |If enabled, `qcatch` will save a separate `.h5ad` file containing only the retained cells.|
-| `--overwrite_h5ad` | `-o` | `flag` (Optional) |If enabled, `qcatch` will overwrite the original `.h5ad` file in place by appending cell filtering results to `anndata.obs`. No existing data or cells will be removed; only additional metadata columns are added.|
-| `--verbose` | `-v` | `flag` (Optional) | Enable verbose logging with debug-level messages. |
-
+| `--overwrite_h5ad` | `-w` | `flag` (Optional) |If enabled, `qcatch` will overwrite the original `.h5ad` file in place by appending cell filtering results to `anndata.obs`. No existing data or cells will be removed; only additional metadata columns are added.|
+| `--skip_umap_tsne` | `-u` | `flag` (Optional) | If provided, skips generation of UMAP and t-SNE plots. |
+| `--verbose` | `-b` | `flag` (Optional) | Enable verbose logging with debug-level messages. |
+| `--version` | `-v` | `flag` (Optional) | Display the installed version of qcatch. |

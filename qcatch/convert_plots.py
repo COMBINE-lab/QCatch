@@ -7,7 +7,7 @@ from qcatch.input_processing import *
 
 logger = logging.getLogger(__name__)
 
-def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
+def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, skip_umap_tsne):
     """
     1.Load feature dump data from the alevin-frey quant output directory
     2.Create interactive Plotly plots
@@ -21,21 +21,30 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
     data = data.sort_values("deduplicated_reads", ascending=False).reset_index(drop=True)
     data["rank"] = data.index
     
-    # get filtered adata if needed
-    if usa_mode or 'gene_symbol' in adata.var.columns or True:
-        filtered_mask = adata.obs['is_retained_cells'].values if is_h5ad else adata.obs_names.isin(valid_bcs)
-            # NOTE: safe but maybe time consuming
-        filtered_adata = adata[filtered_mask, :].copy()
-    
+    # get filtered adata
+    filtered_mask = adata.obs['is_retained_cells'].values if is_h5ad else adata.obs_names.isin(valid_bcs)
+        # NOTE: safe but maybe time consuming
+    filtered_adata = adata[filtered_mask, :].copy()
+
     # ---------------- Tab1 - Knee Plots ---------------
     fig_knee_1, fig_knee_2 = generate_knee_plots(data)
     
     # ---------------- Generate summary table content ----------------
-    # Get total detected genes
-    total_detected_genes = (adata.X > 0).sum(axis=0)  
+    all_mtx = None
+    if usa_mode:
+        # add up all layers
+        all_mtx_filtered = filtered_adata.layers['spliced'] + filtered_adata.layers['unspliced'] + filtered_adata.layers['ambiguous']
+    else: 
+        all_mtx_filtered = filtered_adata.X
+    # Get total detected genes for reatined cells
+    total_detected_genes = (all_mtx_filtered > 0).sum(axis=0)  
     # Count genes with at least one UMI
     total_detected_genes = np.count_nonzero(total_detected_genes)  
-    summary_table_html = generate_summary_table(data,valid_bcs, total_detected_genes)
+    # calculate median genes per cell
+    all_mtx_gene_per_cell = (all_mtx_filtered > 0).sum(axis=1).tolist()
+    median_genes_per_cell = np.median(all_mtx_gene_per_cell)
+
+    summary_table_html = generate_summary_table(data, valid_bcs, total_detected_genes, median_genes_per_cell)
     
     # ---------------- Tab2 - Barcode Frequency Plots ---------------
     fig_bc_freq_UMI, fig_bc_freq_gene, fig_gene_UMI = barcode_frequency_plots(data)
@@ -60,7 +69,12 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
         fig_SUA_bar_html, fig_S_ratio_html = generate_SUA_plots(adata,is_all_cells=True)
         fig_SUA_bar_filtered_html, fig_S_ratio_filtered_html = generate_SUA_plots(filtered_adata,is_all_cells=False)
     # ---------------- Tab6 - UMAP ---------------
-    fig_umap, fig_tsne = umap_tsne_plot(filtered_adata)
+    if not skip_umap_tsne:
+        fig_umap, fig_tsne = umap_tsne_plot(filtered_adata)
+        
+    else:
+        fig_umap = fig_tsne = None
+        logger.info("🦦 Skipping UMAP and t-SNE plots as per user request.")
     
     # Convert plots to HTML div strings
     plots = {
@@ -81,10 +95,11 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
         'barcode_collapse4-2': fig_barcode_collapse.to_html(full_html=False, include_plotlyjs='cdn'),
         
         # ---tab6----
-        'umap_plot6-1': fig_umap.to_html(full_html=False, include_plotlyjs='cdn'),
-        'tsne_plot6-2': fig_tsne.to_html(full_html=False, include_plotlyjs='cdn'),
-
     }
+    if fig_umap and fig_tsne:
+        plots['umap_plot6-1'] = fig_umap.to_html(full_html=False, include_plotlyjs='cdn')
+        plots['tsne_plot6-2'] = fig_tsne.to_html(full_html=False, include_plotlyjs='cdn')
+
     if fig_mt or fig_mt_filtered:
         #  2nd plot in tab3
         plots['fig_mt3-2'] = fig_mt.to_html(full_html=False, include_plotlyjs="cdn")
@@ -104,7 +119,7 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad):
     plot_text_elements = (plots, texts, summary_table_html)
     return plot_text_elements
 
-def modify_html_with_plots(soup, output_html_path, plot_text_elements, quant_json_table_html,permit_list_table_html,  usa_mode):
+def modify_html_with_plots(soup, output_html_path, plot_text_elements, quant_json_table_html, permit_list_table_html, usa_mode):
     """
     Modify an HTML file to include Plotly plots, update text dynamically by ID, 
     and insert summary and log info tables.

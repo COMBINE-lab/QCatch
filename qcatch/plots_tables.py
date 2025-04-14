@@ -505,7 +505,7 @@ def show_quant_log_table(quant_json_data, permit_list_json_data):
     return quant_table_content, permit_list_table_content
 
 
-def generate_summary_table(raw_data, valid_bcs, total_detected_genes):
+def generate_summary_table(raw_data, valid_bcs, total_detected_genes,median_genes_per_cell):
     """
     Generate a summary table with total corrected reads, total UMI, and total number of cells, etc.
     in a 4-column (two key-value pairs per row) Bootstrap table.
@@ -515,10 +515,12 @@ def generate_summary_table(raw_data, valid_bcs, total_detected_genes):
     data = raw_data[raw_data['barcodes'].isin(valid_bcs)]
     mean_reads_per_cell = int(np.nan_to_num(data['corrected_reads'].mean(), nan=0))
     median_umi_per_cell = int(np.nan_to_num(data['deduplicated_reads'].median(), nan=0))
-    median_genes_per_cell = int(np.nan_to_num(data['num_expressed'].median(), nan=0))
-
+    # NOTE: featureDump(in usa_mode), count gene in -U, -S, -A as separate genes. 
+    # median_genes_per_cell = int(np.nan_to_num(data['num_expressed'].median(), nan=0))
     # total_correct_reads = sum(data['corrected_reads'])
     # total_UMI = sum(data['deduplicated_reads'])
+    
+
     summary = {
         "Number of retained cells": f"{len(valid_bcs):,}",
         "Number of all processed cells": f"{total_cells:,}",

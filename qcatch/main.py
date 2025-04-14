@@ -85,16 +85,20 @@ def main():
         help="If enabled, `qcatch` will overwrite the original `.h5ad` file in place by appending cell filtering results to anndata.obs. No existing data or cells will be removed; only additional metadata columns are added."
     )
     parser.add_argument(
-        '--verbose', '-v',
+        '--skip_umap_tsne', '-u',
+        action='store_true',
+        help='If provided, skips generation of UMAP and t-SNE plots.'
+    )
+    parser.add_argument(
+        '--verbose', '-b',
         action='store_true', 
         help='Enable verbose logging with debug level messages')
     
     parser.add_argument(
-        '--version',
+        '--version', '-v',
         action='version',
         version=f"qcatch version {__version__}"
     )
-
     args = parser.parse_args()
 
     # Set logging level based on the verbose flag
@@ -133,7 +137,7 @@ def main():
     converted_filtered_bcs =  [x.decode() if isinstance(x, np.bytes_) else str(x) for x in filtered_bcs]
     non_ambient_result =None
     
-    quick_test_mode_init = False
+    save_for_quick_test = False
     quick_test_mode = False
     if quick_test_mode:
         # Re-load the saved result from pkl file
@@ -151,7 +155,7 @@ def main():
     else:
         non_ambient_cells = len(non_ambient_result.eval_bcs)
         logger.debug(f"step2- Empty drop: number of all potential non-ambient cells: {non_ambient_cells}")
-        if quick_test_mode_init:
+        if save_for_quick_test:
             with open(f'{output_dir}/non_ambient_result.pkl', 'wb') as f:
                 pickle.dump(non_ambient_result, f)
         
@@ -236,7 +240,14 @@ def main():
     # will not affect the h5ad files in disk.
     logger.info("🎨 Generating plots and tables...")
     # plots and log, summary tables
-    plot_text_elements = create_plotly_plots(args.input.feature_dump_data, args.input.mtx_data, valid_bcs, args.input.usa_mode, args.input.is_h5ad)
+    plot_text_elements = create_plotly_plots(
+        args.input.feature_dump_data,
+        args.input.mtx_data,
+        valid_bcs,
+        args.input.usa_mode,
+        args.input.is_h5ad,
+        args.skip_umap_tsne
+    )
     
     quant_json_table_html, permit_list_table_html = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
     

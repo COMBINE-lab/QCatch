@@ -136,8 +136,6 @@ class QuantInput:
                     self.mtx_data = load_fry(str(self.mtx_dir_path), output_format="raw")
                 except Exception as e:
                     logger.error(f"Error calling load_fry :: {e}")
-                # TODO: load the U+S+A mtx data, compute median gene per cell based on mtx
-                # USA_mtx_data = load_fry(mtx_dir_path, output_format='all')
                 self.mtx_data.var["gene_id"] = self.mtx_data.var.index
 
                 # Load  quant.json, generate_permit_list.json, and featureDump.txt
