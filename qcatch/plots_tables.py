@@ -31,9 +31,7 @@ height = 360
 opacity = 0.5
 
 def generate_knee_plots(data):
-    width=  400
-    height= 400
-    
+
     # 1.1 Knee Plot 1: Rank vs UMI Counts
     fig_knee_1 = px.scatter(
         data,
@@ -284,8 +282,8 @@ def barcode_collapse(data):
 
 def barcode_frequency_plots(data):
     # scatter plot for reads per CB v.s. UMI counts in this CB
-    # width = 550
-    height = 380
+    width=  400
+    height= 400
     opacity = 0.5
 
     fig_bc_freq_UMI = px.scatter(
@@ -305,7 +303,7 @@ def barcode_frequency_plots(data):
         x="corrected_reads", 
         y="num_expressed", 
         # log_y=True, 
-        title="Barcode frequency vs Number of Genes Detected(All Cells)", 
+        title="Barcode frequency vs Detected Genes(All Cells)", 
         labels={"corrected_reads": "Barcode frequency", "num_expressed": "Number of Genes Detected"},
         width=width,
         height=height,

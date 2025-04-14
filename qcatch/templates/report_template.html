@@ -186,7 +186,22 @@
               </div>
   
               <div id="summary" class="col col-md-7">
-                    <h4>Summary</h4>
+                    <h4>Summary
+                      <button class="btn btn-link help-button" data-target="helpText-Summary">
+                      <i class="bi bi-question-circle"></i>
+                    </button></h4>
+                    <div class="collapse" id="helpText-Summary">
+                      <div class="card card-body">
+                        <p class="mb-0">
+                          <b>Number of retained cells</b>: The number of valid and high quality cells that passed the cell calling step. This includes cells identified during the initial filtering and additional cells identified by the EmptyDrops step, whose expression profiles are significantly distinct from the ambient background.<br>
+                          <b>Number of all processed cells</b>: The total number of cell barcodes observed in the processed sample. <br>
+                          <b>Mean reads per retained cell</b>: The total number of reads(after cell barcode correction), divided by the number of retained cells. <br>
+                          <b>Median UMI per retained cell</b>: The median number of UMIs per retained cells. <br>
+                          <b>Median genes per retained cell</b>: The median number of detected genes per retained cells. <br>
+                          <b>Total genes detected for retained cells</b>: the total number of unique genes detected acorss all retained cells. <br>
+                        </p>
+                      </div>
+                    </div>
                     <table class="table table-hover table-striped" id = "summary_table">
                       <!-- Dynamic rows will be inserted here -->
                     <tbody id="summary_tbody"></tbody>    
@@ -257,13 +272,13 @@
                               </div>
                             </div>
                           </div>
-                            <div class="col col-md-6" >
+                            <div class="col col-md-4" >
                               <div id="bc_freq_plot2-1"></div>
                             </div>
-                            <div class="col col-md-6">
+                            <div class="col col-md-4">
                               <div id="bc_freq_plot2-2"></div>
                             </div>
-                            <div class="col col-md-6">
+                            <div class="col col-md-4">
                               <div id="bc_freq_plot2-3"></div>
                             </div>
                         </div>
@@ -304,7 +319,7 @@
                          <!-- Section4-->
                          <div class="row align-items-center">
                           <div class="section" id = "section4">
-                            <h5>🧬 Distribution of Detected Gene Count and Mitochondrial Percentage Plot.
+                            <h5>🧬 Distribution of Detected Gene Count and Mitochondrial Percentage Plot
                               <button class="btn btn-link help-button" data-target="helpText4">
                                 <i class="bi bi-question-circle"></i>
                               </button>
@@ -383,7 +398,7 @@
                          <!-- Section6-->
                         <div class="container align-items-center">
                           <div class="section" id = "section6">
-                            <h5>🗺️ Clustering: UMAP and t-SNE.
+                            <h5>🗺️ Clustering: UMAP and t-SNE
                               <button class="btn btn-link help-button" data-target="helpText6">
                                 <i class="bi bi-question-circle"></i>
                               </button>

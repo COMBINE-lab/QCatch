@@ -72,7 +72,7 @@ def main():
         '--gene_id2name_file', '-g', 
         type=Path,
         default=None,
-        help="(Optional) File provides a mapping from gene IDs to gene names. The file must be a CSV file contains two columns with headers: 'gene_id' (e.g., ENSG00000284733) and 'gene_name' (e.g., OR4F29). If not provided, an attempt will be made to look up the mapping in a remote registry. If that lookup fails the mitochondria plots will not be displayed."
+        help="(Optional) Fail provides a mapping from gene IDs to gene names. The file must be a TSV containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)—without a header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed."
     )
     parser.add_argument(
         '--save_filtered_h5ad', '-s',
@@ -134,7 +134,7 @@ def main():
     non_ambient_result =None
     
     quick_test_mode_init = False
-    quick_test_mode = True
+    quick_test_mode = False
     if quick_test_mode:
         # Re-load the saved result from pkl file
         with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:

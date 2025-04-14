@@ -187,7 +187,7 @@ def get_name_mapping_file_from_registry(seqcol_digest: str, output_dir: Path) ->
     look for a known id-to-symbol mapping that matches the digest.  If this is successful, it 
     will download the file and return the path to the downloaded file.  Otherwise, it will return None.
     """
-    output_file = output_dir / f"{seqcol_digest}.csv"
+    output_file = output_dir / f"{seqcol_digest}.tsv"
     REGISTRY_URL = "https://raw.githubusercontent.com/COMBINE-lab/QCatch-resources/refs/heads/main/resources/registries/id2name.json"
     r = requests.get(REGISTRY_URL)
     if r.ok:
@@ -248,7 +248,7 @@ def add_gene_symbol(adata, gene_id2name_file: Path | None, output_dir: Path):
         return adata
 
     # add the gene symbol, based on the gene id to symbol mapping
-    gene_id_to_symbol = pd.read_csv(gene_id2name_path)
+    gene_id_to_symbol = pd.read_csv(gene_id2name_path, sep='\t', header=None, names=['gene_id', 'gene_name'])
 
     # Identify missing gene symbols
     missing_symbols_count = gene_id_to_symbol['gene_name'].isna().sum()
@@ -257,9 +257,9 @@ def add_gene_symbol(adata, gene_id2name_file: Path | None, output_dir: Path):
         logger.info(f"Number of gene IDs with missing gene_name/symbols: {missing_symbols_count}")
         # Replace NaN values in 'gene_symbol' with the corresponding 'gene_id'
         gene_id_to_symbol['gene_name'].fillna(gene_id_to_symbol['gene_id'], inplace=True)
-        logger.info(f"fill missing symbols with gene_id.")
+        logger.info("Filled missing symbols with gene_id.")
 
-    # Create a mapping dictionary from 'query' to 'symbol'
+    # Create a mapping dictionary
     id_to_symbol_dict = pd.Series(gene_id_to_symbol["gene_name"].values, index=gene_id_to_symbol["gene_id"]).to_dict()
 
     # Initialize an empty list to hold the reordered symbols
