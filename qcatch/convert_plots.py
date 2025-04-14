@@ -42,7 +42,7 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, 
     total_detected_genes = np.count_nonzero(total_detected_genes)  
     # calculate median genes per cell
     all_mtx_gene_per_cell = (all_mtx_filtered > 0).sum(axis=1).tolist()
-    median_genes_per_cell = np.median(all_mtx_gene_per_cell)
+    median_genes_per_cell = int(np.median(all_mtx_gene_per_cell))
 
     summary_table_html = generate_summary_table(data, valid_bcs, total_detected_genes, median_genes_per_cell)
     

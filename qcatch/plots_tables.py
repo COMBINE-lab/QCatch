@@ -252,7 +252,7 @@ def barcode_collapse(data):
 
     # Compute the gain_rate safely (avoid division by zero)
     gain_rate = (after_clap - before_clap) / before_clap
-    mean_gain_rate = round(np.mean(gain_rate)*100, 4)
+    mean_gain_rate = round(np.mean(gain_rate)*100, 2)
     # Plot for Barcode Collapse
     fig_barcode_collapse = px.scatter(
         x=before_clap,
