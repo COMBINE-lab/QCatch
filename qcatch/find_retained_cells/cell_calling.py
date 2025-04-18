@@ -12,6 +12,15 @@ from .sgt import sgt_proportions,SimpleGoodTuringError
 import time
 import logging
 logger = logging.getLogger(__name__)
+
+def setup_logger(verbose: bool):
+    if not logger.hasHandlers():  # Avoid duplicate logs
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s :\n %(message)s")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+    logger.setLevel(logging.DEBUG if verbose else logging.INFO)
 # #----------------- Constants -----------------
 ORDMAG_RECOVERED_CELLS_QUANTILE = 0.99
 ORDMAG_NUM_BOOTSTRAP_SAMPLES = 100
@@ -209,13 +218,13 @@ def compute_bootstrapped_top_n(top_n_boot, nonzero_counts):
     return result
 
 ## *M*
-def initial_filtering_OrdMag(matrix, chemistry_description: str | None = None,n_partitions: int | None = None):
-    
+def initial_filtering_OrdMag(matrix, chemistry_description: str | None = None,n_partitions: int | None = None, verbose: bool = False):
+    setup_logger(verbose)
     metrics = FilteredCellResults(0)
     
     bc_counts = matrix.get_counts_per_bc()
-    
     nonzero_bc_counts = bc_counts[bc_counts > 0]
+    logger.debug(f"nonzero_bc_counts len : {len(nonzero_bc_counts)}")
     if len(nonzero_bc_counts) == 0:
         msg = "WARNING: All barcodes do not have enough reads for ordmag, allowing no bcs through"
         return [], metrics, msg
@@ -226,7 +235,7 @@ def initial_filtering_OrdMag(matrix, chemistry_description: str | None = None,n_
     else:
         lower_bound, _ = compute_empty_drops_bounds(chemistry_description, n_partitions)
         max_expected_cells = min(lower_bound, MAX_RECOVERED_CELLS)
-
+    logger.debug(f"max_expected_cells: {max_expected_cells}")
     # Initialize a reproducible random state.
     rs = np.random.RandomState(0)
     
@@ -456,6 +465,7 @@ def find_nonambient_barcodes(matrix, orig_cell_bcs,chemistry_description, n_part
     Returns:
     TBD
     """
+    setup_logger(verbose)
     # Estimate an ambient RNA profile
     umis_per_bc = matrix.get_counts_per_bc()
     logger.debug(f'umi_per_bc zero count: {np.count_nonzero(umis_per_bc == 0)}')

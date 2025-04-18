@@ -88,14 +88,13 @@ class QuantInput:
                 self.mtx_dir_path = os.path.join(
                     self.dir, "simpleaf_quant", "af_quant"
                 )
-            # elif (self.dir / "af_quant").exists():
-            elif os.path.exists(os.path.join(self.dir, "af_quant")):
+            elif os.path.exists(os.path.join(self.dir, "af_quant")) or os.path.exists(os.path.join(self.dir, "simpleaf_quant_log.json")):
                 logger.info(
                     "✅ Detected: 'simpleaf' was used for the quantification result."
                 )
                 self.from_simpleaf = True
                 self.mtx_dir_path = os.path.join(self.dir, "af_quant")
-            elif os.path.exists(os.path.join(self.dir, "quant.json")):
+            elif os.path.exists(os.path.join(self.dir, "alevin")):
                 logger.info(
                     "✅ Detected: 'alevin-fry' was used for the quantification result."
                 )
@@ -120,8 +119,9 @@ class QuantInput:
             self.is_h5ad = False
             # -----------------------------------
             # Check if quants.h5ad file exists in the parent directory
-            h5ad_file_path = os.path.join(self.dir, "quants.h5ad")
+            h5ad_file_path = os.path.join(self.mtx_dir_path, "alevin", "quants.h5ad")
             if os.path.exists(h5ad_file_path):
+                self.file = h5ad_file_path
                 self.is_h5ad = True
                 logger.info("✅ Loading the data from h5ad file...")
                 (
@@ -132,10 +132,13 @@ class QuantInput:
                     self.usa_mode,
                 ) = load_hdf5(self.file)
             else:
+                logger.info("Not finding quants.h5ad file, loading from mtx directory...")
                 try:
-                    self.mtx_data = load_fry(str(self.mtx_dir_path), output_format="raw")
+                    custome_format ={'X' : ['S', 'A','U'], 'unspliced' : ['U'], 'spliced' : ['S'], 'ambiguous' : ['A']}
+                    self.mtx_data = load_fry(str(self.mtx_dir_path), output_format=custome_format)
                 except Exception as e:
                     logger.error(f"Error calling load_fry :: {e}")
+                
                 self.mtx_data.var["gene_id"] = self.mtx_data.var.index
 
                 # Load  quant.json, generate_permit_list.json, and featureDump.txt

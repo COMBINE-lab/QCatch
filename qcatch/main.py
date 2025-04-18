@@ -46,43 +46,35 @@ def main():
         '--input', '-i', 
         type=get_input, 
         required=True, 
-        help="Path to the input directory containing the quantification output files or to the HDF5 file itself."
+        help="Path to either the .h5ad file itself or to the directory containing the quantification output files."
     )
-    
     parser.add_argument(
         '--output', '-o', 
         type=str, 
-        required=True,
-        help="Path to the desired output directory."
+        help="Path to the desired output directory (optional) . If provided, QCatch will save all result files and the QC report to this directory without modifying the original input. If not provided, QCatch will overwrite the original `.h5ad` file in place by appending new columns on anndata.obs(if input is a `.h5ad`), or save results in the input directory (if input is a folder of quantification results)."
     )
-
     parser.add_argument(
         '--chemistry', '-c', 
         type=str, 
         help="Specifies the chemistry used in the experiment, which determines the range for the empty_drops step. Options: '10X_3p_v2', '10X_3p_v3', '10X_3p_v4', '10X_5p_v3', '10X_3p_LT', '10X_HT'. If not provided, we'll use the default range (which is the range used for '10X_3p_v2' and '10X_3p_v3')."
     )
     parser.add_argument(
-        '--n_partitions', '-n', 
-        type=int, 
-        default=None,
-        help="Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specify the chemistry. Otherwise, you can specify the desired `n_partitions`. "
+        '--save_filtered_h5ad', '-s',
+        action='store_true',
+        help="If enabled with an h5ad input, `qcatch` will save a separate `.h5ad` file containing only the retained cells."
     )
     
     parser.add_argument(
         '--gene_id2name_file', '-g', 
         type=Path,
         default=None,
-        help="(Optional) Fail provides a mapping from gene IDs to gene names. The file must be a TSV containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)—without a header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed."
+        help="File provides a mapping from gene IDs to gene names. The file must be a TSV containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)—without a header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed."
     )
     parser.add_argument(
-        '--save_filtered_h5ad', '-s',
-        action='store_true',
-        help="If enabled, `qcatch` will save a separate `.h5ad` file containing only the retained cells."
-    )
-    parser.add_argument(
-        '--overwrite_h5ad', '-w',
-        action='store_true',
-        help="If enabled, `qcatch` will overwrite the original `.h5ad` file in place by appending cell filtering results to anndata.obs. No existing data or cells will be removed; only additional metadata columns are added."
+        '--n_partitions', '-n', 
+        type=int, 
+        default=None,
+        help="Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specify the chemistry. Otherwise, you can specify the desired `n_partitions`. "
     )
     parser.add_argument(
         '--skip_umap_tsne', '-u',
@@ -92,12 +84,13 @@ def main():
     parser.add_argument(
         '--verbose', '-b',
         action='store_true', 
-        help='Enable verbose logging with debug level messages')
+        help='Enable verbose logging with debug-level messages')
     
     parser.add_argument(
         '--version', '-v',
         action='version',
-        version=f"qcatch version {__version__}"
+        version=f"qcatch version {__version__}",
+        help='Display the installed version of qcatch.'
     )
     args = parser.parse_args()
 
@@ -107,16 +100,19 @@ def main():
         format="%(asctime)s - %(levelname)s :\n %(message)s"
     )
     
-    input_dir = args.input
+    input_path = args.input
     output_dir = args.output
     chemistry = args.chemistry 
     n_partitions = args.n_partitions
     gene_id2name_file = args.gene_id2name_file
     verbose = args.verbose
-    overwrite_h5ad = args.overwrite_h5ad
     save_filtered_h5ad = args.save_filtered_h5ad
-    os.makedirs(os.path.join(output_dir), exist_ok=True)
-    
+    if output_dir:
+        output_dir = Path(output_dir)
+        os.makedirs(os.path.join(output_dir), exist_ok=True)
+    else:
+        # If no output directory is specified, use the input directory/input file's parent directory
+        output_dir = Path(args.input.dir)
     # Suppress Numba’s debug messages by raising its level to WARNING
     logging.getLogger('numba').setLevel(logging.WARNING)
     
@@ -127,14 +123,14 @@ def main():
     matrix = CountMatrix.from_anndata(args.input.mtx_data)
 
     # add gene_id_2_name if we don't yet have it
-    output_path = Path(args.output)
-    args.input.add_geneid_2_name_if_absent(gene_id2name_file, output_path)
+    args.input.add_geneid_2_name_if_absent(gene_id2name_file, output_dir)
     
     # # cell calling step1 - empty drop
     logger.info("🧬 Starting cell calling...")
-    filtered_bcs = initial_filtering_OrdMag(matrix, chemistry, n_partitions)
+    filtered_bcs = initial_filtering_OrdMag(matrix, chemistry, n_partitions, verbose = verbose)
     logger.info(f"🔎 step1- number of inital filtered cells: {len(filtered_bcs)}")
     converted_filtered_bcs =  [x.decode() if isinstance(x, np.bytes_) else str(x) for x in filtered_bcs]
+    
     non_ambient_result =None
     
     save_for_quick_test = False
@@ -187,19 +183,21 @@ def main():
             }
             args.input.mtx_data.uns['qc_info'] = qcatch_log
             
-            logger.info("🗂️ Saved 'cell calling result' to the h5ad file, check the new added columns in adata.obs .")
-            temp_file = os.path.join(args.input.dir, 'quants_after_QC.h5ad')
-            # Save the modified file to a temporary file first
-            args.input.mtx_data.write_h5ad(temp_file, compression='gzip')
-            if overwrite_h5ad:
-                # After successful saving, remove or rename the original
-                input_h5ad_file = os.path.join(input_dir, 'quants.h5ad')
-                # Delete original file
-                os.remove(input_h5ad_file) 
-
-                # Rename temporary file to original filename
+            logger.info("🗂️ Saved 'cell calling result' to the modified h5ad file, check the new added columns in adata.obs .")
+            if output_dir == args.input.dir:
+                # In-place overwrite: same location as original
+                temp_file = os.path.join(output_dir, 'quants_after_QC.h5ad')
+                args.input.mtx_data.write_h5ad(temp_file, compression='gzip')
+                input_h5ad_file = args.input.file
+                os.remove(input_h5ad_file)
                 shutil.move(temp_file, input_h5ad_file)
-                logger.info(f"📋 Overwrited the original h5ad file with the new cell calling result.")
+                logger.info(f"📋 Overwrote the original h5ad file with the new cell calling result.")
+            else:
+                # Save to separate file in specified output dir
+                output_h5ad_file = os.path.join(output_dir, 'quants_after_QC.h5ad')
+                args.input.mtx_data.write_h5ad(output_h5ad_file, compression='gzip')
+                logger.info(f"📋 Saved modified h5ad file to: {output_h5ad_file}")
+                
             if save_filtered_h5ad:
                 # filter the anndata , only keep the cells in valid_bcs
                 filter_mtx_data = args.input.mtx_data[args.input.mtx_data.obs['is_retained_cells'].values, :].copy()
@@ -226,7 +224,7 @@ def main():
                     f.write(f"{bc}\t{pval}\n")
             
             # Save the total retained cells to a txt file
-            total_retained_cell_file = f'{output_dir}/total_retained_cells.txt'
+            total_retained_cell_file = os.path.join(output_dir, 'total_retained_cells.txt')
             with open(total_retained_cell_file, 'w') as f:
                 for bc in valid_bcs:
                     f.write(f"{bc}\n")

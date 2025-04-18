@@ -4,6 +4,7 @@ tutorial.sh
 run_main_NEW.sh
 run_installed_pkg.sh
 *.temp.*
+v4_check_10xh5_main.py
 .github/workflows/publish.yml
 # Byte-compiled / optimized / DLL files
 __pycache__/

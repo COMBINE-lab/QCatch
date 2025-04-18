@@ -13,13 +13,15 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, 
     2.Create interactive Plotly plots
     """
     
-    # Load the featureDump data
-    data = feature_dump_data
+    # Filter cells with zero reads from featureDump data
+    data = feature_dump_data[(feature_dump_data["deduplicated_reads"] >= 1) & 
+                        (feature_dump_data["num_expressed"] >= 1)]
+    
     retained_data = data[data['barcodes'].isin(valid_bcs)]
     
     # Sort by "deduplicated_reads" and assign rank
     data = data.sort_values("deduplicated_reads", ascending=False).reset_index(drop=True)
-    data["rank"] = data.index
+    data["rank"] = data.index+1# 1-based rank
     
     # get filtered adata
     filtered_mask = adata.obs['is_retained_cells'].values if is_h5ad else adata.obs_names.isin(valid_bcs)

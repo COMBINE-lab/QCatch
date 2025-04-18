@@ -45,21 +45,22 @@ def generate_knee_plots(data):
         height=height,
         opacity=opacity
     )
-    
-    
+
     # 1.2 Knee Plot 2: Rank vs Genes Detected
     fig_knee_2 = px.scatter(
-    data,
-    x="rank",
-    y="num_expressed",
-    log_x=True,
-    log_y=True,
-    title="Genes Detected against Cell Rank (All Cells)",
-    labels={"rank": "Cell Rank", "num_expressed": "Number of Detected Genes"},
-    width=width,
-    height=height,
-    opacity=opacity
+        data,
+        x="rank",
+        y="num_expressed",
+        log_x=True,
+        log_y=True,
+        title="Genes Detected against Cell Rank (All Cells)",
+        labels={"rank": "Cell Rank", "num_expressed": "Number of Detected Genes"},
+        width=width,
+        height=height,
+        opacity=opacity
     )
+    fig_knee_2.update_yaxes(range=[0, np.log10(data["num_expressed"].max())+0.1])
+ 
     return apply_uniform_style(fig_knee_1), apply_uniform_style(fig_knee_2)
 
 def generate_gene_histogram(data, is_all_cells):
@@ -132,7 +133,7 @@ def generate_seq_saturation(data):
         accumu_seq_saturation_array.append(down_seq_saturation_value)
         
     # for the accumulated arrays, only use 15 dots for plotting
-    num_dots = 20
+    num_dots = 100
     # avoid the case where the number of points is less than num_dots
     step = max(1, len(accumu_read_per_cell_array) // num_dots)
     accumu_read_per_cell_array = accumu_read_per_cell_array[::step]
@@ -173,18 +174,18 @@ def generate_SUA_plots(adata, is_all_cells):
     for layer in ['spliced', 'unspliced', 'ambiguous']:
         sum_count = int(adata.layers[layer].sum())
         SUA_sum_list.append(sum_count)
-    # calculate the S/(S+U) ratio for each cell(row)
+    # calculate the S+A/(S+U+A) ratio for each cell(row)
     # get the gene-wise sum for S and U matrix
 
-    S_sum = adata.layers['spliced'].sum(axis=1).tolist()
-    U_sum = adata.layers['unspliced'].sum(axis=1).tolist()
-
+    S_sum = adata.layers['spliced'].sum(axis=1).A1
+    U_sum = adata.layers['unspliced'].sum(axis=1).A1
+    A_sum = adata.layers['ambiguous'].sum(axis=1).A1
     # Ensure valid indices
-    denominator = np.array(S_sum) + np.array(U_sum)
+    denominator = S_sum + A_sum + U_sum
     valid_indices = (denominator != 0) & ~np.isnan(denominator)
 
     # Calculate the ratio only for valid indices
-    S_ratio = np.array(S_sum)[valid_indices] / denominator[valid_indices]
+    S_ratio = (S_sum + A_sum)[valid_indices] / denominator[valid_indices]
 
     # Convert to a Python list
     S_list = S_ratio.tolist()
@@ -221,7 +222,7 @@ def generate_SUA_plots(adata, is_all_cells):
     # Convert the barplot to HTML
     fig_SUA_bar_html = fig_SUA_bar.to_html(full_html=False, include_plotlyjs="cdn")
 
-    # plot the histogram for S/(S+U) ratio
+    # plot the histogram for S+A/(S+U+A) ratio
     fig_S_ratio = go.Figure(
         data=[go.Histogram(
             x=S_list,
@@ -230,9 +231,9 @@ def generate_SUA_plots(adata, is_all_cells):
 
     # Customize the layout
     fig_S_ratio.update_layout(
-        title="Histogram of S/(S+U) Ratio"+title_suffix,
-        xaxis=dict(title="S/(S+U) Ratio"),
-        yaxis=dict(title="Count"),
+        title="Histogram of  Ratio"+title_suffix,
+        xaxis=dict(title="(S+A)/(S+U+A) Ratio"),
+        yaxis=dict(title="Counts"),
         bargap=0.1,  # Space between bars
         title_x=0.5,
         margin=dict(t=40)
