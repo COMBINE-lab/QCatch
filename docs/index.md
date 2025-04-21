@@ -95,9 +95,9 @@ parent_quant_dir/
 │   │   ├── quants_mat_rows.txt
 │   │   ├── quants_mat.mtx
 │   │   └── quants.h5ad (available if you use simpleaf after v0.19.3)
-|   |   ...
-|   ├── featureDump.txt
-|   └── quant.json
+│   │   ...
+│   ├── featureDump.txt
+│   └── quant.json
 └── simpleaf_quant_log.json
 
 # alevin-fry
