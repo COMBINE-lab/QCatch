@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass
 from pyroe import load_fry
 from typing import List
-
+import argparse
 from qcatch.input_processing import load_json_txt_file, add_gene_symbol, STANDARD_COLUMNS, CAMEL_TO_SNAKE_MAPPING, standardize_feature_dump_columns
 
 
@@ -153,4 +153,7 @@ class QuantInput:
 
 
 def get_input(input_str: str) -> QuantInput:
-    return QuantInput(input_str)
+    try:
+        return QuantInput(input_str)
+    except Exception as e:
+        raise argparse.ArgumentTypeError(f"invalid get_input value: {input_str}\n→ {e}")

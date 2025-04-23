@@ -6,7 +6,7 @@ import plotly.graph_objs as go
 from pyroe import load_fry
 import logging
 import scanpy as sc
-
+from plotly.subplots import make_subplots
 logger = logging.getLogger(__name__)
 
 def apply_uniform_style(fig):
@@ -30,9 +30,12 @@ width = 480
 height = 360
 opacity = 0.5
 
-def generate_knee_plots(data):
+def generate_knee_plots(data, valid_bcs):
+    width = 520
+    # Map is_retained to human-readable cell_type
+    data["cell_type"] = data["barcodes"].isin(valid_bcs).map({True: "Retained Cell", False: "Background"})
 
-    # 1.1 Knee Plot 1: Rank vs UMI Counts
+    # 1.1 Knee Plot 1: Rank vs UMI Counts, colored by cell_type
     fig_knee_1 = px.scatter(
         data,
         x="rank",
@@ -40,13 +43,16 @@ def generate_knee_plots(data):
         log_x=True,
         log_y=True,
         title="UMI Counts vs Cell Rank (All Cells)",
-        labels={"rank": "Cell Rank", "deduplicated_reads": "UMI Counts"},
+        labels={"rank": "Cell Rank", "deduplicated_reads": "UMI Counts", "cell_type": "Cell Type"},
+        color="cell_type",
+        color_discrete_map={"Retained Cell": '#636EFA', "Background": 'lightgrey'},
         width=width,
         height=height,
         opacity=opacity
+        
     )
 
-    # 1.2 Knee Plot 2: Rank vs Genes Detected
+    # 1.2 Knee Plot 2: Rank vs Genes Detected, colored by cell_type
     fig_knee_2 = px.scatter(
         data,
         x="rank",
@@ -54,13 +60,29 @@ def generate_knee_plots(data):
         log_x=True,
         log_y=True,
         title="Genes Detected against Cell Rank (All Cells)",
-        labels={"rank": "Cell Rank", "num_expressed": "Number of Detected Genes"},
+        labels={"rank": "Cell Rank", "num_expressed": "Number of Detected Genes", "cell_type": "Cell Type"},
+        color="cell_type",
+        color_discrete_map={"Retained Cell": '#636EFA', "Background": 'lightgrey'},
         width=width,
         height=height,
         opacity=opacity
     )
     fig_knee_2.update_yaxes(range=[0, np.log10(data["num_expressed"].max())+0.1])
- 
+    # modify the legend
+    fig_knee_1.update_layout(
+        legend_title_text='',
+        title_x=0.5
+    )
+
+    fig_knee_2.update_layout(
+        legend_title_text='',
+        title_x=0.5
+    )
+    
+    fig_knee_1.update_traces(marker=dict(size=5))
+    fig_knee_2.update_traces(marker=dict(size=5))
+
+
     return apply_uniform_style(fig_knee_1), apply_uniform_style(fig_knee_2)
 
 def generate_gene_histogram(data, is_all_cells):
@@ -281,49 +303,86 @@ def barcode_collapse(data):
     
     return apply_uniform_style(fig_barcode_collapse), mean_gain_rate
 
-def barcode_frequency_plots(data):
-    # scatter plot for reads per CB v.s. UMI counts in this CB
-    width=  400
-    height= 400
-    opacity = 0.5
 
-    fig_bc_freq_UMI = px.scatter(
-        data, 
-        x="corrected_reads", 
-        y="deduplicated_reads", 
-        # log_y=True,
-        title="Barcode frequency vs UMI Counts(All Cells)", 
-        labels={"corrected_reads": "Barcode frequency", "deduplicated_reads": "UMI Counts"},
-        width=width,
-        height=height,
-        opacity=opacity)
+
+def barcode_frequency_plots(data, valid_bcs):
+    width = 1200
+    height = 400
+    opacity = 0.5
+    # Map is_retained to human-readable cell_type
+    data["cell_type"] = np.where(
+    data["barcodes"].isin(valid_bcs),
+    "Retained Cell",
+    "Background"
+    )
+    print("Retained barcodes found in data:", data["barcodes"].isin(valid_bcs).sum(), "out of", len(data))
+    # Create subplots: 1 row, 3 columns
+    fig = make_subplots(
+        rows=1, cols=3,
+        subplot_titles=[
+            "Barcode Frequency vs UMI Counts (All Cells)",
+            "Barcode Frequency vs Detected Genes (All Cells)",
+            "UMI Counts vs Detected Genes (All Cells)"
+        ],
+        shared_yaxes=False
+    )
+
+    # Plot 1 (legend enabled)
+    for trace in px.scatter(
+        data,
+        x="corrected_reads",
+        y="deduplicated_reads",
+        color="cell_type",
+        color_discrete_map={"Retained Cell": '#636EFA', "Background": 'lightgrey'},
+        opacity=opacity
+    ).data:
+        fig.add_trace(trace, row=1, col=1)
+
+    # Plot 2 (legend disabled)
+    for trace in px.scatter(
+    data,
+    x="corrected_reads",
+    y="num_expressed",
+    color="cell_type",
+    color_discrete_map={"Retained Cell": '#636EFA', "Background": 'lightgrey'},
+    opacity=opacity
+    ).data:
+        trace.showlegend = False  # Disable legend for this trace
+        fig.add_trace(trace, row=1, col=2)
     
-    # scatter plot for barcode frequency v.s. number of genes detected
-    fig_bc_freq_gene= px.scatter(
-        data, 
-        x="corrected_reads", 
-        y="num_expressed", 
-        # log_y=True, 
-        title="Barcode frequency vs Detected Genes(All Cells)", 
-        labels={"corrected_reads": "Barcode frequency", "num_expressed": "Number of Genes Detected"},
-        width=width,
-        height=height,
-        opacity=opacity)
-    
-    # UMI Counts vs Number of Detected Genes
-    fig_gene_UMI = px.scatter(
+
+    # Plot 3 (legend disabled)
+    for trace in px.scatter(
         data,
         x="deduplicated_reads",
         y="num_expressed",
-        # log_y=True,
-        title="UMI Counts vs Number of Detected Genes(All Cells)",
-        labels={"deduplicated_reads": "UMI Counts", "num_expressed": "Number of Detected Genes"},
+        color="cell_type",
+        color_discrete_map={"Retained Cell": '#636EFA', "Background": 'lightgrey'},
+        opacity=opacity
+        ).data:
+            trace.showlegend = False  # Disable legend for this trace
+            fig.add_trace(trace, row=1, col=3)
+        
+
+    fig.update_layout(
         width=width,
         height=height,
-        opacity=opacity
-        )
-    
-    return apply_uniform_style(fig_bc_freq_UMI), apply_uniform_style(fig_bc_freq_gene), apply_uniform_style(fig_gene_UMI)
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.25,
+            xanchor="center",
+            x=0.5,
+            title_text=""
+        ),
+        margin=dict(t=60, b=80),
+        title_x=0.5
+    )
+    fig = apply_uniform_style(fig)
+    # Explicitly reinforce grid lines for all subplots without overriding other style
+    fig.update_xaxes(showgrid=True, gridcolor='lightgrey',linecolor='#34495e')
+    fig.update_yaxes(showgrid=True, gridcolor='lightgrey',linecolor='#34495e')
+    return fig
     
 def mitochondria_plot(adata,is_all_cells):
     """Generates a properly aligned Plotly violin plot for mitochondrial content."""

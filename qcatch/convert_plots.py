@@ -29,7 +29,7 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, 
     filtered_adata = adata[filtered_mask, :].copy()
 
     # ---------------- Tab1 - Knee Plots ---------------
-    fig_knee_1, fig_knee_2 = generate_knee_plots(data)
+    fig_knee_1, fig_knee_2 = generate_knee_plots(data, valid_bcs)
     
     # ---------------- Generate summary table content ----------------
     all_mtx = None
@@ -49,7 +49,8 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, 
     summary_table_html = generate_summary_table(data, valid_bcs, total_detected_genes, median_genes_per_cell)
     
     # ---------------- Tab2 - Barcode Frequency Plots ---------------
-    fig_bc_freq_UMI, fig_bc_freq_gene, fig_gene_UMI = barcode_frequency_plots(data)
+    fig_bc_freq_all_plots = barcode_frequency_plots(data, valid_bcs)
+    # fig_bc_freq_UMI, fig_bc_freq_gene, fig_gene_UMI = barcode_frequency_plots(data)
 
     # ---------------- Tab3 - Sequencing Saturation ---------------
     fig_seq_saturation, seq_saturation_percent = generate_seq_saturation(retained_data)
@@ -84,9 +85,10 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, 
         'knee_plot1-1': fig_knee_1.to_html(full_html=False, include_plotlyjs='cdn'),
         'knee_plot1-2': fig_knee_2.to_html(full_html=False, include_plotlyjs='cdn'),
         # ----tab2----
-        'bc_freq_plot2-1': fig_bc_freq_UMI.to_html(full_html=False, include_plotlyjs='cdn'),
-        'bc_freq_plot2-2': fig_bc_freq_gene.to_html(full_html=False, include_plotlyjs='cdn'),
-        'bc_freq_plot2-3': fig_gene_UMI.to_html(full_html=False, include_plotlyjs='cdn'),
+        'bc_freq_all_plots': fig_bc_freq_all_plots.to_html(full_html=False, include_plotlyjs='cdn'),
+        # 'bc_freq_plot2-1': fig_bc_freq_UMI.to_html(full_html=False, include_plotlyjs='cdn'),
+        # 'bc_freq_plot2-2': fig_bc_freq_gene.to_html(full_html=False, include_plotlyjs='cdn'),
+        # 'bc_freq_plot2-3': fig_gene_UMI.to_html(full_html=False, include_plotlyjs='cdn'),
         # ----tab3----
         'hist_gene3-1':fig_hist_genes.to_html(full_html=False, include_plotlyjs="cdn"),
         # filtered data
