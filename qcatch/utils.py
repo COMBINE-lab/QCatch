@@ -73,6 +73,9 @@ class QuantInput:
                 self.feature_dump_data,
                 self.usa_mode,
             ) = load_hdf5(self.file)
+            
+            # TODO: deprecated later, when h5ad has the mapping info
+            self.map_json_data = find_mapping_info(self.dir.parent)
 
         else:
             self.dir = self.provided
@@ -80,20 +83,14 @@ class QuantInput:
                 f"Input {self.provided} inferred to be a directory; searching for valid input file"
             )
             self.mtx_dir_path = None
-            if os.path.exists(os.path.join(self.dir, "simpleaf_quant")):
-                logger.info(
-                    "✅ Detected: 'simpleaf' was used for the quantification result."
-                )
-                self.from_simpleaf = True
-                self.mtx_dir_path = os.path.join(
-                    self.dir, "simpleaf_quant", "af_quant"
-                )
-            elif os.path.exists(os.path.join(self.dir, "af_quant")) or os.path.exists(os.path.join(self.dir, "simpleaf_quant_log.json")):
+            self.af_map_path = None
+            if os.path.exists(os.path.join(self.dir, "af_quant")) or os.path.exists(os.path.join(self.dir, "simpleaf_quant_log.json")):
                 logger.info(
                     "✅ Detected: 'simpleaf' was used for the quantification result."
                 )
                 self.from_simpleaf = True
                 self.mtx_dir_path = os.path.join(self.dir, "af_quant")
+
             elif os.path.exists(os.path.join(self.dir, "alevin")):
                 logger.info(
                     "✅ Detected: 'alevin-fry' was used for the quantification result."
@@ -131,22 +128,26 @@ class QuantInput:
                     self.feature_dump_data,
                     self.usa_mode,
                 ) = load_hdf5(self.file)
+                # TODO: deprecated later, when h5ad has the mapping info
+                self.map_json_data = find_mapping_info(self.dir)
+ 
             else:
                 logger.info("Not finding quants.h5ad file, loading from mtx directory...")
                 try:
-                    custome_format ={'X' : ['S', 'A','U'], 'unspliced' : ['U'], 'spliced' : ['S'], 'ambiguous' : ['A']}
+                    custome_format ={'X' : ['S', 'A', 'U'], 'unspliced' : ['U'], 'spliced' : ['S'], 'ambiguous' : ['A']}
                     self.mtx_data = load_fry(str(self.mtx_dir_path), output_format=custome_format)
                 except Exception as e:
                     logger.error(f"Error calling load_fry :: {e}")
                 
                 self.mtx_data.var["gene_id"] = self.mtx_data.var.index
 
-                # Load  quant.json, generate_permit_list.json, and featureDump.txt
+                # Load quant.json, generate_permit_list.json, and featureDump.txt
                 (
                     self.quant_json_data,
                     self.permit_list_json_data,
                     self.feature_dump_data,
-                ) = load_json_txt_file(self.mtx_dir_path)
+                    self.map_json_data,
+                ) = load_json_txt_file(self.mtx_dir_path, self.map_json_path)
 
                 # detect usa_mode
                 self.usa_mode = self.quant_json_data["usa_mode"]
@@ -157,3 +158,20 @@ def get_input(input_str: str) -> QuantInput:
         return QuantInput(input_str)
     except Exception as e:
         raise argparse.ArgumentTypeError(f"invalid get_input value: {input_str}\n→ {e}")
+
+# TODO: deprecated later, when h5ad has the mapping info
+def find_mapping_info(parent_quant_dir):
+    # find the map_json file
+    map_json_path_1 = os.path.join(parent_quant_dir, "af_map", "aux_info", "map.json")
+    map_json_path_2 = os.path.join(parent_quant_dir, "af_map", "map_info.json")
+    if os.path.exists(map_json_path_1):
+        map_json_path = map_json_path_1
+    elif os.path.exists(map_json_path_2):
+        map_json_path = map_json_path_2
+    else:
+        logger.warning(
+            "⚠️ Unable to find af_map directory. Will not be able to display the mapping rate. "
+        )
+    with open(map_json_path, 'r') as f:
+            map_json_data = json.load(f)
+    return map_json_data

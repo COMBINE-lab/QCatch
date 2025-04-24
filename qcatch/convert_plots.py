@@ -7,7 +7,7 @@ from qcatch.input_processing import *
 
 logger = logging.getLogger(__name__)
 
-def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, skip_umap_tsne):
+def create_plotly_plots(feature_dump_data,map_json_data, adata, valid_bcs, usa_mode, is_h5ad, skip_umap_tsne, ):
     """
     1.Load feature dump data from the alevin-frey quant output directory
     2.Create interactive Plotly plots
@@ -45,15 +45,19 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, 
     # calculate median genes per cell
     all_mtx_gene_per_cell = (all_mtx_filtered > 0).sum(axis=1).tolist()
     median_genes_per_cell = int(np.median(all_mtx_gene_per_cell))
-
-    summary_table_html = generate_summary_table(data, valid_bcs, total_detected_genes, median_genes_per_cell)
+    
+    # get mapping rate
+    num_processed = map_json_data.get('num_processed') or map_json_data['num_reads']
+    mapping_rate = round(map_json_data['num_mapped'] / num_processed * 100, 2)
+    seq_saturation_value = generate_seq_saturation(retained_data)
+        
+    summary_table_html = generate_summary_table(data, valid_bcs, total_detected_genes, median_genes_per_cell, mapping_rate, seq_saturation_value)
     
     # ---------------- Tab2 - Barcode Frequency Plots ---------------
     fig_bc_freq_all_plots = barcode_frequency_plots(data, valid_bcs)
     # fig_bc_freq_UMI, fig_bc_freq_gene, fig_gene_UMI = barcode_frequency_plots(data)
 
-    # ---------------- Tab3 - Sequencing Saturation ---------------
-    fig_seq_saturation, seq_saturation_percent = generate_seq_saturation(retained_data)
+    # ---------------- Tab3 - Collapsing ---------------
     # NOTE: use the retained data for barcode_collapse plot
     fig_barcode_collapse, mean_gain_rate = barcode_collapse(retained_data)
     # ---------------- Tab4 - Histogram of Genes Detected ---------------
@@ -95,9 +99,7 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, 
         'hist_gene_filtered_3-1': fig_hist_genes_filtered.to_html(full_html=False, include_plotlyjs="cdn"),
 
         # ----tab4----
-        'seq_saturation4-1': fig_seq_saturation.to_html(full_html=False, include_plotlyjs='cdn'),
-        'barcode_collapse4-2': fig_barcode_collapse.to_html(full_html=False, include_plotlyjs='cdn'),
-        
+        'barcode_collapse4': fig_barcode_collapse.to_html(full_html=False, include_plotlyjs='cdn'),
         # ---tab6----
     }
     if fig_umap and fig_tsne:
@@ -117,7 +119,6 @@ def create_plotly_plots(feature_dump_data, adata, valid_bcs, usa_mode, is_h5ad, 
         plots['SUA_bar_filtered_5-1'] = fig_SUA_bar_filtered_html
         plots['S_ratio_filtered_5-2'] = fig_S_ratio_filtered_html
     texts = {
-        'seqSaturation': f'Sequencing Saturation value: {seq_saturation_percent}%',
         'meanGainRate': f'Mean gain rate per CB: {mean_gain_rate}%'
     }
     plot_text_elements = (plots, texts, summary_table_html)
@@ -183,6 +184,6 @@ def modify_html_with_plots(soup, output_html_path, plot_text_elements, quant_jso
         for missing in missing_sections:
             logger.warning(f"⚠️ {missing} not found in the HTML.")
     if len(missing_sections) == 0:
-        logger.info(f"🚀 HTML successfully updated all elements and saved to: {output_html_path}")
+        logger.info(f"🚀 QC report successfully updated all elements and saved to: {output_html_path}")
     elif len(updated_sections) != 0:
-        logger.info(f"🚀 HTML successfully updated and saved to: {output_html_path}")
+        logger.info(f"🚀 QC report successfully updated and saved to: {output_html_path}")

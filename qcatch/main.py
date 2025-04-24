@@ -161,10 +161,10 @@ def main():
         
         # Calculate the total number of valid barcodes
         valid_bcs = set(converted_filtered_bcs) | set(is_nonambient_bcs)
-        
+        # num of all processed cells
+        all_cells = args.input.mtx_data.shape[0]
         # Save the total retained cells to a txt file
-        logger.info(f"✅ Total reatined cells after cell calling: {len(valid_bcs)}")
-        
+        logger.info(f"✅ Total reatined cells after cell calling: {len(valid_bcs)} out of {all_cells} cells")
         if args.input.is_h5ad:
             # Update the h5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
             args.input.mtx_data.obs['initial_filtered_cell'] = args.input.mtx_data.obs['barcodes'].isin(converted_filtered_bcs)
@@ -240,6 +240,7 @@ def main():
     # plots and log, summary tables
     plot_text_elements = create_plotly_plots(
         args.input.feature_dump_data,
+        args.input.map_json_data,
         args.input.mtx_data,
         valid_bcs,
         args.input.usa_mode,

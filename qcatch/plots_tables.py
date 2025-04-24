@@ -138,56 +138,56 @@ def generate_seq_saturation(data):
     seq_saturation_value = sum(seq_saturation_array) / len(seq_saturation_array) if seq_saturation_array else 0
     seq_saturation_percent = round(seq_saturation_value * 100, 2)
 
-    # Down-sampling for Sequencing Saturation
-    accumu_read_per_cell_array = [0]
-    accumu_seq_saturation_array = [0]
-    bins = 10
-    num_of_cells = len(correct_reads_array)
+    # # Down-sampling for Sequencing Saturation
+    # accumu_read_per_cell_array = [0]
+    # accumu_seq_saturation_array = [0]
+    # bins = 10
+    # num_of_cells = len(correct_reads_array)
 
-    for i in range(1, num_of_cells // bins):
-        downsample_correct_reads_array = correct_reads_array[:bins * i]
-        downsample_seq_saturation_array = seq_saturation_array[:bins * i]
+    # for i in range(1, num_of_cells // bins):
+    #     downsample_correct_reads_array = correct_reads_array[:bins * i]
+    #     downsample_seq_saturation_array = seq_saturation_array[:bins * i]
 
-        down_mean_reads_per_cell = sum(downsample_correct_reads_array) / len(downsample_correct_reads_array)
-        down_seq_saturation_value = sum(downsample_seq_saturation_array) / len(downsample_seq_saturation_array)
+    #     down_mean_reads_per_cell = sum(downsample_correct_reads_array) / len(downsample_correct_reads_array)
+    #     down_seq_saturation_value = sum(downsample_seq_saturation_array) / len(downsample_seq_saturation_array)
 
-        accumu_read_per_cell_array.append(down_mean_reads_per_cell)
-        accumu_seq_saturation_array.append(down_seq_saturation_value)
+    #     accumu_read_per_cell_array.append(down_mean_reads_per_cell)
+    #     accumu_seq_saturation_array.append(down_seq_saturation_value)
         
-    # for the accumulated arrays, only use 15 dots for plotting
-    num_dots = 100
-    # avoid the case where the number of points is less than num_dots
-    step = max(1, len(accumu_read_per_cell_array) // num_dots)
-    accumu_read_per_cell_array = accumu_read_per_cell_array[::step]
-    accumu_seq_saturation_array = accumu_seq_saturation_array[::step]
-    # Plot for Sequencing Saturation using go.Scatter with smooth line
-    fig_seq_saturation = go.Figure(
-        data=go.Scatter(
-            x=accumu_read_per_cell_array,
-            y=accumu_seq_saturation_array,
-            mode='lines',
-            line=dict(color='#636EFA', width=3)
-        )
-    )
-    fig_seq_saturation.update_layout(
-        title="Sequencing Saturation Plot (Retained Cells Only)",
-        xaxis_title="Mean Reads per Cell",
-        yaxis=dict(title="Sequencing Saturation", range=[0, 1]),
-        width=width,
-        height=height,
-        margin=dict(t=40)
-    )
-    fig_seq_saturation.add_shape(
-        type="line",
-        x0=min(accumu_read_per_cell_array),
-        x1=max(accumu_read_per_cell_array),
-        y0=0.9,
-        y1=0.9,
-        line=dict(color="lightgrey", width=2, dash="dash"),
-        layer="below"
-    )
+    # # for the accumulated arrays, only use 15 dots for plotting
+    # num_dots = 100
+    # # avoid the case where the number of points is less than num_dots
+    # step = max(1, len(accumu_read_per_cell_array) // num_dots)
+    # accumu_read_per_cell_array = accumu_read_per_cell_array[::step]
+    # accumu_seq_saturation_array = accumu_seq_saturation_array[::step]
+    # # Plot for Sequencing Saturation using go.Scatter with smooth line
+    # fig_seq_saturation = go.Figure(
+    #     data=go.Scatter(
+    #         x=accumu_read_per_cell_array,
+    #         y=accumu_seq_saturation_array,
+    #         mode='lines',
+    #         line=dict(color='#636EFA', width=3)
+    #     )
+    # )
+    # fig_seq_saturation.update_layout(
+    #     title="Sequencing Saturation Plot (Retained Cells Only)",
+    #     xaxis_title="Mean Reads per Cell",
+    #     yaxis=dict(title="Sequencing Saturation", range=[0, 1]),
+    #     width=width,
+    #     height=height,
+    #     margin=dict(t=40)
+    # )
+    # fig_seq_saturation.add_shape(
+    #     type="line",
+    #     x0=min(accumu_read_per_cell_array),
+    #     x1=max(accumu_read_per_cell_array),
+    #     y0=0.9,
+    #     y1=0.9,
+    #     line=dict(color="lightgrey", width=2, dash="dash"),
+    #     layer="below"
+    # )
 
-    return apply_uniform_style(fig_seq_saturation), seq_saturation_percent
+    return seq_saturation_percent
 
 def generate_SUA_plots(adata, is_all_cells):
     # calculate the sum count for S, U, A matrix separately
@@ -315,7 +315,7 @@ def barcode_frequency_plots(data, valid_bcs):
     "Retained Cell",
     "Background"
     )
-    print("Retained barcodes found in data:", data["barcodes"].isin(valid_bcs).sum(), "out of", len(data))
+
     # Create subplots: 1 row, 3 columns
     fig = make_subplots(
         rows=1, cols=3,
@@ -565,7 +565,7 @@ def show_quant_log_table(quant_json_data, permit_list_json_data):
     return quant_table_content, permit_list_table_content
 
 
-def generate_summary_table(raw_data, valid_bcs, total_detected_genes,median_genes_per_cell):
+def generate_summary_table(raw_data, valid_bcs, total_detected_genes,median_genes_per_cell, mapping_rate,seq_saturation_value):
     """
     Generate a summary table with total corrected reads, total UMI, and total number of cells, etc.
     in a 4-column (two key-value pairs per row) Bootstrap table.
@@ -575,11 +575,6 @@ def generate_summary_table(raw_data, valid_bcs, total_detected_genes,median_gene
     data = raw_data[raw_data['barcodes'].isin(valid_bcs)]
     mean_reads_per_cell = int(np.nan_to_num(data['corrected_reads'].mean(), nan=0))
     median_umi_per_cell = int(np.nan_to_num(data['deduplicated_reads'].median(), nan=0))
-    # NOTE: featureDump(in usa_mode), count gene in -U, -S, -A as separate genes. 
-    # median_genes_per_cell = int(np.nan_to_num(data['num_expressed'].median(), nan=0))
-    # total_correct_reads = sum(data['corrected_reads'])
-    # total_UMI = sum(data['deduplicated_reads'])
-    
 
     summary = {
         "Number of retained cells": f"{len(valid_bcs):,}",
@@ -588,6 +583,8 @@ def generate_summary_table(raw_data, valid_bcs, total_detected_genes,median_gene
         "Median UMI per retained cell": f"{median_umi_per_cell:,}",
         "Median genes per retained cell": f"{median_genes_per_cell:,}",
         "Total genes detected for retained cells": f"{total_detected_genes:,}",
+        "Mapping rate": f"{mapping_rate}%",
+        "Sequencing saturation": f"{seq_saturation_value}%",
     }
 
     # Convert summary dict to a list of (key, value) pairs
