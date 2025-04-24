@@ -43,14 +43,16 @@ def standardize_feature_dump_columns(df: pd.DataFrame) -> pd.DataFrame:
     Standardize feature dump columns to snake_case format.
     If columns are already in snake_case, validates them.
     If columns are in CamelCase, converts them to snake_case.
+    Allows for additional columns beyond the standard ones.
     """
-    # Check if already in standard snake_case format
-    if set(df.columns) == set(STANDARD_COLUMNS):
-        return df[STANDARD_COLUMNS]  # just ensure column order
+    # Check if already in standard snake_case format (allow extra columns)
+    if set(STANDARD_COLUMNS).issubset(df.columns):
+        return df[STANDARD_COLUMNS]  # select only the required columns
     
-    # If not snake_case, try converting from CamelCase
-    if set(df.columns) == set(CAMEL_TO_SNAKE_MAPPING.keys()):
-        return df.rename(columns=CAMEL_TO_SNAKE_MAPPING)[STANDARD_COLUMNS]
+    # If not snake_case, try converting from CamelCase (allow extra columns)
+    if set(CAMEL_TO_SNAKE_MAPPING.keys()).issubset(df.columns):
+        renamed_df = df.rename(columns=CAMEL_TO_SNAKE_MAPPING)
+        return renamed_df[STANDARD_COLUMNS]
     
     # If neither format matches, raise error
     raise ValueError(

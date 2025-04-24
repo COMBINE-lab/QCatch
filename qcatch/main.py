@@ -166,7 +166,12 @@ def main():
         # Save the total retained cells to a txt file
         logger.info(f"✅ Total reatined cells after cell calling: {len(valid_bcs)} out of {all_cells} cells")
         if args.input.is_h5ad:
-            # Update the h5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
+            # check if any result columns already exist
+            existing_cols = {'initial_filtered_cell', 'potential_non_ambient_cell', 'non_ambient_pvalue', 'is_retained_cells'}
+            if existing_cols.intersection(args.input.mtx_data.obs.columns):
+                logger.warning("⚠️ Cell calling result columns already exist in the h5ad file and will be overwritten with new QC analyis.")
+                
+            # Update the hs5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
             args.input.mtx_data.obs['initial_filtered_cell'] = args.input.mtx_data.obs['barcodes'].isin(converted_filtered_bcs)
             args.input.mtx_data.obs['potential_non_ambient_cell'] = args.input.mtx_data.obs['barcodes'].isin(non_ambient_result.eval_bcs)
             
