@@ -116,7 +116,7 @@ def main():
     
     # **** only for development and testing *****
     save_for_quick_test = False # if True, will save the non_ambient_result.pkl file for quick test
-    quick_test_mode = False # If True, will skip the cell calling step2
+    quick_test_mode = True # If True, will skip the cell calling step2
     
     # Run the cell calling process. We will either modify the input file(change the args.input) or save the results in the output directory
     valid_bcs = run_cell_calling(args, output_dir, version, save_for_quick_test, quick_test_mode)

@@ -266,43 +266,53 @@ def generate_SUA_plots(adata, is_all_cells):
 
     return fig_SUA_bar_html, fig_S_ratio_html
 
-def barcode_collapse(data):
+def umi_dedup(data):
+    width=800
     opacity = 0.5
-    # we will use scatter plot to show the reads per CB before and after collapsing
+    # we will use scatter plot to show the reads per CB before and after umi collapse
+    before_dedup = np.array(data["mapped_reads"])
+    after_dedup = np.array(data["deduplicated_reads"])
     
-    before_clap = np.array(data["mapped_reads"])
-    after_clap = np.array(data["corrected_reads"])
-
-    # Compute the gain_rate safely (avoid division by zero)
-    gain_rate = (after_clap - before_clap) / before_clap
-    mean_gain_rate = round(np.mean(gain_rate)*100, 2)
-    # Plot for Barcode Collapse
-    fig_barcode_collapse = px.scatter(
-        x=before_clap,
-        y=after_clap,
-        title="Barcode Collapsing (Retained Cells Only)",
-        labels={"x": "Reads per Cell before collapsing", "y": "Reads per Cell after collapsing"},
+    dedup_rate =  np.array(data["dedup_rate"])
+    mean_dedup_rate = round(np.mean(dedup_rate)*100, 2)
+    
+    # Plot for dedup rate against mapped reads per cell
+    fig_dedup = px.scatter(
+        x=before_dedup,
+        y=after_dedup,
+        custom_data=[dedup_rate],
+        title="UMI Deduplication rate across Retained Cells",
+        labels={"x": "Mapped reads per cell", "y": "Deduplicated UMI per Cell"},
         width=width,
         height=height,
         opacity=opacity
     )
+    
     # Add y = x reference line
-    min_val = min(before_clap.min(), after_clap.min())  # Get min value from both axes
-    max_val = max(before_clap.max(), after_clap.max())  # Get max value from both axes
-    fig_barcode_collapse.add_trace(
+    min_val = min(before_dedup.min(), after_dedup.min())  
+    max_val = max(before_dedup.max(), after_dedup.max())  
+    
+    # add mouse hover template
+    fig_dedup.update_traces(
+    hovertemplate="<br>".join([
+        "Dedup Rate: %{customdata:.2%}",
+        "Mapped reads: %{x}",
+        "Deduplicated UMIs: %{y}",
+        
+    ])
+)
+    # Add a dashed line with the mean deduplication rate as slope
+    fig_dedup.add_trace(
         go.Scatter(
             x=[min_val, max_val],
-            y=[min_val, max_val],
+            y=[min_val * mean_dedup_rate / 100, max_val * mean_dedup_rate / 100],
             mode="lines",
-            line=dict(color="#ed8888", width=2),
-            showlegend=False,
-            # name="y = x Line"
+            line=dict(color="darkorange", width=2, dash="dash"),
+            name=f"Mean Dedup Rate ({mean_dedup_rate}%)",
+            showlegend=True
         )
     )
-    
-    
-    return apply_uniform_style(fig_barcode_collapse), mean_gain_rate
-
+    return apply_uniform_style(fig_dedup), mean_dedup_rate
 
 
 def barcode_frequency_plots(data, valid_bcs):

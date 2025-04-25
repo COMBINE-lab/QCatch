@@ -34,8 +34,6 @@ def run_cell_calling(args, output_dir, version, save_for_quick_test,quick_test_m
         # cell calling step2 - empty drop
         non_ambient_result : NonAmbientBarcodeResult | None = find_nonambient_barcodes(matrix, filtered_bcs, chemistry, n_partitions, verbose = verbose)
     
-    # force result none:
-    non_ambient_result = None
     
     if non_ambient_result is None:
         non_ambient_cells = 0

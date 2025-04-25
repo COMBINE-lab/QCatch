@@ -63,8 +63,9 @@ def create_plotly_plots(args, valid_bcs):
     # fig_bc_freq_UMI, fig_bc_freq_gene, fig_gene_UMI = barcode_frequency_plots(data)
 
     # ---------------- Tab3 - Collapsing ---------------
-    # NOTE: use the retained data for barcode_collapse plot
-    fig_barcode_collapse, mean_gain_rate = barcode_collapse(retained_data)
+    # NOTE: use the retained data for umi_collapse plot
+    fig_umi_dedup, mean_dedup_rate = umi_dedup(retained_data)
+    
     # ---------------- Tab4 - Histogram of Genes Detected ---------------
     fig_hist_genes = generate_gene_histogram(data,is_all_cells=True)
     fig_hist_genes_filtered = generate_gene_histogram(retained_data,is_all_cells=False)
@@ -104,7 +105,7 @@ def create_plotly_plots(args, valid_bcs):
         'hist_gene_filtered_3-1': fig_hist_genes_filtered.to_html(full_html=False, include_plotlyjs="cdn"),
 
         # ----tab4----
-        'barcode_collapse4': fig_barcode_collapse.to_html(full_html=False, include_plotlyjs='cdn'),
+        'umi_dedup4': fig_umi_dedup.to_html(full_html=False, include_plotlyjs='cdn'),
         # ---tab6----
     }
     if fig_umap and fig_tsne:
@@ -124,7 +125,7 @@ def create_plotly_plots(args, valid_bcs):
         plots['SUA_bar_filtered_5-1'] = fig_SUA_bar_filtered_html
         plots['S_ratio_filtered_5-2'] = fig_S_ratio_filtered_html
     texts = {
-        'meanGainRate': f'Mean gain rate per CB: {mean_gain_rate}%'
+        'meanGainRate': f'Mean deduplication rate per CB: {mean_dedup_rate}%'
     }
     plot_text_elements = (plots, texts, summary_table_html)
     return plot_text_elements
