@@ -21,6 +21,7 @@ def setup_logger(verbose: bool):
         logger.addHandler(handler)
 
     logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    
 # #----------------- Constants -----------------
 ORDMAG_RECOVERED_CELLS_QUANTILE = 0.99
 ORDMAG_NUM_BOOTSTRAP_SAMPLES = 100
@@ -60,13 +61,12 @@ NonAmbientBarcodeResult = namedtuple('NonAmbientBarcodeResult',
                                       'is_nonambient', # Boolean nonambient calls (n)
                                       ])
 
-## *M*
+ 
 class FilteredCellResults:
     def __init__(self, value=0):
         self.n_top_cells = value
         self.selection_cutoff = value
-
-## *M*
+ 
 def compute_empty_drops_bounds(chemistry_description: str | None = None, n_partitions: int | None = None):
     """Determines the lower and upper bounds for empty drops background based on the provided chemistry description.
 
@@ -91,7 +91,6 @@ def compute_empty_drops_bounds(chemistry_description: str | None = None, n_parti
         n_partitions = 90000
     return (n_partitions // 2, n_partitions)
 
-## *M*
 def find_within_ordmag(resampled_bc_counts, quantile_point):
     """
         Args:
@@ -125,8 +124,7 @@ def find_within_ordmag(resampled_bc_counts, quantile_point):
     num_cells_above_cutoff = np.searchsorted(-sorted_bc_counts, -cutoff, side='right')
     
     return num_cells_above_cutoff
-
-## *M*
+ 
 def ordMag_expected(sorted_bc_counts,recovered_cells ):
     """
     This is a Python implementation of the ordMagExpected function, which estimates the expected number of cells by analyzing the distribution of barcode counts in a sorted (descending) array. It iterates through 
@@ -181,7 +179,6 @@ def ordMag_expected(sorted_bc_counts,recovered_cells ):
     # Return the best estimate from log2-spaced search
     return recovered_cells[optimal_idx], loss[optimal_idx] 
 
-## *M*
 def call_ordMag(nonzero_bc_counts, max_expected_cells):
     sorted_bc_counts = np.sort(nonzero_bc_counts)[::-1]
     # Generate log2-spaced cell indices
@@ -190,7 +187,6 @@ def call_ordMag(nonzero_bc_counts, max_expected_cells):
 
     return ordMag_expected(sorted_bc_counts, recovered_cells)
 
-## *M*
 def compute_bootstrapped_top_n(top_n_boot, nonzero_counts):
     top_n_bcs_mean = np.mean(top_n_boot)
     n_top_cells = int(np.round(top_n_bcs_mean))
@@ -217,7 +213,6 @@ def compute_bootstrapped_top_n(top_n_boot, nonzero_counts):
         result.selection_cutoff = cutoff
     return result
 
-## *M*
 def initial_filtering_OrdMag(matrix, chemistry_description: str | None = None,n_partitions: int | None = None, verbose: bool = False):
     setup_logger(verbose)
     metrics = FilteredCellResults(0)
@@ -275,7 +270,6 @@ def initial_filtering_OrdMag(matrix, chemistry_description: str | None = None,n_
     filtered_bcs = matrix.ints_to_bcs(top_bc_idx)
     
     return filtered_bcs
-
 
 def adjust_pvalue_bh(p):
     """ Multiple testing correction of p-values using the Benjamini-Hochberg procedure """

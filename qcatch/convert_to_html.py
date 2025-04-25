@@ -7,15 +7,18 @@ from qcatch.input_processing import *
 
 logger = logging.getLogger(__name__)
 
-def create_plotly_plots(feature_dump_data,map_json_data, adata, valid_bcs, usa_mode, is_h5ad, skip_umap_tsne, ):
+def create_plotly_plots(args, valid_bcs):
     """
     1.Load feature dump data from the alevin-frey quant output directory
     2.Create interactive Plotly plots
     """
+    feature_dump_data = args.input.feature_dump_data
+    map_json_data = args.input.map_json_data
+    adata = args.input.mtx_data
+    usa_mode = args.input.usa_mode
     
     # Filter cells with zero reads from featureDump data
-    data = feature_dump_data[(feature_dump_data["deduplicated_reads"] >= 1) & 
-                        (feature_dump_data["num_expressed"] >= 1)]
+    data = feature_dump_data[(feature_dump_data["deduplicated_reads"] >= 1) & (feature_dump_data["num_expressed"] >= 1)]
     
     retained_data = data[data['barcodes'].isin(valid_bcs)]
     
@@ -24,7 +27,7 @@ def create_plotly_plots(feature_dump_data,map_json_data, adata, valid_bcs, usa_m
     data["rank"] = data.index+1# 1-based rank
     
     # get filtered adata
-    filtered_mask = adata.obs['is_retained_cells'].values if is_h5ad else adata.obs_names.isin(valid_bcs)
+    filtered_mask = adata.obs['barcodes'].isin(valid_bcs) if args.input.is_h5ad else adata.obs_names.isin(valid_bcs)
         # NOTE: safe but maybe time consuming
     filtered_adata = adata[filtered_mask, :].copy()
 
@@ -47,8 +50,10 @@ def create_plotly_plots(feature_dump_data,map_json_data, adata, valid_bcs, usa_m
     median_genes_per_cell = int(np.median(all_mtx_gene_per_cell))
     
     # get mapping rate
-    num_processed = map_json_data.get('num_processed') or map_json_data['num_reads']
-    mapping_rate = round(map_json_data['num_mapped'] / num_processed * 100, 2)
+    mapping_rate = None
+    if map_json_data:
+        num_processed = map_json_data.get('num_processed') or map_json_data['num_reads']
+        mapping_rate = round(map_json_data['num_mapped'] / num_processed * 100, 2)
     seq_saturation_value = generate_seq_saturation(retained_data)
         
     summary_table_html = generate_summary_table(data, valid_bcs, total_detected_genes, median_genes_per_cell, mapping_rate, seq_saturation_value)
@@ -76,7 +81,7 @@ def create_plotly_plots(feature_dump_data,map_json_data, adata, valid_bcs, usa_m
         fig_SUA_bar_html, fig_S_ratio_html = generate_SUA_plots(adata,is_all_cells=True)
         fig_SUA_bar_filtered_html, fig_S_ratio_filtered_html = generate_SUA_plots(filtered_adata,is_all_cells=False)
     # ---------------- Tab6 - UMAP ---------------
-    if not skip_umap_tsne:
+    if not args.skip_umap_tsne:
         fig_umap, fig_tsne = umap_tsne_plot(filtered_adata)
         
     else:
@@ -124,13 +129,14 @@ def create_plotly_plots(feature_dump_data,map_json_data, adata, valid_bcs, usa_m
     plot_text_elements = (plots, texts, summary_table_html)
     return plot_text_elements
 
-def modify_html_with_plots(soup, output_html_path, plot_text_elements, quant_json_table_html, permit_list_table_html, usa_mode):
+def modify_html_with_plots(soup, output_html_path, plot_text_elements, table_htmls, usa_mode):
     """
     Modify an HTML file to include Plotly plots, update text dynamically by ID, 
     and insert summary and log info tables.
     """
     plots, texts, summary_table_html = plot_text_elements
-        
+    quant_json_table_html, permit_list_table_html = table_htmls
+    
     updated_sections = []
     missing_sections = []
 

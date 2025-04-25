@@ -60,74 +60,9 @@ def standardize_feature_dump_columns(df: pd.DataFrame) -> pd.DataFrame:
         f"Expected snake_case columns: {STANDARD_COLUMNS}"
     )
 
-# def parse_quant_out_dir(quant_out_dir):
-#     """
-#     Detects the input format of the quantification output directory.
-#     return the loaded data
-#     """
-#     # check if input is a directory or a file
-#     if os.path.isfile(quant_out_dir):
-#         # it's a file and must be an H5AD file so we deal with that here
-#         is_h5ad = True
-#         h5ad_file_path = quant_out_dir
-#         logger.info("✅ Loading the data from h5ad file...")
-#         mtx_data = sc.read_h5ad(h5ad_file_path)
-#         quant_json_data, permit_list_json_data = json.loads(mtx_data.uns['quant_info']), json.loads(mtx_data.uns['gpl_info'])
-
-#         feature_dump_data = pd.DataFrame(mtx_data.obs)
-#         # Standardize feature dump columns to snake_case format
-#         standardize_feature_dump_columns(feature_dump_data)
-#         usa_mode = quant_json_data['usa_mode']
-
-#     else:
-#         used_simpleaf = None
-#         if os.path.exists(os.path.join(quant_out_dir, 'simpleaf_quant')):
-#             logger.info("✅ Detected: 'simpleaf' was used for the quantification result.")
-#             used_simpleaf = True
-#         elif os.path.exists(os.path.join(quant_out_dir, 'quant.json')):
-#             logger.info("✅ Detected: 'alevin-fry' was used for the quantification result.")
-#             used_simpleaf = False
-#         else:
-#             logger.warning(
-#                 "⚠️ Unable to recognize the quantification directory. "
-#                 "Ensure that the directory structure remains unchanged from the original output directory."
-#             )
-        
-#         # -----------------------------------
-#         # Loads matrix data from the given quantification output directory.
-#         mtx_dir_path = os.path.join(quant_out_dir, "simpleaf_quant", "af_quant") if used_simpleaf else quant_out_dir
-
-#         if not os.path.exists(mtx_dir_path):
-#             logger.error(f"❌ Error: Expected matrix directory '{mtx_dir_path}' not found. Please check the input directory structure.")
-#             mtx_data = None
-            
-#         is_h5ad = False
-#         # -----------------------------------
-#         # Check if quants.h5ad file exists in the parent directory
-#         h5ad_file_path = os.path.join(quant_out_dir, 'quants.h5ad')
-#         if os.path.exists(h5ad_file_path):
-#             is_h5ad = True
-#             logger.info("✅ Loading the data from h5ad file...")
-#             mtx_data = sc.read_h5ad(h5ad_file_path)
-#             quant_json_data, permit_list_json_data = json.loads(mtx_data.uns['quant_info']), json.loads(mtx_data.uns['gpl_info'])
-            
-#             feature_dump_data = pd.DataFrame(mtx_data.obs)
-#             # Standardize feature dump columns to snake_case format
-#             standardize_feature_dump_columns(feature_dump_data)
-#             usa_mode = quant_json_data['usa_mode']
-            
-#         else:
-#             mtx_data = load_fry(mtx_dir_path, output_format='raw')
-#             # Load  quant.json, generate_permit_list.json, and featureDump.txt
-#             quant_json_data, permit_list_json_data, feature_dump_data = load_json_txt_file(quant_out_dir, used_simpleaf)
-            
-#             # detect usa_mode
-#             usa_mode = quant_json_data['usa_mode']
-    
-#     return quant_json_data, permit_list_json_data, feature_dump_data, mtx_data, usa_mode, is_h5ad
 
 
-def load_json_txt_file(parent_dir, map_json_path):
+def load_json_txt_file(parent_dir):
     """
     Loads quant.json and generate_permit_list.json from the given directory.
     """
@@ -160,13 +95,8 @@ def load_json_txt_file(parent_dir, map_json_path):
         # rename the columns, align with the standard snake_case format
         feature_dump_data.columns = STANDARD_COLUMNS
         logger.debug(f"feature_dump_data columns: {feature_dump_data.columns}")
-        
-    map_json_data = None
-    if map_json_path:
-        with open(map_json_path, 'r') as f:
-            map_json_data = json.load(f)
-
-    return quant_json_data, permit_list_json_data, feature_dump_data, map_json_data
+    
+    return quant_json_data, permit_list_json_data, feature_dump_data
     
     
 # from https://ga4gh.github.io/refget/seqcols/

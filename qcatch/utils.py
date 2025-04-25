@@ -109,7 +109,7 @@ class QuantInput:
 
             if not self.mtx_dir_path:
                 logger.error(
-                    "❌ Error: Expected matrix directory not found in either 'simpleaf_quant/af_quant' or 'af_quant'."
+                    "❌ Error: Expected matrix directory not found in 'af_quant'."
                 )
                 mtx_data = None
 
@@ -142,13 +142,16 @@ class QuantInput:
                 self.mtx_data.var["gene_id"] = self.mtx_data.var.index
 
                 # Load quant.json, generate_permit_list.json, and featureDump.txt
+
                 (
                     self.quant_json_data,
                     self.permit_list_json_data,
                     self.feature_dump_data,
-                    self.map_json_data,
-                ) = load_json_txt_file(self.mtx_dir_path, self.map_json_path)
-
+                ) = load_json_txt_file(self.mtx_dir_path)
+                
+                self.map_json_data = None
+                logger.warning("⚠️ Mapping log file is not included in output folder if using 'alevin-fry'. Mapping rate will not be displayed in the summary table. You could still find it in the mapping results from piscem or salmon.")
+        
                 # detect usa_mode
                 self.usa_mode = self.quant_json_data["usa_mode"]
 
@@ -159,7 +162,7 @@ def get_input(input_str: str) -> QuantInput:
     except Exception as e:
         raise argparse.ArgumentTypeError(f"invalid get_input value: {input_str}\n→ {e}")
 
-# TODO: deprecated later, when h5ad has the mapping info
+
 def find_mapping_info(parent_quant_dir):
     # find the map_json file
     map_json_path_1 = os.path.join(parent_quant_dir, "af_map", "aux_info", "map.json")
@@ -169,9 +172,10 @@ def find_mapping_info(parent_quant_dir):
     elif os.path.exists(map_json_path_2):
         map_json_path = map_json_path_2
     else:
-        logger.warning(
-            "⚠️ Unable to find af_map directory. Will not be able to display the mapping rate. "
-        )
+        logger.warning("⚠️  Mapping log file not found. Mapping rate will not be displayed in the summary table.")
+        return None
+    
     with open(map_json_path, 'r') as f:
-            map_json_data = json.load(f)
+        map_json_data = json.load(f)
+            
     return map_json_data

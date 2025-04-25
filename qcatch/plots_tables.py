@@ -453,7 +453,8 @@ def umap_tsne_plot(adata):
     sc.pp.log1p(adata)
     
     # feature selection
-    sc.pp.highly_variable_genes(adata, n_top_genes=2000)
+    n_valid = adata.X.shape[1]
+    sc.pp.highly_variable_genes(adata, n_top_genes=min(2000, n_valid))
     # dimensionality Reduction
     sc.tl.pca(adata)
     # nearest neighbor graph constuction and visualization
@@ -463,7 +464,16 @@ def umap_tsne_plot(adata):
     # clustering
     # Using the igraph implementation and a fixed number of iterations can be significantly faster, especially for larger datasets
     sc.tl.leiden(adata, flavor="igraph", n_iterations=2)
-    sc.tl.tsne(adata)
+
+    try:
+        sc.tl.tsne(adata)
+    except TypeError as e:
+        if "PCA initialization is currently not supported with the sparse input matrix" in str(e):
+            logger.warning("t-SNE failed on sparse matrix; converting to dense.")
+            adata.X = adata.X.toarray()
+            sc.tl.tsne(adata)
+        else:
+            raise
 
     # Create a Plotly-based UMAP scatter plot with Leiden clusters
     umap_df = pd.DataFrame(adata.obsm["X_umap"], columns=["UMAP1", "UMAP2"])
@@ -562,7 +572,7 @@ def show_quant_log_table(quant_json_data, permit_list_json_data):
     else: 
         permit_list_table_content = "<tr><td colspan='3'>No permit list data available.</td></tr>"
 
-    return quant_table_content, permit_list_table_content
+    return (quant_table_content, permit_list_table_content)
 
 
 def generate_summary_table(raw_data, valid_bcs, total_detected_genes,median_genes_per_cell, mapping_rate,seq_saturation_value):
@@ -583,7 +593,7 @@ def generate_summary_table(raw_data, valid_bcs, total_detected_genes,median_gene
         "Median UMI per retained cell": f"{median_umi_per_cell:,}",
         "Median genes per retained cell": f"{median_genes_per_cell:,}",
         "Total genes detected for retained cells": f"{total_detected_genes:,}",
-        "Mapping rate": f"{mapping_rate}%",
+        "Mapping rate": f"{mapping_rate}%" if mapping_rate is not None else "N/A",
         "Sequencing saturation": f"{seq_saturation_value}%",
     }
 

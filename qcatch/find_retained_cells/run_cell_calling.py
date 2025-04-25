@@ -1,0 +1,140 @@
+#!/usr/bin/env python
+""" Master function that run calling cell process"""
+import os
+import pickle
+import numpy as np
+from .cell_calling import initial_filtering_OrdMag, find_nonambient_barcodes,NonAmbientBarcodeResult
+from .matrix import CountMatrix
+import logging
+logger = logging.getLogger(__name__)
+import shutil
+
+def run_cell_calling(args, output_dir, version, save_for_quick_test,quick_test_mode):
+
+    matrix = CountMatrix.from_anndata(args.input.mtx_data)
+    chemistry = args.chemistry 
+    n_partitions = args.n_partitions
+    verbose = args.verbose
+    save_filtered_h5ad = args.save_filtered_h5ad
+    
+    # # cell calling step1 - empty drop
+    logger.info("🧬 Starting cell calling...")
+    filtered_bcs = initial_filtering_OrdMag(matrix, chemistry, n_partitions, verbose)
+    logger.info(f"🔎 step1- number of inital filtered cells: {len(filtered_bcs)}")
+    converted_filtered_bcs =  [x.decode() if isinstance(x, np.bytes_) else str(x) for x in filtered_bcs]
+    
+    non_ambient_result =None
+    valid_bcs = set(converted_filtered_bcs)
+
+    if quick_test_mode:
+        # Re-load the saved result from pkl file
+        with open(f'{output_dir}/non_ambient_result.pkl', 'rb') as f:
+            non_ambient_result = pickle.load(f)
+    else:
+        # cell calling step2 - empty drop
+        non_ambient_result : NonAmbientBarcodeResult | None = find_nonambient_barcodes(matrix, filtered_bcs, chemistry, n_partitions, verbose = verbose)
+    
+    # force result none:
+    non_ambient_result = None
+    
+    if non_ambient_result is None:
+        non_ambient_cells = 0
+        valid_bcs = set(converted_filtered_bcs) 
+        logger.warning(" ⚠️ step2- Empty drop failed: non_ambient_result is None. Please ensure the input matrix is complete or verify the chemistry version.")
+        
+    else:
+        non_ambient_cells = len(non_ambient_result.eval_bcs)
+        logger.debug(f"step2- Empty drop: number of all potential non-ambient cells: {non_ambient_cells}")
+        if save_for_quick_test:
+            with open(f'{output_dir}/non_ambient_result.pkl', 'wb') as f:
+                pickle.dump(non_ambient_result, f)
+        
+        # extract the non-ambient cells from eval_bcs from a binary array
+        is_nonambient_bcs = [str(bc) for bc, boolean_non_ambient in zip(non_ambient_result.eval_bcs, non_ambient_result.is_nonambient) if boolean_non_ambient]
+        logger.info(f"🔎 step2- empty drop: number of is_non_ambient cells: {len(is_nonambient_bcs)}")
+        
+        # Calculate the total number of valid barcodes
+        valid_bcs = set(converted_filtered_bcs) | set(is_nonambient_bcs)
+        # num of all processed cells
+        all_cells = args.input.mtx_data.shape[0]
+        # Save the total retained cells to a txt file
+        logger.info(f"✅ Total reatined cells after cell calling: {len(valid_bcs)} out of {all_cells} cells")
+
+    # Save the cell calling result
+    if args.input.is_h5ad:
+        # check if any result columns already exist
+        existing_cols = {'initial_filtered_cell', 'potential_non_ambient_cell', 'non_ambient_pvalue', 'is_retained_cells'}
+        if existing_cols.intersection(args.input.mtx_data.obs.columns):
+            logger.warning("⚠️ Cell calling result columns already exist in the h5ad file and will be overwritten with new QC analyis.")
+            
+        # Update the hs5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
+        args.input.mtx_data.obs['initial_filtered_cell'] = args.input.mtx_data.obs['barcodes'].isin(converted_filtered_bcs)
+        
+        # save the non-ambient cells, if available
+        if non_ambient_result is not None:
+            args.input.mtx_data.obs['potential_non_ambient_cell'] = args.input.mtx_data.obs['barcodes'].isin(non_ambient_result.eval_bcs)
+            
+            # Create a mapping from barcodes to p-values
+            barcode_to_pval = dict(zip(non_ambient_result.eval_bcs, non_ambient_result.pvalues))
+            # Assign p-values only where 'is_nonambient' is True, otherwise fill with NaN
+            args.input.mtx_data.obs['non_ambient_pvalue'] = args.input.mtx_data.obs['barcodes'].map(barcode_to_pval).astype('float')
+        
+        args.input.mtx_data.obs['is_retained_cells'] = args.input.mtx_data.obs['barcodes'].isin(valid_bcs)
+        
+        # add qcatch version
+        qcatch_log = {
+            "version":version,
+        }
+        args.input.mtx_data.uns['qc_info'] = qcatch_log
+        
+        logger.info("🗂️ Saved 'cell calling result' to the modified h5ad file, check the new added columns in adata.obs .")
+        if output_dir == args.input.dir:
+            # In-place overwrite: same location as original
+            temp_file = os.path.join(output_dir, 'quants_after_QC.h5ad')
+            args.input.mtx_data.write_h5ad(temp_file, compression='gzip')
+            input_h5ad_file = args.input.file
+            os.remove(input_h5ad_file)
+            shutil.move(temp_file, input_h5ad_file)
+            logger.info(f"📋 Overwrote the original h5ad file with the new cell calling result.")
+        else:
+            # Save to separate file in specified output dir
+            output_h5ad_file = os.path.join(output_dir, 'quants_after_QC.h5ad')
+            args.input.mtx_data.write_h5ad(output_h5ad_file, compression='gzip')
+            logger.info(f"📋 Saved modified h5ad file to: {output_h5ad_file}")
+            
+        if save_filtered_h5ad:
+            # filter the anndata , only keep the cells in valid_bcs
+            filter_mtx_data = args.input.mtx_data[args.input.mtx_data.obs['is_retained_cells'].values, :].copy()
+            # Save the filtered anndata to a new file
+            filter_mtx_data_filename = os.path.join(output_dir, 'filtered_quants.h5ad')
+            filter_mtx_data.write_h5ad(filter_mtx_data_filename, compression='gzip')
+            logger.info(f"📋 Saved the filtered h5ad file to {filter_mtx_data_filename}.")
+        
+    else:
+        # Not h5ad file, write to new files
+        # 1- original filtered cells
+        initial_filtered_cells_filename= os.path.join(output_dir,'initial_filtered_cells.txt' )
+        
+        with open(initial_filtered_cells_filename, 'w') as f:
+            for bc in converted_filtered_bcs:
+                f.write(f"{bc}\n")
+        
+        # 2- additional non-ambient cells results
+        if non_ambient_result is not None:
+            # Save barcode and adjusted p-values to a txt file
+            pval_output_file = os.path.join(output_dir, 'potential_nonambient_result.txt')
+            with open(pval_output_file, 'w') as f:
+                f.write("barcodes\tadj_pval\n")
+                for bc, pval in zip(non_ambient_result.eval_bcs, non_ambient_result.pvalues):
+                    f.write(f"{bc}\t{pval}\n")
+        
+        # Save the total retained cells to a txt file
+        total_retained_cell_file = os.path.join(output_dir, 'total_retained_cells.txt')
+        with open(total_retained_cell_file, 'w') as f:
+            for bc in valid_bcs:
+                f.write(f"{bc}\n")
+                
+        # Logging the cell calling result path
+        logger.info(f'🗂️ Saved cell calling result in the output directory: {output_dir}')
+
+    return valid_bcs
