@@ -96,9 +96,6 @@ def create_plotly_plots(args, valid_bcs):
         'knee_plot1-2': fig_knee_2.to_html(full_html=False, include_plotlyjs='cdn'),
         # ----tab2----
         'bc_freq_all_plots': fig_bc_freq_all_plots.to_html(full_html=False, include_plotlyjs='cdn'),
-        # 'bc_freq_plot2-1': fig_bc_freq_UMI.to_html(full_html=False, include_plotlyjs='cdn'),
-        # 'bc_freq_plot2-2': fig_bc_freq_gene.to_html(full_html=False, include_plotlyjs='cdn'),
-        # 'bc_freq_plot2-3': fig_gene_UMI.to_html(full_html=False, include_plotlyjs='cdn'),
         # ----tab3----
         'hist_gene3-1':fig_hist_genes.to_html(full_html=False, include_plotlyjs="cdn"),
         # filtered data
@@ -124,10 +121,7 @@ def create_plotly_plots(args, valid_bcs):
         plots['S_ratio5-2'] = fig_S_ratio_html
         plots['SUA_bar_filtered_5-1'] = fig_SUA_bar_filtered_html
         plots['S_ratio_filtered_5-2'] = fig_S_ratio_filtered_html
-    texts = {
-        'meanGainRate': f'Mean deduplication rate per CB: {mean_dedup_rate}%'
-    }
-    plot_text_elements = (plots, texts, summary_table_html)
+    plot_text_elements = (plots, summary_table_html)
     return plot_text_elements
 
 def modify_html_with_plots(soup, output_html_path, plot_text_elements, table_htmls, usa_mode):
@@ -135,7 +129,7 @@ def modify_html_with_plots(soup, output_html_path, plot_text_elements, table_htm
     Modify an HTML file to include Plotly plots, update text dynamically by ID, 
     and insert summary and log info tables.
     """
-    plots, texts, summary_table_html = plot_text_elements
+    plots, summary_table_html = plot_text_elements
     quant_json_table_html, permit_list_table_html = table_htmls
     
     updated_sections = []
@@ -151,15 +145,15 @@ def modify_html_with_plots(soup, output_html_path, plot_text_elements, table_htm
         else:
             missing_sections.append(f"Plot '{plot_id}'")
 
-    # Updating texts
-    for text_id, text in texts.items():
-        text_element = soup.find(id=text_id)
-        if text_element:
-            text_element.clear()
-            text_element.append(BeautifulSoup(f'<p>{text}</p>', 'html.parser'))
-            updated_sections.append(text_id)
-        else:
-            missing_sections.append(f"Text '{text_id}'")
+    # # Updating texts
+    # for text_id, text in texts.items():
+    #     text_element = soup.find(id=text_id)
+    #     if text_element:
+    #         text_element.clear()
+    #         text_element.append(BeautifulSoup(f'<p>{text}</p>', 'html.parser'))
+    #         updated_sections.append(text_id)
+    #     else:
+    #         missing_sections.append(f"Text '{text_id}'")
 
     # Summary and log info tables
     for table_id, table_html in [

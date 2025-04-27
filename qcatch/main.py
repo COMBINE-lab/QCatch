@@ -10,7 +10,7 @@ from qcatch import templates
 from qcatch.utils import QuantInput, get_input
 from qcatch.plots_tables import show_quant_log_table
 from qcatch.convert_to_html import create_plotly_plots, modify_html_with_plots
-from qcatch.find_retained_cells.run_cell_calling import run_cell_calling
+from qcatch.find_retained_cells.run_cell_calling import run_cell_calling, save_results
 
 from importlib.metadata import version, PackageNotFoundError
 
@@ -68,6 +68,12 @@ def main():
         help="File provides a mapping from gene IDs to gene names. The file must be a TSV containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)—without a header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed."
     )
     parser.add_argument(
+        '--valid_cell_list', '-l', 
+        type=Path,
+        default=None,
+        help="File provides a user-specified list of valid cell barcode. The file must be a TSV containing one column with cell barcodes without a header row. If provided, qcatch will skip the internal cell calling steps and and use the supplied list instead."
+    )
+    parser.add_argument(
         '--n_partitions', '-n', 
         type=int, 
         default=None,
@@ -117,9 +123,16 @@ def main():
     # **** only for development and testing *****
     save_for_quick_test = False # if True, will save the non_ambient_result.pkl file for quick test
     quick_test_mode = False # If True, will skip the cell calling step2
+    # ****  ------------------------------- *****
     
     # Run the cell calling process. We will either modify the input file(change the args.input) or save the results in the output directory
-    valid_bcs = run_cell_calling(args, output_dir, version, save_for_quick_test, quick_test_mode)
+    valid_bcs = run_cell_calling(
+        args, 
+        output_dir, 
+        version, 
+        save_for_quick_test, 
+        quick_test_mode
+    )
 
     logger.info("🎨 Generating plots and tables...")
     
