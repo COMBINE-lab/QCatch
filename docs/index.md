@@ -20,7 +20,7 @@ conda install -c bioconda qcatch
 ```
 
 ### PyPI
-
+        
 You can also install from [PyPI](https://pypi.org/project/qcatch/) using `pip`:
 
 ```bash
@@ -75,13 +75,20 @@ To provide a 'gene id to name mapping' info, the file should be a **TSV** contai
 
 If you want to save filtered h5ad file separately, you can specify `--save_filtered_h5ad`, which is only applicable when QCatch detects the h5ad file as the input.
 
-**5- Skip clustering plots:**
+**5- Specify your desired cell list:**
+
+If you want to use a specified list of valid cell barcodes, you can provide the file path with `--valid_cell_list`. QCatch will then skip the default cell calling step and use the supplied list instead. The updated .h5ad file will include only one additional column, 'is_retained_cells', containing boolean values based on the specified list.
+
+**6- Skip clustering plots:**
 
 To reduce runtime, you may enable the `--skip_umap_tsne` option to bypass dimensionality reduction and visualization steps.
 
-**6- Debug-level message**
+**7- Debug-level message**
 
 To get debug-level messages and more intermediate computation in cell calling step, you can specify `--verbose`
+
+**8- Re-run QCatch on modified h5ad file**
+If you re-run QCatch analysis on a modified `.h5ad` file (i.e., an `.h5ad` file with additional columns added for cell calling results), the existing cell calling-related columns will be removed and then replaced with new results. The new cell calling can be generated either through QCatch's internal method or based on a user-specified list of valid cell barcodes.
 
 **Example directory structures:**
 
@@ -121,6 +128,7 @@ For more advanced options and usage details, see the sections below.
 | `--chemistry` | `-c` | `str`(Optional but recommend) | Specifies the chemistry used in the experiment, determining the range for the `empty_drops` step. **Options**: `'10X_3p_v2'`, `'10X_3p_v3'`, `'10X_3p_v4'`, `'10X_3p_LT'`,`'10X_5p_v3'`,`'10X_HT'`. **Default**: Will use the range for `'10X_3p_v2'` and `'10X_3p_v3'`. |
 | `--save_filtered_h5ad` | `-s` | `flag` (Optional) |If enabled, `qcatch` will save a separate `.h5ad` file containing only the retained cells.|
 | `--gene_id2name_file` | `-g` | `str` (Optional) |File provides a mapping from gene IDs to gene names. The file must be a TSV containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)—without a header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed.|
+| `--valid_cell_list` | `-l` | `str` (Optional) |File provides a user-specified list of valid cell barcode. The file must be a TSV containing one column with cell barcodes without a header row. If provided, qcatch will skip the internal cell calling steps and and use the supplied list instead|
 | `--n_partitions` | `-n` | `int` (Optional) | Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specified `--chemistry`. Only use `--n_partitions` when your experiment uses a custom chemistry not listed in the predefined chemistry options.|
 | `--skip_umap_tsne` | `-u` | `flag` (Optional) | If provided, skips generation of UMAP and t-SNE plots. |
 | `--verbose` | `-b` | `flag` (Optional) | Enable verbose logging with debug-level messages. |

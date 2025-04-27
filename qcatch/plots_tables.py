@@ -267,7 +267,7 @@ def generate_SUA_plots(adata, is_all_cells):
     return fig_SUA_bar_html, fig_S_ratio_html
 
 def umi_dedup(data):
-    width=800
+    width=600
     opacity = 0.5
     # we will use scatter plot to show the reads per CB before and after umi collapse
     before_dedup = np.array(data["mapped_reads"])
@@ -309,8 +309,23 @@ def umi_dedup(data):
             mode="lines",
             line=dict(color="darkorange", width=2, dash="dash"),
             name=f"Mean Dedup Rate ({mean_dedup_rate}%)",
-            showlegend=True
+            showlegend=False
         )
+    )
+    # Add a centered annotation for the Mean Dedup Rate
+    fig_dedup.update_layout(
+        annotations=[
+            dict(
+                text=f"Mean Dedup Rate: {mean_dedup_rate}%",
+                x=0.5,
+                y=1.05,
+                xref="paper",
+                yref="paper",
+                showarrow=False,
+                font=dict(size=14),
+                xanchor="center"
+            )
+        ]
     )
     return apply_uniform_style(fig_dedup), mean_dedup_rate
 
