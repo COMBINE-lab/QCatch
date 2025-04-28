@@ -18,7 +18,7 @@ def create_plotly_plots(args, valid_bcs):
     usa_mode = args.input.usa_mode
     
     # Filter cells with zero reads from featureDump data
-    data = feature_dump_data[(feature_dump_data["deduplicated_reads"] >= 1) & (feature_dump_data["num_expressed"] >= 1)]
+    data = feature_dump_data[(feature_dump_data["deduplicated_reads"] >= 1) & (feature_dump_data["num_genes_expressed"] >= 1)]
     
     retained_data = data[data['barcodes'].isin(valid_bcs)]
     

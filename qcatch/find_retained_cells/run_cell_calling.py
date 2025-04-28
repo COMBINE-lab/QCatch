@@ -57,7 +57,7 @@ def internal_cell_calling(args, output_dir, save_for_quick_test,quick_test_mode)
         # Save the total retained cells to a txt file
         logger.info(f"✅ Total reatined cells after cell calling: {len(valid_bcs)} out of {all_cells} cells")
 
-        intermediate_result = (converted_filtered_bcs, non_ambient_result)
+    intermediate_result = (converted_filtered_bcs, non_ambient_result)
     return valid_bcs, intermediate_result
 
     
@@ -83,6 +83,7 @@ def save_results(args, version, intermediate_result, valid_bcs, output_dir ):
             args.input.mtx_data.obs.drop(columns=existing_cols.intersection(args.input.mtx_data.obs.columns), inplace=True)
             
         if args.valid_cell_list:
+            # if the user provided a valid cell list
             args.input.mtx_data.obs['is_retained_cells'] = args.input.mtx_data.obs['barcodes'].isin(set(valid_bcs))
             
             logger.info("🗂️Saved the ‘cell calling result’ based on the user-specified barcode list to the modified .h5ad file. Check the newly added column in adata.obs. Note: Only one column, 'is_retained_cells', is added. FDR-related information from the internal cell calling process is excluded")
@@ -107,7 +108,7 @@ def save_results(args, version, intermediate_result, valid_bcs, output_dir ):
         args.input.mtx_data.uns['qc_info'] = qcatch_log
         
         if output_dir == args.input.dir:
-            # In-place overwrite: same location as original
+            # Inplace overwrite: same location as original
             temp_file = os.path.join(output_dir, 'quants_after_QC.h5ad')
             args.input.mtx_data.write_h5ad(temp_file, compression='gzip')
             input_h5ad_file = args.input.file

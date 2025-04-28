@@ -20,12 +20,13 @@ def load_hdf5(hdf5_path: Path) -> sc.AnnData:
         json.loads(mtx_data.uns["quant_info"]),
         json.loads(mtx_data.uns["gpl_info"]),
     )
+    map_json_data = json.loads(mtx_data.uns["simpleaf_map_info"]) if "simpleaf_map_info" in mtx_data.uns else None
 
     feature_dump_data = pd.DataFrame(mtx_data.obs)
-    standardize_feature_dump_columns(feature_dump_data)
+    feature_dump_data = standardize_feature_dump_columns(feature_dump_data)
     usa_mode = quant_json_data["usa_mode"]
 
-    return mtx_data, quant_json_data, permit_list_json_data, feature_dump_data, usa_mode
+    return mtx_data, quant_json_data, permit_list_json_data, map_json_data, feature_dump_data, usa_mode
 
 
 @dataclass
@@ -70,12 +71,14 @@ class QuantInput:
                 self.mtx_data,
                 self.quant_json_data,
                 self.permit_list_json_data,
+                self.map_json_data,
                 self.feature_dump_data,
                 self.usa_mode,
             ) = load_hdf5(self.file)
-            
+
             # TODO: deprecated later, when h5ad has the mapping info
-            self.map_json_data = find_mapping_info(self.dir.parent)
+            if self.map_json_data is None:
+                self.map_json_data = find_mapping_info(self.dir.parent)
 
         else:
             self.dir = self.provided
@@ -125,11 +128,13 @@ class QuantInput:
                     self.mtx_data,
                     self.quant_json_data,
                     self.permit_list_json_data,
+                    self.map_json_data,
                     self.feature_dump_data,
                     self.usa_mode,
                 ) = load_hdf5(self.file)
                 # TODO: deprecated later, when h5ad has the mapping info
-                self.map_json_data = find_mapping_info(self.dir)
+                if self.map_json_data is None:
+                    self.map_json_data = find_mapping_info(self.dir)
  
             else:
                 logger.info("Not finding quants.h5ad file, loading from mtx directory...")

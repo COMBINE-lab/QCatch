@@ -56,18 +56,18 @@ def generate_knee_plots(data, valid_bcs):
     fig_knee_2 = px.scatter(
         data,
         x="rank",
-        y="num_expressed",
+        y="num_genes_expressed",
         log_x=True,
         log_y=True,
         title="Genes Detected against Cell Rank (All Cells)",
-        labels={"rank": "Cell Rank", "num_expressed": "Number of Detected Genes", "cell_type": "Cell Type"},
+        labels={"rank": "Cell Rank", "num_genes_expressed": "Number of Detected Genes", "cell_type": "Cell Type"},
         color="cell_type",
         color_discrete_map={"Retained Cell": '#636EFA', "Background": 'lightgrey'},
         width=width,
         height=height,
         opacity=opacity
     )
-    fig_knee_2.update_yaxes(range=[0, np.log10(data["num_expressed"].max())+0.1])
+    fig_knee_2.update_yaxes(range=[0, np.log10(data["num_genes_expressed"].max())+0.1])
     # modify the legend
     fig_knee_1.update_layout(
         legend_title_text='',
@@ -88,7 +88,7 @@ def generate_knee_plots(data, valid_bcs):
 def generate_gene_histogram(data, is_all_cells):
     # set up width and height for the plots in horizontal&1 fig per tab
     
-    gene_detected = data["num_expressed"].tolist()
+    gene_detected = data["num_genes_expressed"].tolist()
     title_suffix = get_cell_label(is_all_cells)
     
     # Create a histogram plot
@@ -367,7 +367,7 @@ def barcode_frequency_plots(data, valid_bcs):
     for trace in px.scatter(
     data,
     x="corrected_reads",
-    y="num_expressed",
+    y="num_genes_expressed",
     color="cell_type",
     color_discrete_map={"Retained Cell": '#636EFA', "Background": 'lightgrey'},
     opacity=opacity
@@ -380,7 +380,7 @@ def barcode_frequency_plots(data, valid_bcs):
     for trace in px.scatter(
         data,
         x="deduplicated_reads",
-        y="num_expressed",
+        y="num_genes_expressed",
         color="cell_type",
         color_discrete_map={"Retained Cell": '#636EFA', "Background": 'lightgrey'},
         opacity=opacity
@@ -618,7 +618,7 @@ def generate_summary_table(raw_data, valid_bcs, total_detected_genes,median_gene
         "Median UMI per retained cell": f"{median_umi_per_cell:,}",
         "Median genes per retained cell": f"{median_genes_per_cell:,}",
         "Total genes detected for retained cells": f"{total_detected_genes:,}",
-        "Mapping rate": f"{mapping_rate}%" if mapping_rate is not None else "N/A",
+        "Mapping rate": f"{mapping_rate}%" if mapping_rate else "N/A",
         "Sequencing saturation": f"{seq_saturation_value}%",
     }
 

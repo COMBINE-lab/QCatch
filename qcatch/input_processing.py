@@ -21,7 +21,7 @@ STANDARD_COLUMNS: List[str] = [
     'mapping_rate',
     'dedup_rate',
     'mean_by_max',
-    'num_expressed',
+    'num_genes_expressed',
     'num_genes_over_mean'
 ]
 
@@ -34,7 +34,7 @@ CAMEL_TO_SNAKE_MAPPING = {
     'MappingRate': 'mapping_rate',
     'DedupRate': 'dedup_rate',
     'MeanByMax': 'mean_by_max',
-    'NumGenesExpressed': 'num_expressed',
+    'NumGenesExpressed': 'num_genes_expressed',
     'NumGenesOverMean': 'num_genes_over_mean'
 }
 
@@ -46,10 +46,16 @@ def standardize_feature_dump_columns(df: pd.DataFrame) -> pd.DataFrame:
     Allows for additional columns beyond the standard ones.
     """
     # Check if already in standard snake_case format (allow extra columns)
-    if set(STANDARD_COLUMNS).issubset(df.columns):
-        return df[STANDARD_COLUMNS]  # select only the required columns
     
-    # If not snake_case, try converting from CamelCase (allow extra columns)
+    # NOTE: deprecated the 'num_expressed' column conversion. This input will not be supported in the future.
+
+    if 'num_expressed' in df.columns :
+        df = df.rename(columns={'num_expressed': 'num_genes_expressed'})
+
+    if set(STANDARD_COLUMNS).issubset(df.columns):
+        return df
+    
+    # If the DataFrame columns match the keys in the CamelCase mapping, convert them to snake_case (allowing extra columns)
     if set(CAMEL_TO_SNAKE_MAPPING.keys()).issubset(df.columns):
         renamed_df = df.rename(columns=CAMEL_TO_SNAKE_MAPPING)
         return renamed_df[STANDARD_COLUMNS]
@@ -59,8 +65,6 @@ def standardize_feature_dump_columns(df: pd.DataFrame) -> pd.DataFrame:
         "Input columns must match either standard snake_case or expected CamelCase format. "
         f"Expected snake_case columns: {STANDARD_COLUMNS}"
     )
-
-
 
 def load_json_txt_file(parent_dir):
     """
