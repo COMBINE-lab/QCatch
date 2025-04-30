@@ -395,7 +395,7 @@ def barcode_frequency_plots(data, valid_bcs):
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=-0.25,
+            y=-0.3,
             xanchor="center",
             x=0.5,
             title_text=""
@@ -407,6 +407,15 @@ def barcode_frequency_plots(data, valid_bcs):
     # Explicitly reinforce grid lines for all subplots without overriding other style
     fig.update_xaxes(showgrid=True, gridcolor='lightgrey',linecolor='#34495e')
     fig.update_yaxes(showgrid=True, gridcolor='lightgrey',linecolor='#34495e')
+    # Add axis labels for all three subplots
+    fig.update_xaxes(title_text="Barcode frequency", row=1, col=1)
+    fig.update_yaxes(title_text="UMI Counts", row=1, col=1)
+
+    fig.update_xaxes(title_text="Barcode frequency", row=1, col=2)
+    fig.update_yaxes(title_text="Detected Genes", row=1, col=2)
+
+    fig.update_xaxes(title_text="UMI Counts", row=1, col=3)
+    fig.update_yaxes(title_text="Detected Genes", row=1, col=3)
     return fig
     
 def mitochondria_plot(adata,is_all_cells):
@@ -489,14 +498,18 @@ def umap_tsne_plot(adata):
     # clustering
     # Using the igraph implementation and a fixed number of iterations can be significantly faster, especially for larger datasets
     sc.tl.leiden(adata, flavor="igraph", n_iterations=2)
-
+    
+    n_cells = adata.n_obs
+    perplexity = min(30, max(2, (n_cells - 1) // 3)) 
+    if perplexity < 30:
+        logger.warning(f"🛠️ Perplexity is set to {perplexity} (default is 30) for t-SNE due to a low number of valid cells.")
     try:
-        sc.tl.tsne(adata)
+        sc.tl.tsne(adata, perplexity=perplexity)
     except TypeError as e:
         if "PCA initialization is currently not supported with the sparse input matrix" in str(e):
-            logger.warning("t-SNE failed on sparse matrix; converting to dense.")
+            logger.warning("🛠️ t-SNE failed on sparse matrix; converting to dense.")
             adata.X = adata.X.toarray()
-            sc.tl.tsne(adata)
+            sc.tl.tsne(adata, perplexity=perplexity)
         else:
             raise
 

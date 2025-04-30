@@ -267,9 +267,21 @@ def initial_filtering_OrdMag(matrix, chemistry_description: str | None = None,n_
     top_bc_idx = np.sort(np.argsort(bc_counts, kind=NP_SORT_KIND)[::-1][0:top_n])
     assert top_n <= len(nonzero_bc_counts), "Invalid selection of 0-count barcodes!"
     # Convert the indices to barcode strings
-    filtered_bcs = matrix.ints_to_bcs(top_bc_idx)
-    
-    return filtered_bcs
+    original_filtered_bcs = matrix.ints_to_bcs(top_bc_idx)
+    original_filtered_bcs = np.array(original_filtered_bcs)
+    # check if initial cells has very few UMIs
+    # Filter based on UMI count
+    filtered_counts = bc_counts[top_bc_idx]
+    # keep_mask = filtered_counts > MIN_UMIS
+    keep_mask = filtered_counts > MIN_UMIS
+    filtered_bcs = original_filtered_bcs[keep_mask]
+    filtered_bcs = filtered_bcs.tolist()
+    is_high_quality = len(filtered_bcs) == len(original_filtered_bcs)
+    if not is_high_quality:
+        logger.warning(
+            f"❗️⚠️ ❗️ Warning: During the initial cell calling step, {len(original_filtered_bcs) - len(filtered_bcs)} cells with UMI counts below {MIN_UMIS} were identified. These low-quality cells have been excluded from the final set of retained cells. This situation is uncommon and may indicate that the dataset is of poor quality."
+        )
+    return filtered_bcs, is_high_quality
 
 def adjust_pvalue_bh(p):
     """ Multiple testing correction of p-values using the Benjamini-Hochberg procedure """

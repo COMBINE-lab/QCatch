@@ -10,7 +10,7 @@ from qcatch import templates
 from qcatch.utils import QuantInput, get_input
 from qcatch.plots_tables import show_quant_log_table
 from qcatch.convert_to_html import create_plotly_plots, modify_html_with_plots
-from qcatch.find_retained_cells.run_cell_calling import run_cell_calling, save_results
+from qcatch.find_retained_cells.run_cell_calling import run_cell_calling
 
 from importlib.metadata import version, PackageNotFoundError
 
@@ -126,7 +126,7 @@ def main():
     # ****  ------------------------------- *****
     
     # Run the cell calling process. We will either modify the input file(change the args.input) or save the results in the output directory
-    valid_bcs = run_cell_calling(
+    valid_bcs, is_high_quality = run_cell_calling(
         args, 
         output_dir, 
         version, 
@@ -135,7 +135,9 @@ def main():
     )
 
     logger.info("🎨 Generating plots and tables...")
-    
+    if len(valid_bcs) == 0:
+        logger.warning("❗️⚠️ ❗️ No valid barcodes found. Skip QC report HTML generation.")
+        return
     # plots and log, summary tables
     plot_text_elements = create_plotly_plots(args, valid_bcs)
     

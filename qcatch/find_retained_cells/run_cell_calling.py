@@ -18,10 +18,9 @@ def internal_cell_calling(args, output_dir, save_for_quick_test,quick_test_mode)
     
     # # cell calling step1 - empty drop
     logger.info("🧬 Starting cell calling...")
-    filtered_bcs = initial_filtering_OrdMag(matrix, chemistry, n_partitions, verbose)
+    filtered_bcs, is_high_quality = initial_filtering_OrdMag(matrix, chemistry, n_partitions, verbose)
     logger.info(f"🔎 step1- number of inital filtered cells: {len(filtered_bcs)}")
-    converted_filtered_bcs =  [x.decode() if isinstance(x, np.bytes_) else str(x) for x in filtered_bcs]
-    
+    converted_filtered_bcs = [x.decode() if isinstance(x, (np.bytes_, bytes)) else str(x) for x in filtered_bcs]
     non_ambient_result =None
     valid_bcs = set(converted_filtered_bcs)
 
@@ -36,8 +35,7 @@ def internal_cell_calling(args, output_dir, save_for_quick_test,quick_test_mode)
     
     if non_ambient_result is None:
         non_ambient_cells = 0
-        valid_bcs = set(converted_filtered_bcs) 
-        logger.warning(" ⚠️ step2- Empty drop failed: non_ambient_result is None. Please ensure the input matrix is complete or verify the chemistry version.")
+        logger.warning("⚠️step2- Empty drop failed: non_ambient_result is None. Please ensure the input matrix is complete or verify the chemistry version.")
         
     else:
         non_ambient_cells = len(non_ambient_result.eval_bcs)
@@ -58,7 +56,7 @@ def internal_cell_calling(args, output_dir, save_for_quick_test,quick_test_mode)
         logger.info(f"✅ Total reatined cells after cell calling: {len(valid_bcs)} out of {all_cells} cells")
 
     intermediate_result = (converted_filtered_bcs, non_ambient_result)
-    return valid_bcs, intermediate_result
+    return valid_bcs, intermediate_result, is_high_quality
 
     
 def save_results(args, version, intermediate_result, valid_bcs, output_dir ):
@@ -132,11 +130,16 @@ def save_results(args, version, intermediate_result, valid_bcs, output_dir ):
     else:
         # Not h5ad file, write to new files
         if args.valid_cell_list:
+            # if the user provided a valid cell list
             logger.info("🗂️ Skipped saving the cell calling results because the specified cell barcode list already exists.")
         else:
             # 1- original filtered cells
             initial_filtered_cells_filename= os.path.join(output_dir,'initial_filtered_cells.txt' )
-            
+            type_list =[]
+            for bc in converted_filtered_bcs:
+                type_list.append(type(bc))
+                
+            print(f'set type of initial c b list {set(type_list)}')
             with open(initial_filtered_cells_filename, 'w') as f:
                 for bc in converted_filtered_bcs:
                     f.write(f"{bc}\n")
@@ -173,12 +176,15 @@ def run_cell_calling(args, output_dir, version, save_for_quick_test, quick_test_
         with open(args.valid_cell_list, 'r') as f:
             valid_bcs = list(set(line.strip() for line in f))
         intermediate_result = None
+        is_high_quality = True
+        logger.info(f"Number of cells found in provided valid cell list : {len(valid_bcs)}")
+        
     else:
-        valid_bcs, intermediate_result = internal_cell_calling(args, output_dir, save_for_quick_test, quick_test_mode)
+        valid_bcs, intermediate_result, is_high_quality = internal_cell_calling(args, output_dir, save_for_quick_test, quick_test_mode)
     
     # save results
     save_results(args, version, intermediate_result, valid_bcs, output_dir)
     
-    return valid_bcs
+    return valid_bcs, is_high_quality
 
         

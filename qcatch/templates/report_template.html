@@ -155,7 +155,7 @@
     <ul class="nav-sidebar">
         <li><a href="#section1">🦒 Knee Plots</a></li>
         <li><a href="#section2">🔢 UMI Counts</a></li>
-        <li><a href="#section3">🧽 UMI Dedup</a></li>
+        <li><a href="#section3">🧽 UMI Deduplication</a></li>
         <li><a href="#section4">🧬 Gene Distribution<br>&nbsp;&nbsp;&nbsp;&nbsp;& Mito% Plot</a></li>
         <li><a href="#section5">🧩 S/U/A counts</a></li>
         <li><a href="#section6">🗺️ Clustering</a></li>
@@ -195,11 +195,11 @@
                           <b>Number of retained cells</b>: The number of valid and high quality cells that passed the cell calling step. This includes cells identified during the initial filtering and additional cells identified by the EmptyDrops step, whose expression profiles are significantly distinct from the ambient background.<br>
                           <b>Number of all processed cells</b>: The total number of cell barcodes observed in the processed sample. Cells with zero reads have been excluded. <br>
                           <b>Mean reads per retained cell</b>: The total number of reads, divided by the number of retained cells(filtered by cell calling steps). <br>
-                          <b>Median UMI per retained cell</b>: The median number of UMIs per retained cell. <br>
+                          <b>Median UMI per retained cell</b>: The median number of deduplicated reads (UMIs) per retained cell.<br>
                           <b>Median genes per retained cell</b>: The median number of detected genes per retained cell. <br>
                           <b>Total genes detected for retained cells</b>: the total number of unique genes detected acorss all retained cells. <br>
                           <b>Mapping rate</b>: Fraction of reads that mapped to the reference, calculated as mapped reads / total processed reads. <br>
-                          <b>Sequencing saturation</b>: Sequencing saturation measures the proportion of reads come from already-seen UMIs, calculated as 1 - (deduplicated reads / total reads). High saturation suggests limited gain from additional sequencing, while low saturation indicates that further sequencing could reveal more unique molecules (UMIs).<br>
+                          <b>Sequencing saturation</b>: Sequencing saturation measures the proportion of reads coming from already-seen UMIs, calculated as 1 - (deduplicated reads / total reads). High saturation suggests limited gain from additional sequencing, while low saturation indicates that further sequencing could reveal more unique molecules (UMIs).<br>
                         </p>
                       </div>
                     </div>
@@ -329,8 +329,9 @@
                             <div class="collapse" id="helpText4">
                               <div class="card card-body">
                                 <p class="mb-0">
-                                  The <b>left plot</b> depicts the distribution of detected gene counts. A knee plot can be used to filter out low-quality cells with too few UMIs. <br>
-                                  The <b>right plot</b> displays a violin plot of the percentage of mitochondrial gene expression across all unfiltered cells. For the 'All Cells' plot, cells with fewer than 20 detected genes — which are considered nearly empty — were excluded. In contrast, the 'Retained Cells' plot includes all retained cells without additional filtering.
+                                  The <b>left plot</b> depicts the distribution of detected gene counts.<br>
+                                  The <b>right plot</b> shows the distribution of mitochondrial gene expression percentages across cells. Note: The “All Cells” plot does not display every processed cell. To improve visualization and reduce clutter from very low-quality cells, we excluded cells with fewer than 20 detected genes—these are typically considered nearly empty. In contrast, the “Retained Cells” plot includes all retained cells, without applying this gene count filter.
+
                                 </p>
                               </div>
                             </div>
@@ -369,8 +370,8 @@
                               </h5>
                               <div class="collapse" id="helpText5">
                                 <div class="card card-body">
-                                  <p class="mb-0">The <b>left plot</b> shows the number of reads from three categories for RNA splicing status: Splice(S), Unsplice(U), and Ambiguous(A). <br> The <b>right plot</b> shows the histogram of (S+A)/(S+U+A) ratio. </p>
-                                  <p class="mb-0"><b>Rank</b>: cells are ranked by number of UMIs. <br> <b>UMI count</b>: number of deduplicated reads.</p>
+                                  <p class="mb-0">When using “USA mode” in alevin-fry, spliced (S), unspliced (U), and ambiguous (A) read counts are generated separately for each gene in each cell. <br> In the <b>bar plot</b>, we first sum the spliced, unspliced, and ambiguous counts across all genes and all cells. The plot then displays the total number of reads in each splicing category: Spliced (S), Unspliced (U), and Ambiguous (A). <br>
+                                  In the <b>histogram</b>, we calculate the splicing ratio for each cell as (S + A) / (S + U + A), where the counts are summed across all genes. The histogram shows the distribution of these per-cell splicing ratios.
                                 </div>
                               </div>
                             </div>

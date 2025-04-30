@@ -155,7 +155,7 @@ class QuantInput:
                 ) = load_json_txt_file(self.mtx_dir_path)
                 
                 self.map_json_data = None
-                logger.warning("⚠️ Mapping log file is not included in output folder if using 'alevin-fry'. Mapping rate will not be displayed in the summary table. You could still find it in the mapping results from piscem or salmon.")
+                logger.warning("⚠️ Unfortunately, the mapping log file is not included in output folder if using 'alevin-fry'. As a result, the mapping rate will not be shown in the summary table. However, you can still find this information in your original mapping results from piscem or salmon")
         
                 # detect usa_mode
                 self.usa_mode = self.quant_json_data["usa_mode"]
