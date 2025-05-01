@@ -121,7 +121,7 @@ parent_quant_dir/
 For more advanced options and usage details, see the sections below.
 
 ## FAQ
-- For more details about how the metrics and plots were generated, refer to the [FAQ](./faq.md)
+- For more details about how the metrics and plots were generated, refer to the [FAQ](./docs/faq.md)
 
 ## Command-Line Arguments
 
