@@ -12,8 +12,8 @@
 | **Number of Genes Above Mean** | The number of genes with expression levels above the mean_expr, where mean_expr is defined as the total UMI count divided by the number of genes with non-zero expression levels. |
 
 ## 🥝 Summary metric
-| **Metric** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| **Description** |
-|------------------------|-----------------|
+| **Value showed in summary table** | **Description** |
+|------------|-----------------|
 | **Number of retained cells** | The number of valid and high quality cells that passed the cell calling step. This includes cells identified during the initial filtering and additional cells identified by the EmptyDrops step, whose expression profiles are significantly distinct from the ambient background. |
 | **Number of all processed cells** | The total number of cell barcodes observed in the processed sample. Cells with zero reads have been excluded. |
 | **Mean reads per retained cell** | The total number of corrected reads, divided by the number of retained cells. |
