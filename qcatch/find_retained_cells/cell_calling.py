@@ -40,7 +40,7 @@ N_PARTITIONS=90000
 MAX_OCCUPIED_PARTITIONS_FRAC = 0.5
 
 # *M* Minimum number of UMIS per barcode to consider after the initial cell calling
-MIN_UMIS = 100
+MIN_UMIS = 500
 
 # Default number of background simulations to make
 NUM_SIMS = 100000
