@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import importlib.resources as pkg_resources
 from pathlib import Path
 import numpy as np
-import logging
+from qcatch.logger import setup_logger, generate_warning_html
 
 from qcatch import templates
 from qcatch.utils import QuantInput, get_input
@@ -27,16 +27,21 @@ def load_template():
     return soup
 
 def main():
-    # Remove all existing handlers from the root logger
-    for handler in logging.getLogger().handlers[:]:
-        logging.getLogger().removeHandler(handler)
 
-    # Set logging level based on the verbose flag
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s :\n %(message)s"
-    )
+    # # Remove all existing handlers from the root logger
+    # for handler in logging.getLogger().handlers[:]:
+    #     logging.getLogger().removeHandler(handler)
 
+    # # Set logging level based on the verbose flag
+    # logging.basicConfig(
+    #     level=logging.INFO,
+    #     format="%(asctime)s - %(levelname)s :\n %(message)s"
+    # )
+    # # Suppress Numba’s debug messages by raising its level to WARNING
+    # logging.getLogger('numba').setLevel(logging.WARNING)
+    
+    # logger = logging.getLogger(__name__)
+    
     parser = argparse.ArgumentParser(description="QCatch: Command-line Interface")
     # Add command-line arguments
     parser.add_argument(
@@ -97,12 +102,7 @@ def main():
     )
     args = parser.parse_args()
 
-    # Set logging level based on the verbose flag
-    logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(asctime)s - %(levelname)s :\n %(message)s"
-    )
-    
+    logger = setup_logger(__name__, args.verbose)
     output_dir = args.output
     if output_dir:
         output_dir = Path(output_dir)
@@ -110,10 +110,7 @@ def main():
     else:
         # If no output directory is specified, use the input directory/input file's parent directory
         output_dir = Path(args.input.dir)
-        
-    # Suppress Numba’s debug messages by raising its level to WARNING
-    logging.getLogger('numba').setLevel(logging.WARNING)
-    logger = logging.getLogger(__name__)
+    
    
     # add gene_id_2_name if we don't yet have it
     args.input.add_geneid_2_name_if_absent(args.gene_id2name_file, output_dir)
@@ -126,22 +123,24 @@ def main():
     # ****  ------------------------------- *****
     
     # Run the cell calling process. We will either modify the input file(change the args.input) or save the results in the output directory
-    valid_bcs, is_high_quality = run_cell_calling(
+    valid_bcs = run_cell_calling(
         args, 
         output_dir, 
         version, 
         save_for_quick_test, 
         quick_test_mode
     )
-
     logger.info("🎨 Generating plots and tables...")
     if len(valid_bcs) == 0:
-        logger.warning("❗️⚠️ ❗️ No valid barcodes found. Skip QC report HTML generation.")
+        msg ="❗️ Error: No valid barcodes found. Skip QC report HTML generation."
+        logger.error(msg)
         return
     # plots and log, summary tables
     plot_text_elements = create_plotly_plots(args, valid_bcs)
     
     table_htmls = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
+    
+    warning_html = generate_warning_html(logger.get_record_log())
     
     # Modify HTML with plots
     modify_html_with_plots(
@@ -149,8 +148,8 @@ def main():
         os.path.join(output_dir, f'QCatch_report.html'),
         plot_text_elements,
         table_htmls,
+        warning_html,
         args.input.usa_mode
     )
-
 if __name__ == "__main__":
     main()

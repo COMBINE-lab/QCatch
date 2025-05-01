@@ -155,7 +155,7 @@
     <ul class="nav-sidebar">
         <li><a href="#section1">🦒 Knee Plots</a></li>
         <li><a href="#section2">🔢 UMI Counts</a></li>
-        <li><a href="#section3">🧽 UMI Deduplication</a></li>
+        <li><a href="#section3">🧽 UMI Dedup</a></li>
         <li><a href="#section4">🧬 Gene Distribution<br>&nbsp;&nbsp;&nbsp;&nbsp;& Mito% Plot</a></li>
         <li><a href="#section5">🧩 S/U/A counts</a></li>
         <li><a href="#section6">🗺️ Clustering</a></li>
@@ -199,7 +199,7 @@
                           <b>Median genes per retained cell</b>: The median number of detected genes per retained cell. <br>
                           <b>Total genes detected for retained cells</b>: the total number of unique genes detected acorss all retained cells. <br>
                           <b>Mapping rate</b>: Fraction of reads that mapped to the reference, calculated as mapped reads / total processed reads. <br>
-                          <b>Sequencing saturation</b>: Sequencing saturation measures the proportion of reads coming from already-seen UMIs, calculated as 1 - (deduplicated reads / total reads). High saturation suggests limited gain from additional sequencing, while low saturation indicates that further sequencing could reveal more unique molecules (UMIs).<br>
+                          <b>Sequencing saturation</b>: Sequencing saturation measures the proportion of reads coming from already-observed UMIs, calculated as 1 - (deduplicated reads / total reads). High saturation suggests limited gain from additional sequencing, while low saturation indicates that further sequencing could reveal more unique molecules (UMIs).<br>
                         </p>
                       </div>
                     </div>
@@ -222,9 +222,12 @@
                   </li>
               </ul>
               <!--Warning note-->
-              <div class="alert alert-warning alert-dismissible fade show my-3" role="alert">
+              <div class="alert alert-info alert-dismissible fade show my-3" role="alert">
                 <strong>Note:</strong> For the plots below, the title will specify whether they represent <em>all processed cells</em> or only the <em>retained cells</em>.
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+              <!-- Warning message for data quality -->
+              <div id="qc-warning-container" >
               </div>
                     <div class="tab-content">
                        <!-- Tab1, plots-->

@@ -124,7 +124,7 @@ def create_plotly_plots(args, valid_bcs):
     plot_text_elements = (plots, summary_table_html)
     return plot_text_elements
 
-def modify_html_with_plots(soup, output_html_path, plot_text_elements, table_htmls, usa_mode):
+def modify_html_with_plots(soup, output_html_path, plot_text_elements, table_htmls, warning_html, usa_mode):
     """
     Modify an HTML file to include Plotly plots, update text dynamically by ID, 
     and insert summary and log info tables.
@@ -145,15 +145,6 @@ def modify_html_with_plots(soup, output_html_path, plot_text_elements, table_htm
         else:
             missing_sections.append(f"Plot '{plot_id}'")
 
-    # # Updating texts
-    # for text_id, text in texts.items():
-    #     text_element = soup.find(id=text_id)
-    #     if text_element:
-    #         text_element.clear()
-    #         text_element.append(BeautifulSoup(f'<p>{text}</p>', 'html.parser'))
-    #         updated_sections.append(text_id)
-    #     else:
-    #         missing_sections.append(f"Text '{text_id}'")
 
     # Summary and log info tables
     for table_id, table_html in [
@@ -175,7 +166,18 @@ def modify_html_with_plots(soup, output_html_path, plot_text_elements, table_htm
             sua_tab.decompose()
         if sua_content:
             sua_content.decompose()
+    
+    # Add warning section
+    if warning_html.strip(): 
+        warning_section = soup.find(id="qc-warning-container")
+        if warning_section:
+            warning_section.clear()
+            warning_section.append(BeautifulSoup(warning_html, 'html.parser'))
+            updated_sections.append("qc-warning-container")
+        else:
+            missing_sections.append("Warning section with id='qc-warning-container'")
             
+        
     # Write the updated HTML to a new file
     with open(output_html_path, 'w', encoding='utf-8') as file:
         file.write(str(soup))
@@ -188,3 +190,5 @@ def modify_html_with_plots(soup, output_html_path, plot_text_elements, table_htm
         logger.info(f"🚀 QC report successfully updated all elements and saved to: {output_html_path}")
     elif len(updated_sections) != 0:
         logger.info(f"🚀 QC report successfully updated and saved to: {output_html_path}")
+
+

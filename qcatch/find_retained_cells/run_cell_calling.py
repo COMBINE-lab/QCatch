@@ -18,8 +18,8 @@ def internal_cell_calling(args, output_dir, save_for_quick_test,quick_test_mode)
     
     # # cell calling step1 - empty drop
     logger.info("🧬 Starting cell calling...")
-    filtered_bcs, is_high_quality = initial_filtering_OrdMag(matrix, chemistry, n_partitions, verbose)
-    logger.info(f"🔎 step1- number of inital filtered cells: {len(filtered_bcs)}")
+    filtered_bcs = initial_filtering_OrdMag(matrix, chemistry, n_partitions, verbose)
+    logger.info(f"🧀 Step1- number of inital filtered cells: {len(filtered_bcs)}")
     converted_filtered_bcs = [x.decode() if isinstance(x, (np.bytes_, bytes)) else str(x) for x in filtered_bcs]
     non_ambient_result =None
     valid_bcs = set(converted_filtered_bcs)
@@ -35,18 +35,18 @@ def internal_cell_calling(args, output_dir, save_for_quick_test,quick_test_mode)
     
     if non_ambient_result is None:
         non_ambient_cells = 0
-        logger.warning("⚠️step2- Empty drop failed: non_ambient_result is None. Please ensure the input matrix is complete or verify the chemistry version.")
+        logger.record_warning("⚠️ Warning❗️: Step2- Empty drop failed: non_ambient_result is None. This may indicate low data quality, an incomplete input matrix, or an incorrect chemistry version.")
         
     else:
         non_ambient_cells = len(non_ambient_result.eval_bcs)
-        logger.debug(f"step2- Empty drop: number of all potential non-ambient cells: {non_ambient_cells}")
+        logger.debug(f"🍧 Step2- Empty drop: number of all potential non-ambient cells: {non_ambient_cells}")
         if save_for_quick_test:
             with open(f'{output_dir}/non_ambient_result.pkl', 'wb') as f:
                 pickle.dump(non_ambient_result, f)
         
         # extract the non-ambient cells from eval_bcs from a binary array
         is_nonambient_bcs = [str(bc) for bc, boolean_non_ambient in zip(non_ambient_result.eval_bcs, non_ambient_result.is_nonambient) if boolean_non_ambient]
-        logger.info(f"🔎 step2- empty drop: number of is_non_ambient cells: {len(is_nonambient_bcs)}")
+        logger.info(f"🍹 Step2- empty drop: number of is_non_ambient cells: {len(is_nonambient_bcs)}")
         
         # Calculate the total number of valid barcodes
         valid_bcs = set(converted_filtered_bcs) | set(is_nonambient_bcs)
@@ -56,7 +56,7 @@ def internal_cell_calling(args, output_dir, save_for_quick_test,quick_test_mode)
         logger.info(f"✅ Total reatined cells after cell calling: {len(valid_bcs)} out of {all_cells} cells")
 
     intermediate_result = (converted_filtered_bcs, non_ambient_result)
-    return valid_bcs, intermediate_result, is_high_quality
+    return valid_bcs, intermediate_result
 
     
 def save_results(args, version, intermediate_result, valid_bcs, output_dir ):
@@ -84,7 +84,7 @@ def save_results(args, version, intermediate_result, valid_bcs, output_dir ):
             # if the user provided a valid cell list
             args.input.mtx_data.obs['is_retained_cells'] = args.input.mtx_data.obs['barcodes'].isin(set(valid_bcs))
             
-            logger.info("🗂️Saved the ‘cell calling result’ based on the user-specified barcode list to the modified .h5ad file. Check the newly added column in adata.obs. Note: Only one column, 'is_retained_cells', is added. FDR-related information from the internal cell calling process is excluded")
+            logger.info("🗂️ Saved the ‘cell calling result’ based on the user-specified barcode list to the modified .h5ad file. Check the newly added column in adata.obs. Note: Only one column, 'is_retained_cells', is added. FDR-related information from the internal cell calling process is excluded")
             
         else:
             # Update the hs5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
@@ -171,20 +171,19 @@ def run_cell_calling(args, output_dir, version, save_for_quick_test, quick_test_
     
     if args.valid_cell_list:
         # If a valid cell list is provided, we will skip the cell calling step
-        logger.info("Using user-specified valid cell list.")
+        logger.debug("🍻 Using user-specified valid cell list.")
         # parse the valid cell list
         with open(args.valid_cell_list, 'r') as f:
             valid_bcs = list(set(line.strip() for line in f))
         intermediate_result = None
-        is_high_quality = True
-        logger.info(f"Number of cells found in provided valid cell list : {len(valid_bcs)}")
+        logger.info(f"🧃 Number of cells found in provided valid cell list : {len(valid_bcs)}")
         
     else:
-        valid_bcs, intermediate_result, is_high_quality = internal_cell_calling(args, output_dir, save_for_quick_test, quick_test_mode)
+        valid_bcs, intermediate_result = internal_cell_calling(args, output_dir, save_for_quick_test, quick_test_mode)
     
     # save results
     save_results(args, version, intermediate_result, valid_bcs, output_dir)
     
-    return valid_bcs, is_high_quality
+    return valid_bcs
 
         

@@ -40,7 +40,7 @@ N_PARTITIONS=90000
 MAX_OCCUPIED_PARTITIONS_FRAC = 0.5
 
 # *M* Minimum number of UMIS per barcode to consider after the initial cell calling
-MIN_UMIS = 500
+MIN_UMIS = 100
 
 # Default number of background simulations to make
 NUM_SIMS = 100000
@@ -276,12 +276,11 @@ def initial_filtering_OrdMag(matrix, chemistry_description: str | None = None,n_
     keep_mask = filtered_counts > MIN_UMIS
     filtered_bcs = original_filtered_bcs[keep_mask]
     filtered_bcs = filtered_bcs.tolist()
-    is_high_quality = len(filtered_bcs) == len(original_filtered_bcs)
-    if not is_high_quality:
-        logger.warning(
-            f"❗️⚠️ ❗️ Warning: During the initial cell calling step, {len(original_filtered_bcs) - len(filtered_bcs)} cells with UMI counts below {MIN_UMIS} were identified. These low-quality cells have been excluded from the final set of retained cells. This situation is uncommon and may indicate that the dataset is of poor quality."
-        )
-    return filtered_bcs, is_high_quality
+
+    if len(filtered_bcs) < len(original_filtered_bcs):
+        msg = f"⚠️ Warning❗️: During the initial cell calling step, {len(original_filtered_bcs) - len(filtered_bcs)} cells with UMI counts below {MIN_UMIS} were identified. These low-quality cells have been excluded from the final set of retained cells. This situation is uncommon and may indicate that the dataset is of poor quality ⚠️."
+        logger.record_warning(msg)
+    return filtered_bcs
 
 def adjust_pvalue_bh(p):
     """ Multiple testing correction of p-values using the Benjamini-Hochberg procedure """
