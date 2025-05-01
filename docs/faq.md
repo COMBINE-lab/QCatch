@@ -12,8 +12,8 @@
 | **Number of Genes Above Mean** | The number of genes with expression levels above the mean_expr, where mean_expr is defined as the total UMI count divided by the number of genes with non-zero expression levels. |
 
 ## 🥝 Summary metric
-| **Metric** | **Description** |
-|------------|-----------------|
+| **Metric** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| **Description** |
+|------------------------|-----------------|
 | **Number of retained cells** | The number of valid and high quality cells that passed the cell calling step. This includes cells identified during the initial filtering and additional cells identified by the EmptyDrops step, whose expression profiles are significantly distinct from the ambient background. |
 | **Number of all processed cells** | The total number of cell barcodes observed in the processed sample. Cells with zero reads have been excluded. |
 | **Mean reads per retained cell** | The total number of corrected reads, divided by the number of retained cells. |
@@ -43,12 +43,14 @@ The scatter plot compares the number of mapped reads and number of UMIs for each
 
 #### 3.4 Distribution of Detected Gene Count and Mitochondrial Percentage Plot
 The plot depicts the distribution of detected gene counts per cell. The violin plot shows the distribution of mitochondrial gene expression percentages.  
+
 **Note**: The “All Cells” plot does not display every processed cell. To improve visualization and reduce clutter from very low-quality cells, we excluded cells with fewer than 20 detected genes—these are typically considered nearly empty. In contrast, the “Retained Cells” plot includes all retained cells, without applying this gene count filter.
 
 #### 3.5 Bar Plot for S/U/A Counts and Splicing Ratio Distribution
 When using “USA mode” in alevin-fry, spliced (S), unspliced (U), and ambiguous (A) read counts are generated separately for each gene in each cell.
 
 In the **bar plot**, we first sum the spliced, unspliced, and ambiguous counts across all genes and all cells. The plot then displays the total number of reads in each splicing category: Spliced (S), Unspliced (U), and Ambiguous (A).
+
 In the **histogram**, we calculate the splicing ratio for each cell as (S + A) / (S + U + A), where the counts are summed across all genes. The histogram shows the distribution of these per-cell splicing ratios.
 
 #### 3.6 Clustering: UMAP and t-SNE
