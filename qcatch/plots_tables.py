@@ -568,10 +568,9 @@ def show_quant_log_table(quant_json_data, permit_list_json_data):
     permit_list_table_content = ""
 
     key_list_lv1 = list(quant_json_data.keys())
-    current_index = 1
 
     for key_lv1 in key_list_lv1:
-        table_row = f"<tr><th scope='row'>{current_index}</th><td>{key_lv1}</td>"
+        table_row = f"<tr><td>{key_lv1}</td>"
 
         if key_lv1 == "empty_resolved_cell_numbers" and len(quant_json_data[key_lv1]) > collapse_threshold:
             # Format the list of numbers as a comma-separated string
@@ -579,14 +578,14 @@ def show_quant_log_table(quant_json_data, permit_list_json_data):
 
             # Generate Bootstrap accordion for the content
             accordion_content = f'''
-            <div class="accordion" id="accordion{current_index}">
+            <div class="accordion" id="accordion_{key_lv1}">
                 <div class="accordion-item">
-                    <h2 class="accordion-header" id="heading{current_index}">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{current_index}" aria-expanded="false" aria-controls="collapse{current_index}">
+                    <h2 class="accordion-header" id="heading_{key_lv1}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{key_lv1}" aria-expanded="false" aria-controls="collapse_{key_lv1}">
                             Expand Content
                         </button>
                     </h2>
-                    <div id="collapse{current_index}" class="accordion-collapse collapse" aria-labelledby="heading{current_index}" data-bs-parent="#accordion{current_index}">
+                    <div id="collapse_{key_lv1}" class="accordion-collapse collapse" aria-labelledby="heading_{key_lv1}" data-bs-parent="#accordion_{key_lv1}">
                         <div class="accordion-body">
                             {formatted_content}
                         </div>
@@ -599,14 +598,11 @@ def show_quant_log_table(quant_json_data, permit_list_json_data):
             # Directly display the content for other cases
             quant_table_content += f"{table_row}<td>{quant_json_data[key_lv1]}</td></tr>"
 
-        current_index += 1
-
     # Create Permit List Table 
     if permit_list_json_data:
         permit_list_table_content = ""
         for key, value in permit_list_json_data.items():
-            permit_list_table_content += f"<tr><th scope='row'>{current_index}</th><td>{key}</td><td>{value}</td></tr>"
-            current_index += 1
+            permit_list_table_content += f"<tr><td>{key}</td><td>{value}</td></tr>"
     else: 
         permit_list_table_content = "<tr><td colspan='3'>No permit list data available.</td></tr>"
 

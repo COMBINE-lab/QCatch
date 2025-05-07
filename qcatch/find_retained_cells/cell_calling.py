@@ -267,18 +267,17 @@ def initial_filtering_OrdMag(matrix, chemistry_description: str | None = None,n_
     top_bc_idx = np.sort(np.argsort(bc_counts, kind=NP_SORT_KIND)[::-1][0:top_n])
     assert top_n <= len(nonzero_bc_counts), "Invalid selection of 0-count barcodes!"
     # Convert the indices to barcode strings
-    original_filtered_bcs = matrix.ints_to_bcs(top_bc_idx)
-    original_filtered_bcs = np.array(original_filtered_bcs)
+    filtered_bcs = matrix.ints_to_bcs(top_bc_idx)
+    filtered_bcs = np.array(filtered_bcs)
     # check if initial cells has very few UMIs
     # Filter based on UMI count
     filtered_counts = bc_counts[top_bc_idx]
     # keep_mask = filtered_counts > MIN_UMIS
     keep_mask = filtered_counts > MIN_UMIS
-    filtered_bcs = original_filtered_bcs[keep_mask]
-    filtered_bcs = filtered_bcs.tolist()
+    num_high_quality_filtered_bcs = len(filtered_counts[keep_mask])
 
-    if len(filtered_bcs) < len(original_filtered_bcs):
-        msg = f"⚠️ Warning❗️: During the initial cell calling step, {len(original_filtered_bcs) - len(filtered_bcs)} cells with UMI counts below {MIN_UMIS} were identified. These low-quality cells have been excluded from the final set of retained cells. This situation is uncommon and may indicate that the dataset is of poor quality ⚠️."
+    if num_high_quality_filtered_bcs < len(filtered_bcs):
+        msg = f"⚠️ Warning❗️: During the initial cell calling step, OrdMag identified {len(filtered_bcs) - num_high_quality_filtered_bcs} cells with UMI counts below {MIN_UMIS}. This situation is uncommon and may indicate that the dataset is of poor quality ⚠️. It is recommended to exclude these low-quality cells by evaluating per-cell UMI counts from the count matrix before proceeding with downstream analysis."
         logger.record_warning(msg)
     return filtered_bcs
 
@@ -516,15 +515,17 @@ def find_nonambient_barcodes(matrix, orig_cell_bcs,chemistry_description, n_part
     eval_bcs = np.ma.array(np.arange(matrix.bcs_dim))
     eval_bcs[orig_cells] = ma.masked
 
-    median_initial_umis = np.median(umis_per_bc[orig_cells])
+    # median_initial_umis = np.median(umis_per_bc[orig_cells]) 
+    # min_umis = int(max(min_umis_nonambient, round(np.ceil(median_initial_umis * min_umi_frac_of_median))))
+    # logger.debug('Median UMIs of initial cell calls: {}'.format(median_initial_umis))
+    max_ambient_umis = np.max(umis_per_bc[empty_bcs], initial=0)
+    logger.debug('Max UMIs of ambient barcodes: {}'.format(max_ambient_umis))
     
-    min_umis = int(max(min_umis_nonambient, round(np.ceil(median_initial_umis * min_umi_frac_of_median))))
-    logger.debug('Median UMIs of initial cell calls: {}'.format(median_initial_umis))
+    min_umis = max(min_umis_nonambient, 1 + max_ambient_umis)
     logger.debug('Min UMIs: {}'.format(min_umis))
-
+    
     eval_bcs[umis_per_bc < min_umis] = ma.masked
     n_unmasked_bcs = len(eval_bcs) - eval_bcs.mask.sum()
-
     # Take the top N_CANDIDATE_BARCODES by UMI count, of barcodes that pass the above criteria
     eval_bcs = np.argsort(ma.masked_array(umis_per_bc, mask=eval_bcs.mask))[0:n_unmasked_bcs][-N_CANDIDATE_BARCODES:]
 

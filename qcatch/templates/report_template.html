@@ -194,7 +194,7 @@
                         <p class="mb-0">
                           <b>Number of retained cells</b>: The number of valid and high quality cells that passed the cell calling step. This includes cells identified during the initial filtering and additional cells identified by the EmptyDrops step, whose expression profiles are significantly distinct from the ambient background.<br>
                           <b>Number of all processed cells</b>: The total number of cell barcodes observed in the processed sample. Cells with zero reads have been excluded. <br>
-                          <b>Mean reads per retained cell</b>: The total number of reads, divided by the number of retained cells(filtered by cell calling steps). <br>
+                          <b>Mean reads per retained cell</b>: The total number of reads assigned to the retained cell barcodes, including the mapped and unmapped reads, divided by the number of retained cells. <br>
                           <b>Median UMI per retained cell</b>: The median number of deduplicated reads (UMIs) per retained cell.<br>
                           <b>Median genes per retained cell</b>: The median number of detected genes per retained cell. <br>
                           <b>Total genes detected for retained cells</b>: the total number of unique genes detected acorss all retained cells. <br>
@@ -469,7 +469,6 @@
                             <table class="table table-hover table-striped">
                                 <thead>
                                     <tr class="table-primary">
-                                        <th scope="col">#</th>
                                         <th scope="col">Category</th>
                                         <th scope="col">Content</th>
                                     </tr>
@@ -507,7 +506,6 @@
                             <table class="table table-hover table-striped">
                               <thead>
                                 <tr class="table-primary">
-                                  <th scope="col">#</th>
                                   <th scope="col">Category</th>
                                   <th scope="col">Content</th>
                                 </tr>
