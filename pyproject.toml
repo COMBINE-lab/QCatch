@@ -61,6 +61,7 @@ optional-dependencies.doc = [
 optional-dependencies.test = [
   "coverage",
   "pytest",
+  "setuptools",
 ]
 # https://docs.pypi.org/project_metadata/#project-urls
 urls.Documentation = "https://github.com/COMBINE-lab/QCatch#readme"
@@ -76,7 +77,8 @@ package-dir = { "" = "src" }
 where = [ "src" ]
 
 [tool.hatch.envs.default]
-installer = "uv"
+# installer = "uv"
+installer = "virtual"
 features = [ "dev" ]
 
 [tool.hatch.envs.docs]
@@ -95,8 +97,15 @@ scripts.clean = "git clean -fdX -- {args:docs}"
 # deps = [ "pre" ]
 # python = [ "3.13" ]
 
-[tool.hatch.envs.hatch-test]
+[tool.hatch.envs."hatch-test-3.11"]
+python = "3.11"
 features = [ "test" ]
+installer = "virtual"
+
+[tool.hatch.envs."hatch-test-3.12"]
+python = "3.12"
+features = [ "test" ]
+installer = "virtual"
 
 # [tool.hatch.envs.hatch-test.overrides]
 # If the matrix variable `deps` is set to "pre",

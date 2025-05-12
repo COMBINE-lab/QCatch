@@ -1,3 +1,4 @@
+### <-------- scvere ####
 # Temp files
 .DS_Store
 *~
@@ -9,11 +10,11 @@ buck-out/
 
 # Compiled files
 .venv/
-__pycache__/
+# __pycache__/
 .*cache/
 
-# Distribution / packaging
-/dist/
+# # Distribution / packaging
+# /dist/
 
 # Tests and coverage
 /data/
@@ -21,10 +22,10 @@ __pycache__/
 
 # docs
 /docs/generated/
-/docs/_build/
+# /docs/_build/
+### scvere  ---------> ####
 
-
-# QCatch - Ignore local shell scripts
+### <-------- QCatch - Ignore local shell scripts
 run_main.sh
 tutorial.sh
 run_main_NEW.sh
