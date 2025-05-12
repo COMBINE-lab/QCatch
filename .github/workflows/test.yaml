@@ -39,10 +39,10 @@ jobs:
         run: |
           ENVS_JSON=$(uvx hatch env show --json | jq -c 'to_entries
             | map(
-                select(.key | startswith("hatch-test"))
+                select((.key == "hatch-test-3.11") or (.key == "hatch-test-3.12"))
                 | {
                     name: .key,
-                    label: (if (.key | contains("pre")) then .key + " (PRE-RELEASE DEPENDENCIES)" else .key end),
+                    label: .key,
                     python: .value.python
                   }
               )')

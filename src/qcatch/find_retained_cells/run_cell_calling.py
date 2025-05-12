@@ -8,10 +8,13 @@ import shutil
 
 import numpy as np
 
+from qcatch.logger import QCatchLogger
+
 from .cell_calling import NonAmbientBarcodeResult, find_nonambient_barcodes, initial_filtering_OrdMag
 from .matrix import CountMatrix
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("qcatch")
+assert isinstance(logger, QCatchLogger), "Logger is not a QCatchLogger. Call setup_logger() in main.py first."
 
 
 def internal_cell_calling(args, output_dir, save_for_quick_test, quick_test_mode):

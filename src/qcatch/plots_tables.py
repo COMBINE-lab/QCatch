@@ -9,7 +9,10 @@ import plotly.graph_objs as go
 import scanpy as sc
 from plotly.subplots import make_subplots
 
+from qcatch.logger import QCatchLogger
+
 logger = logging.getLogger(__name__)
+assert isinstance(logger, QCatchLogger), "Logger is not a QCatchLogger. Call setup_logger() in main.py first."
 
 
 def apply_uniform_style(fig: go.Figure) -> go.Figure:

@@ -107,6 +107,12 @@ python = "3.12"
 features = [ "test" ]
 installer = "virtual"
 
+[tool.hatch.envs."hatch-test-3.11".scripts]
+run-cov = "pytest --cov=qcatch --cov-report=term-missing tests"
+
+[tool.hatch.envs."hatch-test-3.12".scripts]
+run-cov = "pytest --cov=qcatch --cov-report=term-missing tests"
+
 # [tool.hatch.envs.hatch-test.overrides]
 # If the matrix variable `deps` is set to "pre",
 # set the environment variable `UV_PRERELEASE` to "allow".

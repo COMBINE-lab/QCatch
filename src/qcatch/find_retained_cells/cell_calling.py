@@ -12,10 +12,13 @@ import numpy.ma as ma
 import scipy.stats as sp_stats
 from scipy.sparse import csc_matrix
 
+from qcatch.logger import QCatchLogger
+
 from .sgt import SimpleGoodTuringError, sgt_proportions
 
+logger = logging.getLogger("qcatch")
+assert isinstance(logger, QCatchLogger), "Logger is not a QCatchLogger. Call setup_logger() in main.py first."
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-logger = logging.getLogger(__name__)
 
 # #----------------- Constants -----------------
 ORDMAG_RECOVERED_CELLS_QUANTILE = 0.99
@@ -263,7 +266,6 @@ def initial_filtering_OrdMag(
         tuple[np.ndarray, FilteredCellResults, str] or np.ndarray: Filtered barcodes, metrics, and warning message if applicable.
     """
     metrics = FilteredCellResults(0)
-
     bc_counts = matrix.get_counts_per_bc()
     nonzero_bc_counts = bc_counts[bc_counts > 0]
     logger.debug(f"nonzero_bc_counts len : {len(nonzero_bc_counts)}")

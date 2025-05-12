@@ -39,11 +39,14 @@ def setup_logger(name: str, verbose: bool) -> QCatchLogger:
     QCatchLogger
         The configured logger instance.
     """
-    logger = logging.getLogger(name)
+    # Forcefully create a new QCatchLogger and assign it in the loggerDict
+    new_logger = QCatchLogger(name)
+    logging.Logger.manager.loggerDict[name] = new_logger
 
     # Remove all existing handlers from the root logger
     for handler in logging.getLogger().handlers[:]:
         logging.getLogger().removeHandler(handler)
+
     # Suppress noisy third-party libraries
     logging.getLogger("numba").setLevel(logging.WARNING)
 
@@ -52,7 +55,7 @@ def setup_logger(name: str, verbose: bool) -> QCatchLogger:
         level=logging.DEBUG if verbose else logging.INFO, format="%(asctime)s - %(levelname)s :\n %(message)s"
     )
 
-    return logger
+    return new_logger
 
 
 def generate_warning_html(warning_list: list[str]) -> str:

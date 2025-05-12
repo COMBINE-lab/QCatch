@@ -4,6 +4,8 @@ from argparse import Namespace
 import numpy as np
 from bs4 import BeautifulSoup
 
+from qcatch.logger import QCatchLogger
+
 # from qcatch.input_processing import
 from qcatch.plots_tables import (
     barcode_frequency_plots,
@@ -17,7 +19,8 @@ from qcatch.plots_tables import (
     umi_dedup,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("qcatch")
+assert isinstance(logger, QCatchLogger), "Logger is not a QCatchLogger. Call setup_logger() in main.py first."
 
 
 def create_plotly_plots(

@@ -91,7 +91,7 @@ def main():
     )
     args = parser.parse_args()
 
-    logger = setup_logger(__name__, args.verbose)
+    logger = setup_logger("qcatch", args.verbose)
     output_dir = args.output
 
     # If no output directory is specified, use the input directory/input file's parent directory
