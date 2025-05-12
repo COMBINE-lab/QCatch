@@ -1,11 +1,40 @@
+# Temp files
+.DS_Store
+*~
+buck-out/
+
+# IDEs
+/.idea/
+/.vscode/
+
+# Compiled files
+.venv/
+__pycache__/
+.*cache/
+
+# Distribution / packaging
+/dist/
+
+# Tests and coverage
+/data/
+/node_modules/
+
+# docs
+/docs/generated/
+/docs/_build/
+
+
 # QCatch - Ignore local shell scripts
 run_main.sh
 tutorial.sh
 run_main_NEW.sh
+run_main_cookie.sh
 run_installed_pkg.sh
 *.temp.*
-v4_check_10xh5_main.py
 .github/workflows/publish.yml
+
+# large test data
+tests/data/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -180,4 +209,3 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-

@@ -1,8 +1,8 @@
 git add .
-git commit -m "release v0.2.3" # need to change each time
-# git tag v0.2.1          
-git push origin main    
-# git push origin v0.2.1  
+git commit -m "release v0.2.4" # need to change each time
+git tag v0.2.4
+git push origin main
+# git push origin v0.2.1
 
 
 # Build the package locally
