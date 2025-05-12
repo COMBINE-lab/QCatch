@@ -61,6 +61,7 @@ optional-dependencies.doc = [
 optional-dependencies.test = [
   "coverage",
   "pytest",
+  "pytest-cov",
   "setuptools",
 ]
 # https://docs.pypi.org/project_metadata/#project-urls
