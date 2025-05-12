@@ -78,6 +78,8 @@ def test_simpleaf_with_cb_list(tmp_path):
         "--valid_cell_list",
         str(valid_cb_list),
         "--skip_umap_tsne",
+        "--summary_table_file",
+        str(output_path),
         "--verbose",
     ]
 

@@ -97,11 +97,15 @@ If you want to use a specified list of valid cell barcodes, you can provide the 
 
 To reduce runtime, you may enable the `--skip_umap_tsne` option to bypass dimensionality reduction and visualization steps.
 
-**7- Debug-level message**
+**7- Export the summary metrics**
+
+To export the summary metrics, specify the directory where the summary table should be saved as a CSV file.
+
+**8- Debug-level message**
 
 To get debug-level messages and more intermediate computation in cell calling step, you can specify `--verbose`
 
-**8- Re-run QCatch on modified h5ad file**
+**9- Re-run QCatch on modified h5ad file**
 If you re-run QCatch analysis on a modified `.h5ad` file (i.e., an `.h5ad` file with additional columns added for cell calling results), the existing cell calling-related columns will be removed and then replaced with new results. The new cell calling can be generated either through QCatch's internal method or based on a user-specified list of valid cell barcodes.
 
 **Example directory structures:**
@@ -148,6 +152,7 @@ For more advanced options and usage details, see the sections below.
 | `--valid_cell_list` | `-l` | `str` (Optional) |File provides a user-specified list of valid cell barcode. The file must be a TSV containing one column with cell barcodes without a header row. If provided, qcatch will skip the internal cell calling steps and and use the supplied list instead|
 | `--n_partitions` | `-n` | `int` (Optional) | Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specified `--chemistry`. Only use `--n_partitions` when your experiment uses a custom chemistry not listed in the predefined chemistry options.|
 | `--skip_umap_tsne` | `-u` | `flag` (Optional) | If provided, skips generation of UMAP and t-SNE plots. |
+| `--summary_table_file` | `-t` | `Path` (Optional) | Path to a directory where the summary metrics will be saved as a CSV file. |
 | `--verbose` | `-b` | `flag` (Optional) | Enable verbose logging with debug-level messages. |
 | `--version` | `-v` | `flag` (Optional) | Display the installed version of qcatch. |
 

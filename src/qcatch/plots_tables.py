@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 
 import numpy as np
 import pandas as pd
@@ -664,17 +665,19 @@ def generate_summary_table(
     median_genes_per_cell: int,
     mapping_rate: float | None,
     seq_saturation_value: float,
+    summary_table_file: str | None = None,
 ) -> str:
     """
     Generate a summary table with total corrected reads, median UMI, and total number of cells, etc.
 
     Args:
-        raw_featuredump_data: DataFrame containing featurn dump data.
+        raw_featuredump_data: DataFrame containing feature dump data.
         valid_bcs: List of valid barcode strings.
         total_detected_genes: Total number of genes detected in retained cells.
         median_genes_per_cell: Median number of genes per retained cell.
         mapping_rate: Fraction of reads mapped to reference, or None.
         seq_saturation_value: Sequencing saturation percentage.
+        summary_table_file: Optional path to save the summary table as a CSV file.
 
     Returns
     -------
@@ -696,6 +699,13 @@ def generate_summary_table(
         "Mapping rate": f"{mapping_rate}%" if mapping_rate else "N/A",
         "Sequencing saturation": f"{seq_saturation_value}%",
     }
+
+    # Optionally: Save the summary table to a CSV file
+    if summary_table_file:
+        summary_table_file_path = os.path.join(summary_table_file, "summary_table.csv")
+        logger.info(f"🍡 Saving summary table to CSV at: {summary_table_file_path}")
+        # Save the summary dictionary as a single-row CSV file with keys as column headers
+        pd.DataFrame([summary]).to_csv(summary_table_file_path, index=False)
 
     # Convert summary dict to a list of (key, value) pairs
     summary_items = list(summary.items())

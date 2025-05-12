@@ -89,8 +89,15 @@ def create_plotly_plots(
         mapping_rate = round(map_json_data["num_mapped"] / num_processed * 100, 2)
     seq_saturation_value = generate_seq_saturation(retained_data)
 
+    summary_table_file = args.summary_table_file
     summary_table_html = generate_summary_table(
-        data, valid_bcs, total_detected_genes, median_genes_per_cell, mapping_rate, seq_saturation_value
+        data,
+        valid_bcs,
+        total_detected_genes,
+        median_genes_per_cell,
+        mapping_rate,
+        seq_saturation_value,
+        summary_table_file,
     )
 
     # ---------------- Tab2 - Barcode Frequency Plots ---------------

@@ -80,6 +80,13 @@ def main():
     parser.add_argument(
         "--skip_umap_tsne", "-u", action="store_true", help="If provided, skips generation of UMAP and t-SNE plots."
     )
+    parser.add_argument(
+        "--summary_table_file",
+        "-t",
+        type=Path,
+        default=None,
+        help="Path to a directory where the summary metrics will be saved as a CSV file.",
+    )
     parser.add_argument("--verbose", "-b", action="store_true", help="Enable verbose logging with debug-level messages")
 
     parser.add_argument(
