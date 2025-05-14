@@ -17,7 +17,7 @@ logger = logging.getLogger("qcatch")
 assert isinstance(logger, QCatchLogger), "Logger is not a QCatchLogger. Call setup_logger() in main.py first."
 
 
-def internal_cell_calling(args, output_dir, save_for_quick_test, quick_test_mode):
+def internal_cell_calling(args, save_for_quick_test, quick_test_mode):
     """
     Perform internal cell calling via initial filtering and non-ambient barcode detection.
 
@@ -44,7 +44,7 @@ def internal_cell_calling(args, output_dir, save_for_quick_test, quick_test_mode
     converted_filtered_bcs = [x.decode() if isinstance(x, np.bytes_ | bytes) else str(x) for x in filtered_bcs]
     non_ambient_result = None
     valid_bcs = set(converted_filtered_bcs)
-
+    output_dir = args.output
     if quick_test_mode:
         # Re-load the saved result from pkl file
         with open(f"{output_dir}/non_ambient_result.pkl", "rb") as f:
@@ -89,7 +89,7 @@ def internal_cell_calling(args, output_dir, save_for_quick_test, quick_test_mode
     return valid_bcs, intermediate_result
 
 
-def save_results(args, version, intermediate_result, valid_bcs, output_dir):
+def save_results(args, version, intermediate_result, valid_bcs):
     """Save the cell calling results for h5ad or mtx directory."""
     if intermediate_result is not None:
         converted_filtered_bcs, non_ambient_result = intermediate_result
@@ -101,7 +101,7 @@ def save_results(args, version, intermediate_result, valid_bcs, output_dir):
         "version": version,
     }
     save_filtered_h5ad = args.save_filtered_h5ad
-
+    output_dir = args.output
     # Save the cell calling result
     if args.input.is_h5ad:
         # check if any result columns already exist
@@ -220,7 +220,7 @@ def save_results(args, version, intermediate_result, valid_bcs, output_dir):
         logger.info(f"🗂️ Saved qcatch log file in the output directory: {output_dir}")
 
 
-def run_cell_calling(args, output_dir, version, save_for_quick_test, quick_test_mode):
+def run_cell_calling(args, version, save_for_quick_test, quick_test_mode):
     """Run the cell calling process."""
     if args.valid_cell_list:
         # If a valid cell list is provided, we will skip the cell calling step
@@ -232,9 +232,9 @@ def run_cell_calling(args, output_dir, version, save_for_quick_test, quick_test_
         logger.info(f"🧃 Number of cells found in provided valid cell list : {len(valid_bcs)}")
 
     else:
-        valid_bcs, intermediate_result = internal_cell_calling(args, output_dir, save_for_quick_test, quick_test_mode)
+        valid_bcs, intermediate_result = internal_cell_calling(args, save_for_quick_test, quick_test_mode)
 
     # save results
-    save_results(args, version, intermediate_result, valid_bcs, output_dir)
+    save_results(args, version, intermediate_result, valid_bcs)
 
     return valid_bcs

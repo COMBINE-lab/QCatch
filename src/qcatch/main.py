@@ -53,7 +53,7 @@ def main():
         "--save_filtered_h5ad",
         "-s",
         action="store_true",
-        help="If enabled with an h5ad input, `qcatch` will save a separate `.h5ad` file containing only the retained cells.",
+        help="If enabled with an h5ad input, QCatch will save a separate `.h5ad` file containing only the retained cells.",
     )
 
     parser.add_argument(
@@ -81,11 +81,10 @@ def main():
         "--skip_umap_tsne", "-u", action="store_true", help="If provided, skips generation of UMAP and t-SNE plots."
     )
     parser.add_argument(
-        "--summary_table_file",
-        "-t",
-        type=Path,
-        default=None,
-        help="Path to a directory where the summary metrics will be saved as a CSV file.",
+        "--export_summary_table",
+        "-e",
+        action="store_true",
+        help="If enabled, QCatch will export the summary metrics as a separate CSV file.",
     )
     parser.add_argument("--verbose", "-b", action="store_true", help="Enable verbose logging with debug-level messages")
 
@@ -99,14 +98,12 @@ def main():
     args = parser.parse_args()
 
     logger = setup_logger("qcatch", args.verbose)
-    output_dir = args.output
 
     # If no output directory is specified, use the input directory/input file's parent directory
-    output_dir = Path(output_dir) if output_dir else Path(args.input.dir)
-    os.makedirs(output_dir, exist_ok=True)
-
+    args.output = Path(args.output) if args.output else Path(args.input.dir)
+    os.makedirs(args.output, exist_ok=True)
     # add gene_id_2_name if we don't yet have it
-    args.input.add_geneid_2_name_if_absent(args.gene_id2name_file, output_dir)
+    args.input.add_geneid_2_name_if_absent(args.gene_id2name_file, args.output)
 
     version = __version__
 
@@ -116,7 +113,7 @@ def main():
     # ****  ------------------------------- *****
 
     # Run the cell calling process. We will either modify the input file(change the args.input) or save the results in the output directory
-    valid_bcs = run_cell_calling(args, output_dir, version, save_for_quick_test, quick_test_mode)
+    valid_bcs = run_cell_calling(args, version, save_for_quick_test, quick_test_mode)
     logger.info("🎨 Generating plots and tables...")
     if len(valid_bcs) == 0:
         msg = "❗️ Error: No valid barcodes found. Skip QC report HTML generation."
@@ -132,7 +129,7 @@ def main():
     # Modify HTML with plots
     modify_html_with_plots(
         load_template(),
-        os.path.join(output_dir, "QCatch_report.html"),
+        os.path.join(args.output, "QCatch_report.html"),
         plot_text_elements,
         table_htmls,
         warning_html,

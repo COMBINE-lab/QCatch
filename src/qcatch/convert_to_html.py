@@ -1,7 +1,9 @@
 import logging
+import os
 from argparse import Namespace
 
 import numpy as np
+import pandas as pd
 from bs4 import BeautifulSoup
 
 from qcatch.logger import QCatchLogger
@@ -89,16 +91,21 @@ def create_plotly_plots(
         mapping_rate = round(map_json_data["num_mapped"] / num_processed * 100, 2)
     seq_saturation_value = generate_seq_saturation(retained_data)
 
-    summary_table_file = args.summary_table_file
-    summary_table_html = generate_summary_table(
+    export_summary_table = args.export_summary_table
+    summary_table_html, summary = generate_summary_table(
         data,
         valid_bcs,
         total_detected_genes,
         median_genes_per_cell,
         mapping_rate,
         seq_saturation_value,
-        summary_table_file,
     )
+    # Optionally: Save the summary table to a CSV file
+    if export_summary_table:
+        summary_table_file_path = os.path.join(args.output, "summary_table.csv")
+        logger.info(f"🍡 Saving summary table to CSV at: {summary_table_file_path}")
+        # Save the summary dictionary as a single-row CSV file with keys as column headers
+        pd.DataFrame([summary]).to_csv(summary_table_file_path, index=False)
 
     # ---------------- Tab2 - Barcode Frequency Plots ---------------
     fig_bc_freq_all_plots = barcode_frequency_plots(data, valid_bcs)

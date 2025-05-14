@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def test_simpleaf_wrong_path(tmp_path):
-    input_path = Path("tests/data/simpleaf_wrong_path/quants.h5ad")
+    input_path = Path("tests/data/test_data/simpleaf_wrong_path/quants.h5ad")
     output_path = tmp_path / "test_output_cookie"
     main_py = Path(__file__).resolve().parent.parent / "src" / "qcatch" / "main.py"
 
@@ -30,7 +30,7 @@ def test_simpleaf_wrong_path(tmp_path):
 
 
 def test_simpleaf_with_map_runs(tmp_path):
-    input_path = Path("tests/data/simpleaf_with_map/quants.h5ad")
+    input_path = Path("tests/data/test_data/simpleaf_with_map/quants.h5ad")
     output_path = tmp_path / "test_output_cookie"
     main_py = Path(__file__).resolve().parent.parent / "src" / "qcatch" / "main.py"
 
@@ -58,9 +58,9 @@ def test_simpleaf_with_map_runs(tmp_path):
 
 
 def test_simpleaf_with_cb_list(tmp_path):
-    input_path = Path("tests/data/simpleaf_rerun_1k_pbmc/quants.h5ad")
+    input_path = Path("tests/data/test_data/simpleaf_rerun_1k_pbmc/quants.h5ad")
     output_path = tmp_path / "test_output_cookie" / "simpleaf_latest_1k_with_cb_list"
-    valid_cb_list = Path("tests/data/simpleaf_rerun_1k_pbmc/total_retained_cells.tsv")
+    valid_cb_list = Path("tests/data/test_data/simpleaf_rerun_1k_pbmc/total_retained_cells.tsv")
     main_py = Path(__file__).resolve().parent.parent / "src" / "qcatch" / "main.py"
 
     env = os.environ.copy()
@@ -78,8 +78,7 @@ def test_simpleaf_with_cb_list(tmp_path):
         "--valid_cell_list",
         str(valid_cb_list),
         "--skip_umap_tsne",
-        "--summary_table_file",
-        str(output_path),
+        "--export_summary_table",
         "--verbose",
     ]
 
@@ -91,8 +90,8 @@ def test_simpleaf_with_cb_list(tmp_path):
 
 
 def test_simpleaf_overwrite_save(tmp_path):
-    input_path = Path("tests/data/simpleaf_rerun_1k_pbmc_overwrite/quants.h5ad")
-    valid_cb_list = Path("tests/data/simpleaf_rerun_1k_pbmc/total_retained_cells.tsv")
+    input_path = Path("tests/data/test_data/simpleaf_rerun_1k_pbmc_overwrite/quants.h5ad")
+    valid_cb_list = Path("tests/data/test_data/simpleaf_rerun_1k_pbmc/total_retained_cells.tsv")
     main_py = Path(__file__).resolve().parent.parent / "src" / "qcatch" / "main.py"
 
     env = os.environ.copy()
@@ -118,7 +117,7 @@ def test_simpleaf_overwrite_save(tmp_path):
 
 
 def test_mtx_input_1k_pbmc_v3(tmp_path):
-    input_path = Path("tests/data/1k_pbmc_v3")
+    input_path = Path("tests/data/test_data/1k_pbmc_v3")
     output_path = tmp_path / "1k_pbmc_v3_out"
     main_py = Path(__file__).resolve().parent.parent / "src" / "qcatch" / "main.py"
 

@@ -17,7 +17,7 @@ buck-out/
 # /dist/
 
 # Tests and coverage
-/data/
+/data
 /node_modules/
 
 # docs
@@ -35,7 +35,9 @@ run_installed_pkg.sh
 .github/workflows/publish.yml
 
 # large test data
-tests/data/*
+
+tests/data
+tests/data_backup
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

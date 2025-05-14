@@ -99,7 +99,7 @@ To reduce runtime, you may enable the `--skip_umap_tsne` option to bypass dimens
 
 **7- Export the summary metrics**
 
-To export the summary metrics, specify the directory where the summary table should be saved as a CSV file.
+To export the summary metrics, enable the `--export_summary_table` flag. The summary table will be saved as a separate CSV file in the output directory.
 
 **8- Debug-level message**
 
@@ -152,7 +152,7 @@ For more advanced options and usage details, see the sections below.
 | `--valid_cell_list` | `-l` | `str` (Optional) |File provides a user-specified list of valid cell barcode. The file must be a TSV containing one column with cell barcodes without a header row. If provided, qcatch will skip the internal cell calling steps and and use the supplied list instead|
 | `--n_partitions` | `-n` | `int` (Optional) | Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specified `--chemistry`. Only use `--n_partitions` when your experiment uses a custom chemistry not listed in the predefined chemistry options.|
 | `--skip_umap_tsne` | `-u` | `flag` (Optional) | If provided, skips generation of UMAP and t-SNE plots. |
-| `--summary_table_file` | `-t` | `Path` (Optional) | Path to a directory where the summary metrics will be saved as a CSV file. |
+| `--export_summary_table` | `-x` | `flag` (Optional) | If enabled, QCatch will export the summary metrics as a separate CSV file. |
 | `--verbose` | `-b` | `flag` (Optional) | Enable verbose logging with debug-level messages. |
 | `--version` | `-v` | `flag` (Optional) | Display the installed version of qcatch. |
 
