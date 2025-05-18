@@ -28,10 +28,8 @@ MIN_RECOVERED_CELLS = 5
 MAX_RECOVERED_CELLS = 2621448  # 2^18
 NP_SORT_KIND = "stable"
 
-# Number of additional barcodes to consider after the initial cell calling
-N_CANDIDATE_BARCODES = 20000
 
-# Number of partitions (max number of barcodes to consider for ambient estimation)
+# Number of partitions (max number of barcodes to consider for ambient estimation)1
 N_PARTITIONS = 90000
 
 # Drop this top fraction of the barcodes when estimating ambient.
@@ -45,9 +43,6 @@ NUM_SIMS = 100000
 
 # Minimum ratio of UMIs to the median (initial cell call UMI) to consider after the initial cell calling
 MIN_UMI_FRAC_OF_MEDIAN = 0.01
-
-# *M* Maximum adjusted p-value to call a barcode as non-ambient
-MAX_ADJ_PVALUE = 0.01
 
 MAX_MEM_GB = 0.3
 
@@ -98,6 +93,21 @@ def compute_empty_drops_bounds(
     else:
         n_partitions = 90000
     return (n_partitions // 2, n_partitions)
+
+
+def get_fdr_threshold_by_chemistry(chemistry_name: str) -> float:
+    """
+    Return the maximum adjusted p-value (FDR threshold) for calling a barcode as non-ambient, based on the chemistry used.
+
+    Args:
+        chemistry_name (str): Name of the 10X chemistry.
+
+    Returns
+    -------
+        float: FDR threshold (e.g., 0.001 or 0.01)
+    """
+    high_gem_chemistries = {"10X_3p_v3", "10X_3p_v4", "10X_5p_v3", "10X_HT"}
+    return 0.001 if chemistry_name in high_gem_chemistries else 0.01
 
 
 def find_within_ordmag(resampled_bc_counts: np.ndarray, quantile_point: int) -> int:
@@ -417,7 +427,7 @@ def simulate_multinomial_loglikelihoods(
     log_profile_p = np.log(profile_p)
 
     for sim_idx in range(num_sims):
-        if verbose and sim_idx % 100 == 99:
+        if verbose and sim_idx % 1000 == 999:
             logger.debug("Simulation progress: completed %d/%d simulations", sim_idx + 1, num_sims)
         curr_counts = np.ravel(sp_stats.multinomial.rvs(distinct_n[0], profile_p, size=1))
 
@@ -546,7 +556,6 @@ def find_nonambient_barcodes(
     max_mem_gb: float = MAX_MEM_GB,
     min_umi_frac_of_median: float = MIN_UMI_FRAC_OF_MEDIAN,
     min_umis_nonambient: int = MIN_UMIS,
-    max_adj_pvalue: float = MAX_ADJ_PVALUE,
     verbose: bool = False,
 ) -> NonAmbientBarcodeResult | None:
     """
@@ -624,8 +633,8 @@ def find_nonambient_barcodes(
 
     eval_bcs[umis_per_bc < min_umis] = ma.masked
     n_unmasked_bcs = len(eval_bcs) - eval_bcs.mask.sum()
-    # Take the top N_CANDIDATE_BARCODES by UMI count, of barcodes that pass the above criteria
-    eval_bcs = np.argsort(ma.masked_array(umis_per_bc, mask=eval_bcs.mask))[0:n_unmasked_bcs][-N_CANDIDATE_BARCODES:]
+    # Take the unmasked barcodes
+    eval_bcs = np.argsort(ma.masked_array(umis_per_bc, mask=eval_bcs.mask))[0:n_unmasked_bcs]
 
     if len(eval_bcs) == 0:
         return None
@@ -655,7 +664,8 @@ def find_nonambient_barcodes(
     pvalues = compute_ambient_pvalues(umis_per_bc[eval_bcs], obs_loglk, distinct_ns, sim_loglk)
 
     pvalues_adj = adjust_pvalue_bh(pvalues)
-
+    # get the max_adj by chemistry
+    max_adj_pvalue = get_fdr_threshold_by_chemistry(chemistry_description)
     is_nonambient = pvalues_adj <= max_adj_pvalue
     eval_bcs_str = matrix.ints_to_bcs(eval_bcs)
     # converted the byte strings to regular strings
