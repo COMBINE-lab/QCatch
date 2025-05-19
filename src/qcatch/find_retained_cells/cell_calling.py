@@ -28,7 +28,6 @@ MIN_RECOVERED_CELLS = 5
 MAX_RECOVERED_CELLS = 2621448  # 2^18
 NP_SORT_KIND = "stable"
 
-
 # Number of partitions (max number of barcodes to consider for ambient estimation)1
 N_PARTITIONS = 90000
 

@@ -88,7 +88,15 @@ def create_plotly_plots(
     mapping_rate = None
     if map_json_data:
         num_processed = map_json_data.get("num_processed") or map_json_data["num_reads"]
-        mapping_rate = round(map_json_data["num_mapped"] / num_processed * 100, 2)
+        if num_processed and map_json_data.get("num_mapped"):
+            mapping_rate = round(map_json_data["num_mapped"] / num_processed * 100, 2)
+            if mapping_rate < 60:  # less than 60% mapping rate
+                msg = "High-quality datasets typically exhibit a mapping rate of around 90%. In this dataset, the mapping rate is below 60%, which may indicate a mismatch between the sample and the reference -- often due to sample contamination or using an inappropriate reference transcriptome."
+                logger.record_warning(msg)
+            elif mapping_rate < 80:  # less than 80% mapping rate
+                msg = "High-quality datasets typically exhibit a mapping rate of around 90%. In this dataset, the mapping rate is below 80%, which may indicate low data quality."
+                logger.record_warning(msg)
+
     seq_saturation_value = generate_seq_saturation(retained_data)
 
     export_summary_table = args.export_summary_table
