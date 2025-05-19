@@ -512,7 +512,7 @@ def mitochondria_plot(adata: sc.AnnData, is_all_cells: bool) -> go.Figure:
 
 def umap_tsne_plot(
     adata: sc.AnnData,
-) -> tuple[go.Figure, go.Figure]:
+) -> tuple[go.Figure, go.Figure, str]:
     """
     Perform dimensionality reduction and clustering, and generate UMAP and t-SNE plots.
 
@@ -522,6 +522,7 @@ def umap_tsne_plot(
     Returns
     -------
         Tuple of Plotly Figures for UMAP and t-SNE plots.
+        code_text: Code snippet will be displayed in help text.
     """
     sc.settings.set_figure_params(dpi=200, facecolor="white")
 
@@ -594,9 +595,76 @@ def umap_tsne_plot(
         height=360,
         opacity=0.7,
     ).update_traces(marker={"size": 3})
+    # set up the code block
+    code_text = """
+        # Pre-processing for UMAP and t-SNE
+
+        sc.settings.set_figure_params(dpi=200, facecolor="white")
+        # Normalizing to median total counts
+        sc.pp.normalize_total(adata)
+        # Logarithmize the data
+        sc.pp.log1p(adata)
+
+        # feature selection
+        n_valid = adata.X.shape[1]
+        sc.pp.highly_variable_genes(adata, n_top_genes=min(2000, n_valid))
+        # dimensionality Reduction
+        sc.tl.pca(adata)
+        # nearest neighbor graph constuction and visualization
+        sc.pp.neighbors(adata)
+        # UMAP
+        sc.tl.umap(adata)
+
+        # clustering
+        # Using the igraph implementation and a fixed number of iterations can be significantly faster, especially for larger datasets
+        sc.tl.leiden(adata, flavor="igraph", n_iterations=2)
+
+        n_cells = adata.n_obs
+        perplexity = min(30, max(2, (n_cells - 1) // 3))
+
+        # t-SNE
+        sc.tl.tsne(adata, perplexity=perplexity)
+
+        # Create a Plotly-based UMAP scatter plot with Leiden clusters
+        umap_df = pd.DataFrame(adata.obsm["X_umap"], columns=["UMAP1", "UMAP2"])
+        umap_df["leiden"] = adata.obs["leiden"].values
+
+        # UMAP in plotly
+        opacity = 0.7
+        # modify dot size
+        dot_size = 3
+        fig_umap = px.scatter(
+            umap_df,
+            x="UMAP1",
+            y="UMAP2",
+            color="leiden",
+            title="UMAP with Leiden Clusters (Retained Cells Only)",
+            width=width,
+            height=height,
+            opacity=opacity,
+        ).update_traces(marker={"size": dot_size})  # Set the dot size
+
+        # Center title and reduce margin
+        fig_umap.update_layout(title_x=0.5, margin={"t": 30, "l": 10, "r": 10, "b": 20})
+
+        # t-SNE plot in plotly
+        tsne_df = pd.DataFrame(adata.obsm["X_tsne"], columns=["TSNE1", "TSNE2"])
+        tsne_df["leiden"] = adata.obs["leiden"].values
+
+        fig_tsne = px.scatter(
+            tsne_df,
+            x="TSNE1",
+            y="TSNE2",
+            color="leiden",
+            title="t-SNE with Leiden Clusters (Retained Cells Only)",
+            width=480,
+            height=360,
+            opacity=0.7,
+        ).update_traces(marker={"size": 3})
+        """
 
     fig_tsne.update_layout(title_x=0.5, margin={"t": 30, "l": 10, "r": 10, "b": 20})
-    return apply_uniform_style(fig_umap), apply_uniform_style(fig_tsne)
+    return apply_uniform_style(fig_umap), apply_uniform_style(fig_tsne), code_text
 
 
 def show_quant_log_table(quant_json_data: dict, permit_list_json_data: dict | None) -> tuple[str, str]:

@@ -10,6 +10,16 @@
     <link rel="stylesheet" type="text/css" href="css/index.css">
       <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+        <!-- Highlight.js CSS (theme) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/xcode.min.css">
+
+    <!-- Highlight.js script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+    <!-- Run Highlight.js -->
+    <script>hljs.highlightAll();</script>
+
     <style>
       .accordion-body {
           word-wrap: break-word;
@@ -100,6 +110,14 @@
           background-color: #0E6EFE !important;  /* Custom purple background */
           border-color: #0E6EFE !important;
           color: white !important;
+      }
+      .scroll-box {
+        max-height: 300px;      /* adjust height as needed */
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+        background-color: #f8f9fa;  /* light background */
       }
     </style>
 </head>
@@ -414,7 +432,12 @@
                                 <p class="mb-0">
                                   These plots are low-dimensional projections of high-dimensional gene expression data. Each point represents a single cell. Cells that appear close together in the plot are inferred to have similar transcriptomic profiles, indicating potential similarity in cell type or state. <br>
                                   <b>Note</b>: Only retained cells are included in these visualizations. All retained cells are shown without further filtering. Standard preprocessing steps were applied using `Scanpy`, including normalization, log transformation, feature selection, and dimensionality reduction.<br>
+                                  <br>
+                                  See the source python code for the plots below:
                                 </p>
+                                <div id="code-block-umap">
+                                  <!-- Python code will be inserted here by BeautifulSoup -->
+                                </div>
                               </div>
                             </div>
 

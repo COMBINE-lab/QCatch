@@ -120,7 +120,7 @@ def main():
         logger.error(msg)
         return
     # plots and log, summary tables
-    plot_text_elements = create_plotly_plots(args, valid_bcs)
+    plot_text_elements, code_texts = create_plotly_plots(args, valid_bcs)
 
     table_htmls = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
 
@@ -132,6 +132,7 @@ def main():
         os.path.join(args.output, "QCatch_report.html"),
         plot_text_elements,
         table_htmls,
+        code_texts,
         warning_html,
         args.input.usa_mode,
     )

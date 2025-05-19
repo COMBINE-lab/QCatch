@@ -140,7 +140,7 @@ def create_plotly_plots(
         fig_SUA_bar_filtered_html, fig_S_ratio_filtered_html = generate_SUA_plots(filtered_adata, is_all_cells=False)
     # ---------------- Tab6 - UMAP ---------------
     if not args.skip_umap_tsne:
-        fig_umap, fig_tsne = umap_tsne_plot(filtered_adata)
+        fig_umap, fig_tsne, code_text = umap_tsne_plot(filtered_adata)
 
     else:
         fig_umap = fig_tsne = None
@@ -178,7 +178,7 @@ def create_plotly_plots(
         plots["SUA_bar_filtered_5-1"] = fig_SUA_bar_filtered_html
         plots["S_ratio_filtered_5-2"] = fig_S_ratio_filtered_html
     plot_text_elements = (plots, summary_table_html)
-    return plot_text_elements
+    return plot_text_elements, code_text
 
 
 def modify_html_with_plots(
@@ -186,6 +186,7 @@ def modify_html_with_plots(
     output_html_path: str,
     plot_text_elements: tuple[dict[str, str], str],
     table_htmls: tuple[str, str],
+    code_texts: str,
     warning_html: str,
     usa_mode: bool,
 ) -> None:
@@ -244,6 +245,19 @@ def modify_html_with_plots(
             sua_tab.decompose()
         if sua_content:
             sua_content.decompose()
+
+    # Add the code block for plots help text
+
+    # create tags: <pre><code class="language-python">...</code></pre>
+    code_outer = soup.new_tag("pre", **{"class": "scroll-box"})
+    code_inner = soup.new_tag("code", **{"class": "language-python"})
+    code_inner.string = code_texts
+    code_outer.append(code_inner)
+
+    # insert to <div id="code-block">
+    code_block = soup.find("div", id="code-block-umap")
+    code_block.clear()  # Optional: clear previous content
+    code_block.append(code_outer)
 
     # Add warning section
     if warning_html.strip():
