@@ -15,7 +15,7 @@ in particular, the [API documentation][]. -->
 
 ## Installation
 
-You need to have Python 3.11 or newer installed on your system.
+You need to have Python 3.11 or 3.12 installed on your system.
 
 There are several alternative options to install QCatch:
 
@@ -36,9 +36,15 @@ You can also install from [PyPI](https://pypi.org/project/qcatch/) using `pip`:
 pip install qcatch
 ```
 
+> Tips: If you run into environment issues, you can also use the provided Conda .yml file, which specifies the exact versions of all dependencies to ensure consistency.
+
+```bash
+conda env create -f qcatch_conda_env.yml
+```
+
 ## Release notes
 
-See the [changelog][].
+See the [changelog](CHANGELOG.md).
 
 
 ## Basic Usage
