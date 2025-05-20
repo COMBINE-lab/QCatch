@@ -22,6 +22,8 @@ def apply_uniform_style(fig: go.Figure) -> go.Figure:
         margin={"t": 40, "l": 30, "r": 30, "b": 30},
         plot_bgcolor="rgba(0,0,0,0)",  # Fully transparent background
         paper_bgcolor="rgba(0,0,0,0)",
+        # plot_bgcolor="#fff",  # Solid white background for plot area
+        # paper_bgcolor="#fff",  # Solid white background for entire figure
         font={"family": "Arial, sans-serif", "size": 14, "color": "#2c3e50"},
         title_font={"size": 16, "color": "#34495e"},
         xaxis={
@@ -108,6 +110,94 @@ def generate_knee_plots(data: pd.DataFrame, valid_bcs: list[str]) -> tuple[go.Fi
     fig_knee_2.update_traces(marker={"size": 5})
 
     return apply_uniform_style(fig_knee_1), apply_uniform_style(fig_knee_2)
+
+
+def barcode_frequency_plots(data: pd.DataFrame, valid_bcs: list[str]) -> go.Figure:
+    """
+    Generate subplots showing barcode frequency vs UMI counts, barcode frequency vs detected genes, and UMI counts vs detected genes.
+
+    Args:
+        data: DataFrame with barcode and cell metrics.
+        valid_bcs: List of valid barcode strings.
+
+    Returns
+    -------
+        A Plotly Figure with three subplots.
+    """
+    width = 1200
+    height = 400
+    opacity = 0.5
+    # Map is_retained to human-readable cell_type
+    data["cell_type"] = np.where(data["barcodes"].isin(valid_bcs), "Retained Cell", "Background")
+
+    # Create subplots: 1 row, 3 columns
+    fig = make_subplots(
+        rows=1,
+        cols=3,
+        subplot_titles=[
+            "Barcode Frequency vs UMI Counts (All Cells)",
+            "Barcode Frequency vs Detected Genes (All Cells)",
+            "UMI Counts vs Detected Genes (All Cells)",
+        ],
+        shared_yaxes=False,
+    )
+
+    # Plot 1 (legend enabled)
+    for trace in px.scatter(
+        data,
+        x="corrected_reads",
+        y="deduplicated_reads",
+        color="cell_type",
+        color_discrete_map={"Retained Cell": "#636EFA", "Background": "lightgrey"},
+        opacity=opacity,
+    ).data:
+        fig.add_trace(trace, row=1, col=1)
+
+    # Plot 2 (legend disabled)
+    for trace in px.scatter(
+        data,
+        x="corrected_reads",
+        y="num_genes_expressed",
+        color="cell_type",
+        color_discrete_map={"Retained Cell": "#636EFA", "Background": "lightgrey"},
+        opacity=opacity,
+    ).data:
+        trace.showlegend = False  # Disable legend for this trace
+        fig.add_trace(trace, row=1, col=2)
+
+    # Plot 3 (legend disabled)
+    for trace in px.scatter(
+        data,
+        x="deduplicated_reads",
+        y="num_genes_expressed",
+        color="cell_type",
+        color_discrete_map={"Retained Cell": "#636EFA", "Background": "lightgrey"},
+        opacity=opacity,
+    ).data:
+        trace.showlegend = False  # Disable legend for this trace
+        fig.add_trace(trace, row=1, col=3)
+
+    fig.update_layout(
+        width=width,
+        height=height,
+        legend={"orientation": "h", "yanchor": "bottom", "y": -0.3, "xanchor": "center", "x": 0.5, "title_text": ""},
+        margin={"t": 60, "b": 80},
+        title_x=0.5,
+    )
+    fig = apply_uniform_style(fig)
+    # Explicitly reinforce grid lines for all subplots without overriding other style
+    fig.update_xaxes(showgrid=True, gridcolor="lightgrey", linecolor="#34495e")
+    fig.update_yaxes(showgrid=True, gridcolor="lightgrey", linecolor="#34495e")
+    # Add axis labels for all three subplots
+    fig.update_xaxes(title_text="Barcode frequency", row=1, col=1)
+    fig.update_yaxes(title_text="UMI Counts", row=1, col=1)
+
+    fig.update_xaxes(title_text="Barcode frequency", row=1, col=2)
+    fig.update_yaxes(title_text="Detected Genes", row=1, col=2)
+
+    fig.update_xaxes(title_text="UMI Counts", row=1, col=3)
+    fig.update_yaxes(title_text="Detected Genes", row=1, col=3)
+    return fig
 
 
 def generate_gene_histogram(data: pd.DataFrame, is_all_cells: bool) -> go.Figure:
@@ -262,7 +352,7 @@ def generate_SUA_plots(adata: sc.AnnData, is_all_cells: bool) -> tuple[str, str]
 
     # Customize the layout
     fig_S_ratio.update_layout(
-        title="Histogram of  Ratio" + title_suffix,
+        title="Histogram of Splicing Ratio" + title_suffix,
         xaxis={"title": "(S+A)/(S+U+A) Ratio"},
         yaxis={"title": "Counts"},
         bargap=0.1,  # Space between bars
@@ -349,94 +439,6 @@ def umi_dedup(data: pd.DataFrame) -> tuple[go.Figure, float]:
         ]
     )
     return apply_uniform_style(fig_dedup), mean_dedup_rate
-
-
-def barcode_frequency_plots(data: pd.DataFrame, valid_bcs: list[str]) -> go.Figure:
-    """
-    Generate subplots showing barcode frequency vs UMI counts, barcode frequency vs detected genes, and UMI counts vs detected genes.
-
-    Args:
-        data: DataFrame with barcode and cell metrics.
-        valid_bcs: List of valid barcode strings.
-
-    Returns
-    -------
-        A Plotly Figure with three subplots.
-    """
-    width = 1200
-    height = 400
-    opacity = 0.5
-    # Map is_retained to human-readable cell_type
-    data["cell_type"] = np.where(data["barcodes"].isin(valid_bcs), "Retained Cell", "Background")
-
-    # Create subplots: 1 row, 3 columns
-    fig = make_subplots(
-        rows=1,
-        cols=3,
-        subplot_titles=[
-            "Barcode Frequency vs UMI Counts (All Cells)",
-            "Barcode Frequency vs Detected Genes (All Cells)",
-            "UMI Counts vs Detected Genes (All Cells)",
-        ],
-        shared_yaxes=False,
-    )
-
-    # Plot 1 (legend enabled)
-    for trace in px.scatter(
-        data,
-        x="corrected_reads",
-        y="deduplicated_reads",
-        color="cell_type",
-        color_discrete_map={"Retained Cell": "#636EFA", "Background": "lightgrey"},
-        opacity=opacity,
-    ).data:
-        fig.add_trace(trace, row=1, col=1)
-
-    # Plot 2 (legend disabled)
-    for trace in px.scatter(
-        data,
-        x="corrected_reads",
-        y="num_genes_expressed",
-        color="cell_type",
-        color_discrete_map={"Retained Cell": "#636EFA", "Background": "lightgrey"},
-        opacity=opacity,
-    ).data:
-        trace.showlegend = False  # Disable legend for this trace
-        fig.add_trace(trace, row=1, col=2)
-
-    # Plot 3 (legend disabled)
-    for trace in px.scatter(
-        data,
-        x="deduplicated_reads",
-        y="num_genes_expressed",
-        color="cell_type",
-        color_discrete_map={"Retained Cell": "#636EFA", "Background": "lightgrey"},
-        opacity=opacity,
-    ).data:
-        trace.showlegend = False  # Disable legend for this trace
-        fig.add_trace(trace, row=1, col=3)
-
-    fig.update_layout(
-        width=width,
-        height=height,
-        legend={"orientation": "h", "yanchor": "bottom", "y": -0.3, "xanchor": "center", "x": 0.5, "title_text": ""},
-        margin={"t": 60, "b": 80},
-        title_x=0.5,
-    )
-    fig = apply_uniform_style(fig)
-    # Explicitly reinforce grid lines for all subplots without overriding other style
-    fig.update_xaxes(showgrid=True, gridcolor="lightgrey", linecolor="#34495e")
-    fig.update_yaxes(showgrid=True, gridcolor="lightgrey", linecolor="#34495e")
-    # Add axis labels for all three subplots
-    fig.update_xaxes(title_text="Barcode frequency", row=1, col=1)
-    fig.update_yaxes(title_text="UMI Counts", row=1, col=1)
-
-    fig.update_xaxes(title_text="Barcode frequency", row=1, col=2)
-    fig.update_yaxes(title_text="Detected Genes", row=1, col=2)
-
-    fig.update_xaxes(title_text="UMI Counts", row=1, col=3)
-    fig.update_yaxes(title_text="Detected Genes", row=1, col=3)
-    return fig
 
 
 def mitochondria_plot(adata: sc.AnnData, is_all_cells: bool) -> go.Figure:
@@ -712,7 +714,7 @@ def show_quant_log_table(quant_json_data: dict, permit_list_json_data: dict | No
             quant_table_content += f"{table_row}<td>{accordion_content}</td></tr>"
         else:
             # Directly display the content for other cases
-            quant_table_content += f"{table_row}<td>{quant_json_data[key_lv1]}</td></tr>"
+            quant_table_content += f"{table_row}<td>{str(quant_json_data[key_lv1])}</td></tr>"
 
     # Create Permit List Table
     if permit_list_json_data:
@@ -743,7 +745,6 @@ def generate_summary_table(
         median_genes_per_cell: Median number of genes per retained cell.
         mapping_rate: Fraction of reads mapped to reference, or None.
         seq_saturation_value: Sequencing saturation percentage.
-        export_summary_table: Boolean flag indicating whether to save the summary table as a CSV file.
 
     Returns
     -------

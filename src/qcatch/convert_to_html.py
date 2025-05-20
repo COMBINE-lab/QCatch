@@ -117,7 +117,6 @@ def create_plotly_plots(
 
     # ---------------- Tab2 - Barcode Frequency Plots ---------------
     fig_bc_freq_all_plots = barcode_frequency_plots(data, valid_bcs)
-    # fig_bc_freq_UMI, fig_bc_freq_gene, fig_gene_UMI = barcode_frequency_plots(data)
 
     # ---------------- Tab3 - Collapsing ---------------
     # NOTE: use the retained data for umi_collapse plot
@@ -144,12 +143,16 @@ def create_plotly_plots(
 
     else:
         fig_umap = fig_tsne = None
+        code_text = ""
         logger.info("🦦 Skipping UMAP and t-SNE plots as per user request.")
 
     # Convert plots to HTML div strings
     plots = {
         # ----tab1----(
-        "knee_plot1-1": fig_knee_1.to_html(full_html=False, include_plotlyjs="cdn"),
+        "knee_plot1-1": fig_knee_1.to_html(
+            full_html=False,
+            include_plotlyjs="cdn",
+        ),
         "knee_plot1-2": fig_knee_2.to_html(full_html=False, include_plotlyjs="cdn"),
         # ----tab2----
         "bc_freq_all_plots": fig_bc_freq_all_plots.to_html(full_html=False, include_plotlyjs="cdn"),
