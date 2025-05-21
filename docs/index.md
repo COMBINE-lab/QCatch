@@ -6,6 +6,7 @@
 :hidden: true
 :maxdepth: 1
 
+demo/demo
 api.md
 changelog.md
 contributing.md
