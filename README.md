@@ -1,17 +1,21 @@
 # QCatch
 
-<!-- [![Tests][badge-tests]][tests]
+[![PyPI version][badge-pypi]][pypi]
+[![Tests][badge-tests]][tests]
 [![Documentation][badge-docs]][documentation]
 
-[badge-tests]: https://img.shields.io/github/actions/workflow/status/ygao61/QCatch/test.yaml?branch=main
-[badge-docs]: https://img.shields.io/readthedocs/QCatch -->
+[badge-pypi]: https://img.shields.io/pypi/v/qcatch
+[pypi]: https://pypi.org/project/qcatch/
+
+[badge-tests]: https://img.shields.io/github/actions/workflow/status/COMBINE-lab/QCatch/test.yaml?branch=main
+[tests]: https://github.com/COMBINE-lab/QCatch/actions/workflows/test.yaml
+
+[badge-docs]: https://img.shields.io/badge/docs-online-blue
+[documentation]: https://ygao61.github.io/QCatch/
 
 QCatch: Quality Control downstream of alevin-fry / simpleaf
 
-<!-- ## Getting started
-
-Please refer to the [documentation][],
-in particular, the [API documentation][]. -->
+View the complete [QCatch documentation](https://ygao61.github.io/QCatch/) with interactive examples, FAQs, and detailed usage guides.
 
 ## Installation
 
@@ -41,10 +45,6 @@ pip install qcatch
 ```bash
 conda env create -f qcatch_conda_env.yml
 ```
-
-## Release notes
-
-See the [changelog](CHANGELOG.md).
 
 
 ## Basic Usage
@@ -143,9 +143,6 @@ parent_quant_dir/
 ```
 For more advanced options and usage details, see the sections below.
 
-## FAQ
-- For more details about how the metrics and plots were generated, refer to the [FAQ](./docs/faq.md)
-
 ## Command-Line Arguments
 
 | Flag | Short | Type | Description |
@@ -162,12 +159,12 @@ For more advanced options and usage details, see the sections below.
 | `--verbose` | `-b` | `flag` (Optional) | Enable verbose logging with debug-level messages. |
 | `--version` | `-v` | `flag` (Optional) | Display the installed version of qcatch. |
 
-## Contact
+<!-- ## Contact
 
 For questions and help requests, you can reach out in the [scverse discourse][].
-If you found a bug, please use the [issue tracker][].
+If you found a bug, please use the [issue tracker][]. -->
 
-## Citation
+<!-- ## Citation
 
 > t.b.a
 
@@ -178,4 +175,4 @@ If you found a bug, please use the [issue tracker][].
 [documentation]: https://QCatch.readthedocs.io
 [changelog]: https://QCatch.readthedocs.io/en/latest/changelog.html
 [api documentation]: https://QCatch.readthedocs.io/en/latest/api.html
-[pypi]: https://pypi.org/project/QCatch
+[pypi]: https://pypi.org/project/QCatch -->

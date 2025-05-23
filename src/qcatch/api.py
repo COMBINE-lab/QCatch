@@ -44,19 +44,19 @@ def run_qcatch_api(
     logger = logger or setup_logger("qcatch", verbose=False)
 
     # Convert and validate input
-    input_obj = get_input(str(input_path))
+    input = get_input(str(input_path))
 
-    output_dir = Path(output) if output else Path(input_obj.dir)
+    output_dir = Path(output) if output else Path(input.dir)
     output_dir.mkdir(exist_ok=True)
 
-    input_obj.add_geneid_2_name_if_absent(gene_id2name_file, output_dir)
+    input.add_geneid_2_name_if_absent(gene_id2name_file, output_dir)
     version = f"{__version__}-API"
 
     # Run cell calling
     save_for_quick_test = False
     quick_test_mode = False
     args = Namespace(
-        input=input_obj,
+        input=input,
         chemistry=chemistry,
         valid_cell_list=valid_cell_list,
         output=output_dir,
@@ -75,7 +75,7 @@ def run_qcatch_api(
 
     # Create plots and summary tables
     plot_args = Namespace(
-        input=input_obj,
+        input=input,
         output=output_dir,
         skip_umap_tsne=skip_umap_tsne,
     )
@@ -86,12 +86,12 @@ def run_qcatch_api(
 
     summary_html = ""
     if export_summary_table:
-        summary_html = show_quant_log_table(input_obj.quant_json_data, input_obj.permit_list_json_data)
+        summary_html = show_quant_log_table(input.quant_json_data, input.permit_list_json_data)
 
     warning_html = generate_warning_html(logger.get_record_log())
 
     return {
-        "anndata": input_obj.mtx_data,
+        "anndata": input.mtx_data,
         "valid_barcodes": valid_barcodes,
         "figures": plot_texts,  # HTML strings or optionally real plotly.Figure
         "summary_table_html": summary_html,

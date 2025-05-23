@@ -1,17 +1,1 @@
-```{include} ../README.md
-
-```
-
-```{toctree}
-:hidden: true
-:maxdepth: 1
-
-demo/demo
-api.md
-changelog.md
-contributing.md
-references.md
-faq.md
-
-notebooks/example
-```
+../README.md
