@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 import scanpy as sc
-from pyroe import load_fry
 
+from qcatch.fry_tools.loader import load_fry
 from qcatch.input_processing import (
     add_gene_symbol,
     load_json_txt_file,

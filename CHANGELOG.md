@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning][].
 ### Added
 
 - Updated QCatch documentation and included an interactive demo page
+- Add tutorial scripts in the README.
 
 ## [0.2.5] 2025-05-19
 

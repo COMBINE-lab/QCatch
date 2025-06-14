@@ -28,14 +28,14 @@ buck-out/
 ### <-------- QCatch - Ignore local shell scripts
 run_main.sh
 tutorial.sh
+create_env.sh
 run_main_NEW.sh
-run_main_cookie.sh
 run_installed_pkg.sh
 *.temp.*
 .github/workflows/publish.yml
 
 # large test data
-
+qcatch_tutorial
 tests/data
 tests/data_backup
 # Byte-compiled / optimized / DLL files

@@ -58,7 +58,43 @@ qcatch \
     --save_filtered_h5ad
 
 ```
+## Tutorial: Run QCatch on Example data
+### Step 1 — Download Dataset
+```bash
+#!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status
 
+echo "📦 Downloading QCatch example dataset..."
+
+# Define where to run the tutorial (you can change this path if desired)
+CWD=$(pwd)  # Current working directory
+TUTORIAL_DIR="${CWD}/qcatch_tutorial"
+
+# Clean any existing tutorial directory to ensure a fresh download
+rm -rf "$TUTORIAL_DIR" && mkdir -p "$TUTORIAL_DIR"
+ZIP_FILE="data.zip"
+
+# Download from Box
+wget -O "$ZIP_FILE" "https://umd.box.com/shared/static/zd4sai70uw9fs24e1qx6r41ec50pf45g.zip?dl=1"
+
+# Unzip and clean up
+unzip "$ZIP_FILE" -d "$TUTORIAL_DIR"
+rm "$ZIP_FILE"
+
+echo "✅ Test data downloaded to $TUTORIAL_DIR"
+```
+### Step 2 - Run the qcatch
+🎉 All set! Now let’s run QCatch:
+```bash
+#Set up output directory
+OUT_DIR="${TUTORIAL_DIR}/output"
+mkdir -p "$OUT_DIR"
+
+# Step2 - Run QCatch
+qcatch --input ${TUTORIAL_DIR}/test_data/simpleaf_with_map/quants.h5ad \
+       --output ${OUT_DIR} \
+       --chemistry 10X_3p_v3
+```
 ### Tips
 **1- Input path:**
 
