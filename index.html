@@ -343,8 +343,35 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Basic Usage">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tutorial-run-qcatch-on-example-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tutorial: Run QCatch on Example data
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tutorial: Run QCatch on Example data">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-download-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Download Dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-run-the-qcatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 - Run the qcatch
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#tips" class="md-nav__link">
@@ -531,8 +558,35 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Basic Usage">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tutorial-run-qcatch-on-example-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tutorial: Run QCatch on Example data
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tutorial: Run QCatch on Example data">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-download-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Download Dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-run-the-qcatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 - Run the qcatch
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#tips" class="md-nav__link">
@@ -607,6 +661,41 @@ from <a href="https://bioconda.github.io/">Bioconda</a>.</p>
     --chemistry 10X_3p_v3
     --save_filtered_h5ad
 
+</code></pre>
+<h2 id="tutorial-run-qcatch-on-example-data">Tutorial: Run QCatch on Example data</h2>
+<h3 id="step-1-download-dataset">Step 1 — Download Dataset</h3>
+<pre><code class="language-bash">#!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status
+
+echo &quot;📦 Downloading QCatch example dataset...&quot;
+
+# Define where to run the tutorial (you can change this path if desired)
+CWD=$(pwd)  # Current working directory
+TUTORIAL_DIR=&quot;${CWD}/qcatch_tutorial&quot;
+
+# Clean any existing tutorial directory to ensure a fresh download
+rm -rf &quot;$TUTORIAL_DIR&quot; &amp;&amp; mkdir -p &quot;$TUTORIAL_DIR&quot;
+ZIP_FILE=&quot;data.zip&quot;
+
+# Download from Box
+wget -O &quot;$ZIP_FILE&quot; &quot;https://umd.box.com/shared/static/zd4sai70uw9fs24e1qx6r41ec50pf45g.zip?dl=1&quot;
+
+# Unzip and clean up
+unzip &quot;$ZIP_FILE&quot; -d &quot;$TUTORIAL_DIR&quot;
+rm &quot;$ZIP_FILE&quot;
+
+echo &quot;✅ Test data downloaded to $TUTORIAL_DIR&quot;
+</code></pre>
+<h3 id="step-2-run-the-qcatch">Step 2 - Run the qcatch</h3>
+<p>🎉 All set! Now let’s run QCatch:</p>
+<pre><code class="language-bash">#Set up output directory
+OUT_DIR=&quot;${TUTORIAL_DIR}/output&quot;
+mkdir -p &quot;$OUT_DIR&quot;
+
+# Step2 - Run QCatch
+qcatch --input ${TUTORIAL_DIR}/test_data/simpleaf_with_map/quants.h5ad \
+       --output ${OUT_DIR} \
+       --chemistry 10X_3p_v3
 </code></pre>
 <h3 id="tips">Tips</h3>
 <p><strong>1- Input path:</strong></p>
