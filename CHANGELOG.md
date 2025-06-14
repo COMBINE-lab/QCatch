@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning][].
 
 - Updated QCatch documentation and included an interactive demo page
 - Add tutorial scripts in the README.
+- Upgraded requests to ==2.32.4 to resolve CVE-2024-47081, which addressed a .netrc credentials leak vulnerability triggered by malicious URLs
 
 ## [0.2.5] 2025-05-19
 
