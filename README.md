@@ -11,11 +11,11 @@
 [tests]: https://github.com/COMBINE-lab/QCatch/actions/workflows/test.yaml
 
 [badge-docs]: https://img.shields.io/badge/docs-online-blue
-[documentation]: https://ygao61.github.io/QCatch/
+[documentation]: https://COMBINE-lab.github.io/QCatch
 
-QCatch: Quality Control downstream of alevin-fry / simpleaf
+QCatch: Quality Control downstream of `alevin-fry` and `simpleaf`
 
-View the complete [QCatch documentation](https://ygao61.github.io/QCatch/) with interactive examples, FAQs, and detailed usage guides.
+View the complete [QCatch documentation](https://COMBINE-lab.github.io/QCatch) with interactive examples, FAQs, and detailed usage guides.
 
 ## Installation
 
