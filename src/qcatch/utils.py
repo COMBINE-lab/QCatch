@@ -22,20 +22,23 @@ def load_hdf5(
     hdf5_path: Path,
 ) -> tuple[sc.AnnData, dict, dict, dict | None, pd.DataFrame, bool]:
     """
-    Load an h5ad file and extract relevant quantification and mapping information.
+    Load an h5ad file and extract quantification, mapping, and feature dump information.
 
-    Args:
-        hdf5_path: Path to the h5ad file.
+    Parameters
+    ----------
+    hdf5_path
+        Path to the h5ad file.
 
     Returns
     -------
-        Tuple containing:
-            - mtx_data: AnnData object loaded from the h5ad file.
-            - quant_json_data: dict of quant info.
-            - permit_list_json_data: dict of permit list info.
-            - map_json_data: dict or None, mapping info if present.
-            - feature_dump_data: DataFrame of feature dump data.
-            - usa_mode: bool indicating USA mode.
+    tuple
+        A tuple containing:
+        - AnnData object loaded from the h5ad file.
+        - Quantification info.
+        - Permit list info.
+        - Mapping info if available, otherwise None.
+        - Feature dump data.
+        - whether USA mode was used.
     """
     mtx_data = sc.read_h5ad(hdf5_path)
     quant_json_data, permit_list_json_data = (
@@ -54,9 +57,10 @@ def load_hdf5(
 @dataclass
 class QuantInput:
     """
-    A class to handle quantification input data, supporting both file and directory inputs.
+    Handle quantification input from a single h5ad file or a directory.
 
-    It processes and loads data from various formats, including h5ad and matrix directories.
+    This class detects whether the input is an h5ad file or a directory
+    and loads associated quantification results, mapping logs, and feature data.
     """
 
     def add_geneid_2_name_if_absent(self, gene_id_2_name_file: Path, output_dir: Path) -> bool:
@@ -72,9 +76,16 @@ class QuantInput:
 
     def __init__(self, input_str: str):
         """
-        Detects the input format of the quantification output directory.
+        Detect the input format of the quantification output and load associated data.
 
-        Return the loaded data
+        Parameters
+        ----------
+        input_str
+            Path to a quantification output directory or an h5ad file.
+
+        Returns
+        -------
+        Loaded data
         """
         self.provided = Path(input_str)
         if not self.provided.exists():
@@ -177,16 +188,7 @@ class QuantInput:
 
 
 def get_input(input_str: str) -> QuantInput:
-    """
-    Wrapper function to instantiate QuantInput from a string input. Raises an argparse.ArgumentTypeError if instantiation fails.
-
-    Args:
-        input_str: Path string for quantification input.
-
-    Returns
-    -------
-        QuantInput instance corresponding to the input.
-    """
+    """Wrapper function to instantiate QuantInput from a string input."""
     try:
         return QuantInput(input_str)
     except Exception as e:
@@ -195,10 +197,12 @@ def get_input(input_str: str) -> QuantInput:
 
 def find_mapping_info(parent_quant_dir: Path) -> dict | None:
     """
-    Search for and load mapping information JSON file within a quantification directory.
+    Search for and load mapping information JSON file from a quantification directory.
 
-    Args:
-        parent_quant_dir: Path to the parent quantification directory.
+    Parameters
+    ----------
+    parent_quant_dir
+        Path to the parent quantification directory.
 
     Returns
     -------

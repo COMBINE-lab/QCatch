@@ -198,14 +198,22 @@ def modify_html_with_plots(
 
     Parameters
     ----------
-        soup (BeautifulSoup): Parsed HTML document to modify.
-        output_html_path (str): Path to save the modified HTML file.
-        plot_text_elements (tuple): A tuple containing:
-            - dict: Plotly plot HTML div strings keyed by plot identifiers.
-            - str: HTML string for the summary table.
-        table_htmls (tuple): A tuple containing HTML strings for quant JSON and permit list log info tables.
-        warning_html (str): HTML string containing warning messages to insert.
-        usa_mode (bool): Flag indicating whether SUA mode is enabled; if False, SUA tab is removed.
+    soup
+        Parsed HTML document as a BeautifulSoup object.
+    output_html_path
+        Path to save the modified HTML file.
+    plot_text_elements
+        Tuple containing:
+        - A dictionary of Plotly plot HTML div strings keyed by plot identifiers.
+        - An HTML string representing the summary table.
+    table_htmls
+        Tuple containing HTML strings for the quant log and permit list log info tables.
+    code_texts
+        Python code snippet to insert into the report.
+    warning_html
+        HTML string containing warning messages.
+    usa_mode
+        Flag indicating whether SUA mode is enabled; if False, SUA tab is removed.
 
     Returns
     -------

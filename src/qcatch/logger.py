@@ -29,10 +29,10 @@ def setup_logger(name: str, verbose: bool) -> QCatchLogger:
 
     Parameters
     ----------
-    name : str
+    name
         The name of the logger.
-    verbose : bool
-        If True, set the logging level to DEBUG. Otherwise, set it to INFO.
+    verbose
+        If True, sets the logging level to DEBUG; otherwise, sets it to INFO.
 
     Returns
     -------
@@ -64,12 +64,12 @@ def generate_warning_html(warning_list: list[str]) -> str:
 
     Parameters
     ----------
-    warning_list : list[str]
+    warning_list
         A list of warning messages to include in the HTML.
 
     Returns
     -------
-    str
+    warning_html
         An HTML string containing the warnings. Returns an empty string if no warnings are provided.
     """
     if not warning_list or len(warning_list) == 0:
