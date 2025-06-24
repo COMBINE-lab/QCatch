@@ -81,11 +81,15 @@ line-length = 120
 src = ["src"]
 extend-include = ["*.ipynb"]
 fix = true
-format.docstring-code-format = true
 
-lint.select = [
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
   "B",      # flake8-bugbear
   "BLE",    # flake8-blind-except
+  "B904",
   "C4",     # flake8-comprehensions
   "D",      # pydocstyle
   "E",      # Error detected by Pycodestyle
@@ -96,7 +100,7 @@ lint.select = [
   "UP",     # pyupgrade
   "W",      # Warning detected by Pycodestyle
 ]
-lint.ignore = [
+ignore = [
   "B008", # Errors from function calls in argument defaults. These are fine when the result is immutable.
   "D100", # Missing docstring in public module
   "D104", # Missing docstring in public package
@@ -111,12 +115,10 @@ lint.ignore = [
   "E731", # Do not assign a lambda expression, use a def -> lambda expression assignments are convenient
   "E741", # allow I, O, l as variable names -> I is the identity matrix
 ]
-lint.per-file-ignores."*/__init__.py" = ["F401"]
-lint.per-file-ignores."docs/*" = ["I"]
-lint.per-file-ignores."tests/*" = ["D"]
-lint.pydocstyle.convention = "numpy"
-
-select = ["E", "F", "I", "UP", "D", "W", "C", "B", "BLE", "B904"]
+per-file-ignores."*/__init__.py" = ["F401"]
+per-file-ignores."docs/*" = ["I"]
+per-file-ignores."tests/*" = ["D"]
+pydocstyle.convention = "numpy"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
