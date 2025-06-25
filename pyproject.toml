@@ -2,6 +2,7 @@
 name = "qcatch"
 version = "0.2.5"
 description = "QCatch: Quality Control downstream of alevin-fry / simpleaf."
+readme = "README.md"
 authors = [
   { name = "Yuan Gao" },
   { name = "Dongze He" },
