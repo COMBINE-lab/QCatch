@@ -21,6 +21,13 @@ dependencies = [
   "scipy>=1.15.2,<2.0.0",
   "session-info2>=0.1.2,<0.2.0",
 ]
+optional-dependencies.dev = ["pre-commit", "twine>=4.0.2"]
+optional-dependencies.test = ["coverage", "pytest", "pytest-cov", "setuptools"]
+urls.Documentation = "https://github.com/COMBINE-lab/QCatch#readme"
+urls.Homepage = "https://github.com/COMBINE-lab/QCatch"
+urls.Source = "https://github.com/COMBINE-lab/QCatch"
+scripts.qcatch = "qcatch.main:main"
+
 
 [build-system]
 requires = ["hatchling"]
