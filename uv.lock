@@ -1114,18 +1114,6 @@ wheels = [
 ]
 
 [[package]]
-name = "python-igraph"
-version = "0.11.8"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "igraph" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3f/7c/d30cfbb2d85ec54bcbf96a98135074a733f93fec0dff1ef6a03934df5632/python_igraph-0.11.8.tar.gz", hash = "sha256:235550fedd3f649e8350bc97cd9220c9751a9fe4b912360d234fe0ef84e82d0b", size = 9589 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ac/37/3fb69b17599b4c76f75bdf00ea4b78394d3cbf1fc0ba31179861153c239f/python_igraph-0.11.8-py3-none-any.whl", hash = "sha256:f917c7ed8fbaa08d31bd47e9ca8f68305fc53b294c304190f285392eb3f2dc13", size = 9066 },
-]
-
-[[package]]
 name = "pytz"
 version = "2025.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1185,10 +1173,10 @@ source = { editable = "." }
 dependencies = [
     { name = "anndata" },
     { name = "beautifulsoup4" },
+    { name = "igraph" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "plotly" },
-    { name = "python-igraph" },
     { name = "requests" },
     { name = "scanpy" },
     { name = "scipy" },
@@ -1212,13 +1200,13 @@ requires-dist = [
     { name = "anndata", specifier = ">=0.11.4" },
     { name = "beautifulsoup4", specifier = ">=4.13.3" },
     { name = "coverage", marker = "extra == 'test'" },
+    { name = "igraph", specifier = ">=0.11.0,<0.12.0" },
     { name = "numpy", specifier = ">=2.1.3,<3.0" },
     { name = "pandas", specifier = ">=2.2.3,<3.0" },
     { name = "plotly", specifier = ">=6" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-cov", marker = "extra == 'test'" },
-    { name = "python-igraph", specifier = ">=0.11.0,<0.12.0" },
     { name = "requests", specifier = ">=2.32.4" },
     { name = "scanpy", specifier = ">=1.10.4,<2.0.0" },
     { name = "scipy", specifier = ">=1.15.2,<2.0.0" },
