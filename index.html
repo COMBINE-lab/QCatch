@@ -1,0 +1,914 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://combine-lab.github.io/QCatch/">
+      
+      
+      
+        <link rel="next" href="demo/demo.html">
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Documentation for QCatch</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#qcatch" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="Documentation for QCatch" class="md-header__button md-logo" aria-label="Documentation for QCatch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Documentation for QCatch
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/COMBINE-lab/QCatch" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="Documentation for QCatch" class="md-nav__button md-logo" aria-label="Documentation for QCatch" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Documentation for QCatch
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/COMBINE-lab/QCatch" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-bioconda" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Bioconda
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-pypi" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. PyPI
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tutorial-run-qcatch-on-example-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tutorial: Run QCatch on Example data
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tutorial: Run QCatch on Example data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-download-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Download Dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-run-the-qcatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 - Run the qcatch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tips
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-line-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Command-Line Arguments
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="demo/demo.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Static Demo
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FAQ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-bioconda" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Bioconda
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-pypi" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. PyPI
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tutorial-run-qcatch-on-example-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tutorial: Run QCatch on Example data
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tutorial: Run QCatch on Example data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-download-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 1 — Download Dataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-run-the-qcatch" class="md-nav__link">
+    <span class="md-ellipsis">
+      Step 2 - Run the qcatch
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tips
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-line-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Command-Line Arguments
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="qcatch">QCatch</h1>
+<p><a href="https://pypi.org/project/qcatch/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/qcatch" /></a>
+<a href="https://github.com/COMBINE-lab/QCatch/actions/workflows/test.yaml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/COMBINE-lab/QCatch/test.yaml?branch=main" /></a>
+<a href="https://COMBINE-lab.github.io/QCatch"><img alt="Documentation" src="https://img.shields.io/badge/docs-online-blue" /></a></p>
+<p>QCatch: Quality Control downstream of <code>alevin-fry</code> and <code>simpleaf</code></p>
+<p>View the complete <a href="https://COMBINE-lab.github.io/QCatch">QCatch documentation</a> with interactive examples, FAQs, and detailed usage guides.</p>
+<h2 id="installation">Installation</h2>
+<p>You need to have Python 3.11 or 3.12 installed on your system.</p>
+<p>There are several alternative options to install QCatch:</p>
+<h4 id="1-bioconda">1. Bioconda</h4>
+<p>You can install using <a href="http://anaconda.org/">Conda</a>
+from <a href="https://bioconda.github.io/">Bioconda</a>.</p>
+<pre><code class="language-bash">conda install -c bioconda qcatch
+</code></pre>
+<h4 id="2-pypi">2. PyPI</h4>
+<p>You can also install from <a href="https://pypi.org/project/qcatch/">PyPI</a> using <code>pip</code>:</p>
+<pre><code class="language-bash">pip install qcatch
+</code></pre>
+<blockquote>
+<p>Tips: If you run into environment issues, you can also use the provided Conda .yml file, which specifies the exact versions of all dependencies to ensure consistency.</p>
+</blockquote>
+<pre><code class="language-bash">conda env create -f qcatch_conda_env.yml
+</code></pre>
+<h2 id="basic-usage">Basic Usage</h2>
+<p>Provide the path to the parent folder for quantification results, or the direct path to a .h5ad file generated by <code>alevin-fry</code> or <code>simpleaf</code>. QCatch will automatically scan the input path, assess data quality, and generate an interactive HTML report that can be viewed directly in your browser.</p>
+<pre><code class="language-bash">qcatch \
+    --input path/to/your/quantification/result \
+    --output path/to/desired/QC/output/folder \ # if you want another folder for output
+    --chemistry 10X_3p_v3
+    --save_filtered_h5ad
+
+</code></pre>
+<h2 id="tutorial-run-qcatch-on-example-data">Tutorial: Run QCatch on Example data</h2>
+<h3 id="step-1-download-dataset">Step 1 — Download Dataset</h3>
+<pre><code class="language-bash">#!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status
+
+echo &quot;📦 Downloading QCatch example dataset...&quot;
+
+# Define where to run the tutorial (you can change this path if desired)
+CWD=$(pwd)  # Current working directory
+TUTORIAL_DIR=&quot;${CWD}/qcatch_tutorial&quot;
+
+# Clean any existing tutorial directory to ensure a fresh download
+rm -rf &quot;$TUTORIAL_DIR&quot; &amp;&amp; mkdir -p &quot;$TUTORIAL_DIR&quot;
+ZIP_FILE=&quot;data.zip&quot;
+
+# Download from Box
+wget -O &quot;$ZIP_FILE&quot; &quot;https://umd.box.com/shared/static/zd4sai70uw9fs24e1qx6r41ec50pf45g.zip?dl=1&quot;
+
+# Unzip and clean up
+unzip &quot;$ZIP_FILE&quot; -d &quot;$TUTORIAL_DIR&quot;
+rm &quot;$ZIP_FILE&quot;
+
+echo &quot;✅ Test data downloaded to $TUTORIAL_DIR&quot;
+</code></pre>
+<h3 id="step-2-run-the-qcatch">Step 2 - Run the qcatch</h3>
+<p>🎉 All set! Now let’s run QCatch:</p>
+<pre><code class="language-bash">#Set up output directory
+OUT_DIR=&quot;${TUTORIAL_DIR}/output&quot;
+mkdir -p &quot;$OUT_DIR&quot;
+
+# Step2 - Run QCatch
+qcatch --input ${TUTORIAL_DIR}/test_data/simpleaf_with_map/quants.h5ad \
+       --output ${OUT_DIR} \
+       --chemistry 10X_3p_v3
+</code></pre>
+<h3 id="tips">Tips</h3>
+<p><strong>1- Input path:</strong></p>
+<p>Provide either:</p>
+<ul>
+<li>the <strong>path to the parent directory</strong> containing quantification results, or</li>
+<li>the <strong>direct path to a .h5ad file</strong> generated by those tools.</li>
+</ul>
+<p>QCatch will automatically detect the input type:
+- If a <strong>.h5ad file</strong> is provided, QCatch will process it directly.
+- If a <strong>directory</strong> is provided, QCatch will first look for an existing .h5ad file inside. If not found, it will fall back to processing the mtx-based quantification results.</p>
+<p>See the example directory structures at the end of the Tips section for reference:</p>
+<p><strong>2- Output path:</strong></p>
+<p>If you do not want any modifications in your input folder/files, speaficy the output path, we will save any new results and QC HTML report there.</p>
+<p><strong><em>By default</em></strong>, QCatch saves the QC report and all output files in your input directory. Therefore, specifying an output path is optional. Specifically,
+- If QCatch finds the <code>.h5ad</code> file from input path, it will modify the original <code>.h5ad</code> file in place by appending cell filtering results to <code>anndata.obs</code> and create a separate QC report in HTML in the input folder.
+- For <code>mtx-based</code> results, QCatch will generate text files for the cell calling reuslts as well as the QC report in the input folder."</p>
+<p><strong>3- Chemistry:</strong></p>
+<p>We highly recommend specifying the chemistry used in your experiment. By default, QCatch will assume the settings for 10X 3' v2 and v3 chemistry. If you use custom chemistry that not listed in the predefined chemistry options. You can specify the <code>--n_partitions</code>.</p>
+<p><strong>3- Gene gene mapping file:</strong></p>
+<p>If you are using simpleaf v0.19.3 or later, the generated .h5ad file already includes gene names. In this case, you do not need to specify the --gene_id2name_file option.</p>
+<p>To provide a 'gene id to name mapping' info, the file should be a <strong>TSV</strong> containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)— <strong>without</strong> header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed, but will not affect the QC report.</p>
+<p><strong>4- Save filtered h5ad file:</strong></p>
+<p>If you want to save filtered h5ad file separately, you can specify <code>--save_filtered_h5ad</code>, which is only applicable when QCatch detects the h5ad file as the input.</p>
+<p><strong>5- Specify your desired cell list:</strong></p>
+<p>If you want to use a specified list of valid cell barcodes, you can provide the file path with <code>--valid_cell_list</code>. QCatch will then skip the default cell calling step and use the supplied list instead. The updated .h5ad file will include only one additional column, 'is_retained_cells', containing boolean values based on the specified list.</p>
+<p><strong>6- Skip clustering plots:</strong></p>
+<p>To reduce runtime, you may enable the <code>--skip_umap_tsne</code> option to bypass dimensionality reduction and visualization steps.</p>
+<p><strong>7- Export the summary metrics</strong></p>
+<p>To export the summary metrics, enable the <code>--export_summary_table</code> flag. The summary table will be saved as a separate CSV file in the output directory.</p>
+<p><strong>8- Debug-level message</strong></p>
+<p>To get debug-level messages and more intermediate computation in cell calling step, you can specify <code>--verbose</code></p>
+<p><strong>9- Re-run QCatch on modified h5ad file</strong>
+If you re-run QCatch analysis on a modified <code>.h5ad</code> file (i.e., an <code>.h5ad</code> file with additional columns added for cell calling results), the existing cell calling-related columns will be removed and then replaced with new results. The new cell calling can be generated either through QCatch's internal method or based on a user-specified list of valid cell barcodes.</p>
+<p><strong>Example directory structures:</strong></p>
+<pre><code class="language-bash"># simpleaf
+parent_quant_dir/
+├── af_map/
+├── af_quant/
+│   ├── alevin/
+│   │   ├── quants_mat_cols.txt
+│   │   ├── quants_mat_rows.txt
+│   │   ├── quants_mat.mtx
+│   │   └── quants.h5ad (available if you use simpleaf after v0.19.3)
+│   │   ...
+│   ├── featureDump.txt
+│   └── quant.json
+└── simpleaf_quant_log.json
+
+# alevin-fry
+parent_quant_dir/
+├── alevin/
+│   ├── quants_mat_cols.txt
+│   ├── quants_mat_rows.txt
+│   └── quants_mat.mtx
+├── featureDump.txt
+└── quant.json
+
+</code></pre>
+<p>For more advanced options and usage details, see the sections below.</p>
+<h2 id="command-line-arguments">Command-Line Arguments</h2>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Short</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--input</code></td>
+<td><code>-i</code></td>
+<td><code>str</code> (Required)</td>
+<td>Path to the input directory containing the quantification output files or to the HDF5 file itself.</td>
+</tr>
+<tr>
+<td><code>--output</code></td>
+<td><code>-o</code></td>
+<td><code>str</code>(Required)</td>
+<td>Path to the output directory.</td>
+</tr>
+<tr>
+<td><code>--chemistry</code></td>
+<td><code>-c</code></td>
+<td><code>str</code>(Optional but recommend)</td>
+<td>Specifies the chemistry used in the experiment, determining the range for the <code>empty_drops</code> step. <strong>Options</strong>: <code>'10X_3p_v2'</code>, <code>'10X_3p_v3'</code>, <code>'10X_3p_v4'</code>, <code>'10X_3p_LT'</code>,<code>'10X_5p_v3'</code>,<code>'10X_HT'</code>. <strong>Default</strong>: Will use the range for <code>'10X_3p_v2'</code> and <code>'10X_3p_v3'</code>.</td>
+</tr>
+<tr>
+<td><code>--save_filtered_h5ad</code></td>
+<td><code>-s</code></td>
+<td><code>flag</code> (Optional)</td>
+<td>If enabled, <code>qcatch</code> will save a separate <code>.h5ad</code> file containing only the retained cells.</td>
+</tr>
+<tr>
+<td><code>--gene_id2name_file</code></td>
+<td><code>-g</code></td>
+<td><code>str</code> (Optional)</td>
+<td>File provides a mapping from gene IDs to gene names. The file must be a TSV containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)—without a header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed.</td>
+</tr>
+<tr>
+<td><code>--valid_cell_list</code></td>
+<td><code>-l</code></td>
+<td><code>str</code> (Optional)</td>
+<td>File provides a user-specified list of valid cell barcode. The file must be a TSV containing one column with cell barcodes without a header row. If provided, qcatch will skip the internal cell calling steps and and use the supplied list instead</td>
+</tr>
+<tr>
+<td><code>--n_partitions</code></td>
+<td><code>-n</code></td>
+<td><code>int</code> (Optional)</td>
+<td>Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specified <code>--chemistry</code>. Only use <code>--n_partitions</code> when your experiment uses a custom chemistry not listed in the predefined chemistry options.</td>
+</tr>
+<tr>
+<td><code>--skip_umap_tsne</code></td>
+<td><code>-u</code></td>
+<td><code>flag</code> (Optional)</td>
+<td>If provided, skips generation of UMAP and t-SNE plots.</td>
+</tr>
+<tr>
+<td><code>--export_summary_table</code></td>
+<td><code>-x</code></td>
+<td><code>flag</code> (Optional)</td>
+<td>If enabled, QCatch will export the summary metrics as a separate CSV file.</td>
+</tr>
+<tr>
+<td><code>--verbose</code></td>
+<td><code>-b</code></td>
+<td><code>flag</code> (Optional)</td>
+<td>Enable verbose logging with debug-level messages.</td>
+</tr>
+<tr>
+<td><code>--version</code></td>
+<td><code>-v</code></td>
+<td><code>flag</code> (Optional)</td>
+<td>Display the installed version of qcatch.</td>
+</tr>
+</tbody>
+</table>
+<!-- ## Contact
+
+For questions and help requests, you can reach out in the [scverse discourse][].
+If you found a bug, please use the [issue tracker][]. -->
+
+<!-- ## Citation
+
+> t.b.a
+
+[uv]: https://github.com/astral-sh/uv
+[scverse discourse]: https://discourse.scverse.org/
+[issue tracker]: https://github.com/ygao61/QCatch/issues
+[tests]: https://github.com/ygao61/QCatch/actions/workflows/test.yaml
+[documentation]: https://QCatch.readthedocs.io
+[changelog]: https://QCatch.readthedocs.io/en/latest/changelog.html
+[api documentation]: https://QCatch.readthedocs.io/en/latest/api.html
+[pypi]: https://pypi.org/project/QCatch -->
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
