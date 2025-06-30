@@ -3,7 +3,9 @@ name: Release
 on:
   release:
     types: [published]
-
+  push:
+    tags:
+      - 'v*.*.*'
 defaults:
   run:
     # to fail on error in multiline statements (-e), in pipes (-o pipefail), and on unset variables (-u).
