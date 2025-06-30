@@ -68,17 +68,7 @@ class FilteredCellResults:
 def compute_empty_drops_bounds(
     chemistry_description: str | None = None, n_partitions: int | None = None
 ) -> tuple[int, int]:
-    """
-    Determines the lower and upper bounds for empty drops background based on the provided chemistry description.
-
-    Args:
-        chemistry_description (str | None): A string specifying the chemistry type.
-        n_partitions (int | None): Number of partitions specified in the input.
-
-    Returns
-    -------
-        tuple[int, int]: A tuple containing the lower and upper bounds.
-    """
+    """Determines the lower and upper bounds for empty drops background based on the provided chemistry description."""
     if n_partitions is not None:
         return (n_partitions // 2, n_partitions)
 
@@ -98,12 +88,15 @@ def get_fdr_threshold_by_chemistry(chemistry_name: str) -> float:
     """
     Return the maximum adjusted p-value (FDR threshold) for calling a barcode as non-ambient, based on the chemistry used.
 
-    Args:
-        chemistry_name (str): Name of the 10X chemistry.
+    Parameters
+    ----------
+    chemistry_name
+        Name of the 10X chemistry.
 
     Returns
     -------
-        float: FDR threshold (e.g., 0.001 or 0.01)
+    float
+        FDR threshold (e.g., 0.001 or 0.01)
     """
     high_gem_chemistries = {"10X_3p_v3", "10X_3p_v4", "10X_5p_v3", "10X_HT"}
     return 0.001 if chemistry_name in high_gem_chemistries else 0.01
@@ -113,13 +106,17 @@ def find_within_ordmag(resampled_bc_counts: np.ndarray, quantile_point: int) -> 
     """
     Find the number of barcodes above a cutoff determined by a quantile value.
 
-    Args:
-        resampled_bc_counts (np.ndarray): Resampled barcode counts derived from non-zero_bc_counts.
-        quantile_point (int): Index of the cell at the quantile point.
+    Parameters
+    ----------
+    resampled_bc_counts
+        Resampled barcode counts derived from non-zero_bc_counts.
+    quantile_point
+        Index of the cell at the quantile point.
 
     Returns
     -------
-        int: The number of barcodes above the cutoff (quantile_val / 10).
+    int
+        Number of barcodes above the cutoff (quantile_val / 10).
     """
     n = len(resampled_bc_counts)
     if n == 0:
@@ -150,13 +147,17 @@ def ordMag_expected(sorted_bc_counts: np.ndarray, recovered_cells: np.ndarray) -
     """
     Estimate the expected number of cells by analyzing the distribution of barcode counts.
 
-    Args:
-        sorted_bc_counts (np.ndarray): A sorted (descending) array of read counts per barcode.
-        recovered_cells (np.ndarray): A list of candidate cell indices (log2-spaced) to evaluate potential cell thresholds.
+    Parameters
+    ----------
+    sorted_bc_counts
+        A sorted (descending) array of read counts per barcode.
+    recovered_cells
+        A list of candidate cell indices (log2-spaced) to evaluate potential cell thresholds.
 
     Returns
     -------
-        tuple[int, float]: The estimated number of expected cells and the associated loss value.
+    tuple
+        The estimated number of expected cells and the associated loss value.
     """
     # Initialize loss array
     loss = np.zeros(len(recovered_cells))
@@ -201,17 +202,7 @@ def ordMag_expected(sorted_bc_counts: np.ndarray, recovered_cells: np.ndarray) -
 
 
 def call_ordMag(nonzero_bc_counts: np.ndarray, max_expected_cells: int) -> tuple[int, float]:
-    """
-    Call the expected number of cells using the OrdMag method.
-
-    Args:
-        nonzero_bc_counts (np.ndarray): Nonzero barcode counts.
-        max_expected_cells (int): Maximum number of expected cells.
-
-    Returns
-    -------
-        tuple[int, float]: Estimated number of expected cells and associated loss.
-    """
+    """Call the expected number of cells using the OrdMag method."""
     sorted_bc_counts = np.sort(nonzero_bc_counts)[::-1]
     # Generate log2-spaced cell indices
     recovered_cells = np.linspace(1, np.log2(max_expected_cells), 2000)
@@ -221,17 +212,7 @@ def call_ordMag(nonzero_bc_counts: np.ndarray, max_expected_cells: int) -> tuple
 
 
 def compute_bootstrapped_top_n(top_n_boot: np.ndarray, nonzero_counts: np.ndarray) -> FilteredCellResults:
-    """
-    Compute the bootstrapped top N cells from bootstrap samples.
-
-    Args:
-        top_n_boot (np.ndarray): Array of top N cell counts from bootstrap samples.
-        nonzero_counts (np.ndarray): Nonzero barcode counts.
-
-    Returns
-    -------
-        FilteredCellResults: An object containing the estimated number of top cells to retain and the UMI count threshold.
-    """
+    """Compute the bootstrapped top N cells from bootstrap samples."""
     top_n_bcs_mean = np.mean(top_n_boot)
     n_top_cells = int(np.round(top_n_bcs_mean))
     logger.debug(f"INSIDE compute_bootstrapped_top_n(): n_top_cells: {n_top_cells}")
@@ -261,19 +242,7 @@ def compute_bootstrapped_top_n(top_n_boot: np.ndarray, nonzero_counts: np.ndarra
 def initial_filtering_OrdMag(
     matrix: csc_matrix, chemistry_description: str | None = None, n_partitions: int | None = None, verbose: bool = False
 ) -> tuple[np.ndarray, FilteredCellResults, str] | np.ndarray:
-    """
-    Perform initial filtering of cells using the OrdMag method.
-
-    Args:
-        matrix (csc_matrix): The count matrix.
-        chemistry_description (str | None): Chemistry description string.
-        n_partitions (int | None): Number of partitions.
-        verbose (bool): If True, enables verbose output.
-
-    Returns
-    -------
-        tuple[np.ndarray, FilteredCellResults, str] or np.ndarray: Filtered barcodes, metrics, and warning message if applicable.
-    """
+    """Perform initial filtering of cells using the OrdMag method."""
     metrics = FilteredCellResults(0)
     bc_counts = matrix.get_counts_per_bc()
     nonzero_bc_counts = bc_counts[bc_counts > 0]
@@ -339,16 +308,7 @@ def initial_filtering_OrdMag(
 
 
 def adjust_pvalue_bh(p: np.ndarray) -> np.ndarray:
-    """
-    Multiple testing correction of p-values using the Benjamini-Hochberg procedure.
-
-    Args:
-        p (np.ndarray): Array of p-values.
-
-    Returns
-    -------
-        np.ndarray: Array of adjusted p-values.
-    """
+    """Multiple testing correction of p-values using the Benjamini-Hochberg procedure."""
     descending = np.argsort(p)[::-1]
     # q = p * N / k where p = p-value, N = # tests, k = p-value rank
     scale = float(len(p)) / np.arange(len(p), 0, -1)
@@ -359,18 +319,7 @@ def adjust_pvalue_bh(p: np.ndarray) -> np.ndarray:
 
 
 def eval_multinomial_loglikelihoods(matrix: csc_matrix, profile_p: np.ndarray, max_mem_gb: float = 0.1) -> np.ndarray:
-    """
-    Compute the multinomial log PMF for many barcodes.
-
-    Args:
-        matrix (csc_matrix): Matrix of UMI counts (feature x barcode).
-        profile_p (np.ndarray): Multinomial probability vector.
-        max_mem_gb (float): Try to bound memory usage.
-
-    Returns
-    -------
-        np.ndarray: Log-likelihood for each barcode.
-    """
+    """Compute the multinomial log PMF for many barcodes."""
     gb_per_bc = float(matrix.shape[0] * matrix.dtype.itemsize) / (1024**3)
     bcs_per_chunk = max(1, int(round(max_mem_gb / gb_per_bc)))
     num_bcs = matrix.shape[1]
@@ -397,18 +346,6 @@ def simulate_multinomial_loglikelihoods(
     Simulate draws from a multinomial distribution for various values of N.
 
     Uses the approximation from Lun et al. (https://www.biorxiv.org/content/biorxiv/early/2018/04/04/234872.full.pdf)
-
-    Args:
-        profile_p (np.ndarray): Probability of observing each feature.
-        umis_per_bc (np.ndarray): UMI counts per barcode (multinomial N).
-        num_sims (int): Number of simulations per distinct N value.
-        jump (int): Vectorize the sampling if the gap between two distinct Ns exceeds this.
-        n_sample_feature_block (int): Vectorize this many feature samplings at a time.
-        verbose (bool): Enable verbose output.
-
-    Returns
-    -------
-        tuple[np.ndarray, np.ndarray]: distinct_ns (simulated N values), log_likelihoods (simulated log likelihoods).
     """
     distinct_n = np.flatnonzero(np.bincount(umis_per_bc.astype(int)))
 
@@ -463,19 +400,7 @@ def simulate_multinomial_loglikelihoods(
 def compute_ambient_pvalues(
     umis_per_bc: np.ndarray, obs_loglk: np.ndarray, sim_n: np.ndarray, sim_loglk: np.ndarray
 ) -> np.ndarray:
-    """
-    Compute p-values for observed multinomial log-likelihoods.
-
-    Args:
-        umis_per_bc (np.ndarray): UMI counts per barcode.
-        obs_loglk (np.ndarray): Observed log-likelihoods of each barcode deriving from an ambient profile.
-        sim_n (np.ndarray): Multinomial N for simulated log-likelihoods.
-        sim_loglk (np.ndarray): Simulated log-likelihoods of shape (len(sim_n), num_simulations).
-
-    Returns
-    -------
-        np.ndarray: Array of p-values.
-    """
+    """Compute p-values for observed multinomial log-likelihoods."""
     assert len(umis_per_bc) == len(obs_loglk)
     assert sim_loglk.shape[0] == len(sim_n)
 
@@ -494,18 +419,7 @@ def compute_ambient_pvalues(
 
 
 def estimate_profile_sgt(matrix: csc_matrix, barcode_indices: np.ndarray, nz_feat: np.ndarray) -> np.ndarray:
-    """
-    Estimate a gene expression profile by Simple Good Turing.
-
-    Args:
-        matrix (csc_matrix): Sparse matrix of all counts.
-        barcode_indices (np.ndarray): Barcode indices to use.
-        nz_feat (np.ndarray): Indices of features that are non-zero at least once.
-
-    Returns
-    -------
-        np.ndarray: Estimated probabilities of length len(nz_feat).
-    """
+    """Estimate a gene expression profile by Simple Good Turing."""
     # Initial profile estimate
     prof_mat = matrix[:, barcode_indices]
 
@@ -527,17 +441,7 @@ def estimate_profile_sgt(matrix: csc_matrix, barcode_indices: np.ndarray, nz_fea
 
 # Construct a background expression profile from barcodes with <= T UMIs
 def est_background_profile_sgt(matrix: csc_matrix, use_bcs: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Estimate a gene expression profile on a given subset of barcodes. Use Good-Turing to smooth the estimated profile.
-
-    Args:
-        matrix (csc_matrix): Sparse matrix of all counts.
-        use_bcs (np.ndarray): Indices of barcodes to use (col indices into matrix).
-
-    Returns
-    -------
-        tuple[np.ndarray, np.ndarray]: Tuple of (features used, estimated probabilities of length use_features).
-    """
+    """Estimate a gene expression profile on a given subset of barcodes. Use Good-Turing to smooth the estimated profile."""
     # Use features that are nonzero anywhere in the data
     use_feats = np.flatnonzero(np.asarray(matrix.sum(1)))
 
@@ -560,20 +464,29 @@ def find_nonambient_barcodes(
     """
     Call barcodes as being sufficiently distinct from the ambient profile.
 
-    Args:
-        matrix (csc_matrix): Full expression matrix.
-        orig_cell_bcs (list[str]): Strings of initially-called cell barcodes.
-        chemistry_description (str): Chemistry description.
-        n_partitions (int): Number of partitions.
-        max_mem_gb (float): Maximum memory to use in GB.
-        min_umi_frac_of_median (float): Minimum UMI fraction of median.
-        min_umis_nonambient (int): Minimum UMIs for nonambient barcodes.
-        max_adj_pvalue (float): Maximum adjusted p-value to call barcode as non-ambient.
-        verbose (bool): Enable verbose output.
+    Parameters
+    ----------
+    matrix
+        Full expression matrix.
+    orig_cell_bcs
+        Initially-called cell barcodes.
+    chemistry_description
+        Chemistry description.
+    n_partitions
+        Number of partitions used for ambient estimation.
+    max_mem_gb
+        Maximum memory to use in gigabytes.
+    min_umi_frac_of_median
+        Minimum UMI fraction (relative to median) required for candidate barcodes.
+    min_umis_nonambient
+        Minimum number of UMIs to consider a barcode for non-ambient testing.
+    verbose
+        Whether to enable verbose output.
 
     Returns
     -------
-        NonAmbientBarcodeResult | None: A result object or None if no suitable barcodes found.
+    NonAmbientBarcodeResult or None
+        A result object containing evaluation metrics for non-ambient barcodes, or None if no suitable barcodes are found.
     """
     # Estimate an ambient RNA profile
     umis_per_bc = matrix.get_counts_per_bc()

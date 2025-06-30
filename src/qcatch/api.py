@@ -23,23 +23,33 @@ def run_qcatch_api(
     """
     Run QCatch as a Python API.
 
-    Args:
-        input_path: Path to .h5ad file or quant folder
-        chemistry: Chemistry type (same as CLI)
-        gene_id2name_file: TSV with gene ID to name map
-        valid_cell_list: Optional list of valid barcodes
-        skip_umap_tsne: Skip clustering plots
-        export_summary_table: Whether to compute and return summary table
-        logger: Optional custom logger
+    Parameters
+    ----------
+    input_path
+        Path to .h5ad file or quantification folder.
+    output
+        Output directory path. If None, uses the input directory.
+    chemistry
+        Chemistry type
+    gene_id2name_file
+        TSV file mapping gene IDs to gene names.
+    valid_cell_list
+        Optional list of valid barcodes to retain.
+    skip_umap_tsne
+        If True, skip generating UMAP and t-SNE plots.
+    export_summary_table
+        If True, include a summary HTML table in the output.
+    logger
+        Optional custom logger instance.
 
     Returns
     -------
         dict with:
             - 'anndata': updated AnnData object
             - 'valid_barcodes': list of barcodes
-            - 'figures': list of plotly figures
-            - 'summary_table_html': str (optional)
-            - 'warning_html': str
+            - 'figures': HTML strings or optionally real plotly.Figure
+            - 'summary_table_html': HTML string of summary table
+            - 'warning_html': HTML string of warnings
     """
     logger = logger or setup_logger("qcatch", verbose=False)
 

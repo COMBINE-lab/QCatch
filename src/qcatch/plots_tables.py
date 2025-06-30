@@ -57,13 +57,16 @@ def generate_knee_plots(data: pd.DataFrame, valid_bcs: list[str]) -> tuple[go.Fi
     """
     Generate knee plots for UMI counts and genes detected versus cell rank, colored by cell type.
 
-    Args:
-        data: DataFrame containing feature dump data.
-        valid_bcs: List of valid barcode strings.
+    Parameters
+    ----------
+    data
+        Feature dump data.
+    valid_bcs
+        List of valid barcodes.
 
     Returns
     -------
-        Tuple of Plotly Figures for UMI counts and genes detected.
+    Two Plotly figures for UMI counts and detected genes.
     """
     width = 520
     # Map is_retained to human-readable cell_type
@@ -116,13 +119,16 @@ def barcode_frequency_plots(data: pd.DataFrame, valid_bcs: list[str]) -> go.Figu
     """
     Generate subplots showing barcode frequency vs UMI counts, barcode frequency vs detected genes, and UMI counts vs detected genes.
 
-    Args:
-        data: DataFrame with barcode and cell metrics.
-        valid_bcs: List of valid barcode strings.
+    Parameters
+    ----------
+    data
+        Barcode and cell metrics.
+    valid_bcs
+        Valid barcode strings.
 
     Returns
     -------
-        A Plotly Figure with three subplots.
+    A Plotly Figure with three subplots.
     """
     width = 1200
     height = 400
@@ -204,13 +210,16 @@ def generate_gene_histogram(data: pd.DataFrame, is_all_cells: bool) -> go.Figure
     """
     Generate a histogram plot of the number of detected genes per cell.
 
-    Args:
-        data: DataFrame containing feature dump data.
-        is_all_cells: True if all cells are included, False for retained cells only.
+    Parameters
+    ----------
+    data
+        Feature dump data.
+    is_all_cells
+        True if all cells are included, False for retained cells only.
 
     Returns
     -------
-        A Plotly Figure representing the histogram.
+    A Plotly Figure representing the histogram.
     """
     gene_detected = data["num_genes_expressed"].tolist()
     title_suffix = get_cell_label(is_all_cells)
@@ -240,12 +249,14 @@ def generate_seq_saturation(data: pd.DataFrame) -> float:
     """
     Calculate sequencing saturation percentage for cells.
 
-    Args:
-        data: DataFrame containing feature dump data.
+    Parameters
+    ----------
+    data
+        Feature dump data.
 
     Returns
     -------
-        Sequencing saturation as a float percentage.
+    Sequencing saturation as a percentage.
     """
     # Sequencing Saturation. x = meanReadsPerCell; y = seq saturation
     data = data.sort_values(by="corrected_reads")
@@ -278,13 +289,16 @@ def generate_SUA_plots(adata: sc.AnnData, is_all_cells: bool) -> tuple[str, str]
     """
     Generate barplot and histogram HTML for spliced, unspliced, and ambiguous RNA counts and splice ratios.
 
-    Args:
-        adata: AnnData object with spliced, unspliced, and ambiguous layers.
-        is_all_cells: True if all cells are included, False for retained cells only.
+    Parameters
+    ----------
+    adata
+        AnnData object with spliced, unspliced, and ambiguous layers.
+    is_all_cells
+        True if all cells are included, False for retained cells only.
 
     Returns
     -------
-        Tuple of HTML strings for the barplot and histogram.
+    Tuple of HTML strings for the barplot and histogram.
     """
     # calculate the sum count for S, U, A matrix separately
 
@@ -370,8 +384,10 @@ def umi_dedup(data: pd.DataFrame) -> tuple[go.Figure, float]:
     """
     Generate a scatter plot showing UMI deduplication rates across retained cells.
 
-    Args:
-        data: DataFrame containing feature dump data.
+    Parameters
+    ----------
+    data
+        Feature dump data.
 
     Returns
     -------
@@ -443,15 +459,18 @@ def umi_dedup(data: pd.DataFrame) -> tuple[go.Figure, float]:
 
 def mitochondria_plot(adata: sc.AnnData, is_all_cells: bool) -> go.Figure:
     """
-    Generate a violin plot for mitochondrial content in cells.
+    Generate a violin plot showing mitochondrial content for cells.
 
-    Args:
-        adata: AnnData object containing gene expression data.
-        is_all_cells: True if all cells are included, False for retained cells only.
+    Parameters
+    ----------
+    adata
+        AnnData object for gene expression data.
+    is_all_cells
+        Whether to include all cells or only retained cells.
 
     Returns
     -------
-        A Plotly Figure of mitochondrial content.
+    A Plotly Figure visualizing mitochondrial content distribution.
     """
     dot_size = 2
     dot_opacity = 0.3  # Adjust opacity of the dots
@@ -518,13 +537,17 @@ def umap_tsne_plot(
     """
     Perform dimensionality reduction and clustering, and generate UMAP and t-SNE plots.
 
-    Args:
-        adata: AnnData object containing gene expression data.
+    Parameters
+    ----------
+    adata
+        AnnData object for gene expression mtx.
 
     Returns
     -------
-        Tuple of Plotly Figures for UMAP and t-SNE plots.
-        code_text: Code snippet will be displayed in help text.
+    tuple
+        - A Plotly Figure for the UMAP plot.
+        - A Plotly Figure for the t-SNE plot.
+        - A string containing a code snippet for preprocessing and visualization.
     """
     sc.settings.set_figure_params(dpi=200, facecolor="white")
 
@@ -671,15 +694,19 @@ def umap_tsne_plot(
 
 def show_quant_log_table(quant_json_data: dict, permit_list_json_data: dict | None) -> tuple[str, str]:
     """
-    Generate a HTML table from the quant log and permit list JSON data.
+    Generate an HTML table from quant log and permit list JSON data.
 
-    Args:
-        quant_json_data: Dictionary containing quant log data.
-        permit_list_json_data: Dictionary containing permit list data, or None.
+    Parameters
+    ----------
+    quant_json_data
+        log from the 'quant' step of alvin-fry
+    permit_list_json_data
+        log from the 'generate-permit-list' step of alvin-fry
 
     Returns
     -------
-        Tuple of HTML strings for the quant info and permit list table.
+    tuple
+        Two HTML strings: one for the quant info table and one for the permit list table.
     """
     collapse_threshold = 30
     quant_table_content = ""
@@ -738,18 +765,26 @@ def generate_summary_table(
     """
     Generate a summary table with total corrected reads, median UMI, and total number of cells, etc.
 
-    Args:
-        raw_featuredump_data: DataFrame containing feature dump data.
-        valid_bcs: List of valid barcode strings.
-        total_detected_genes: Total number of genes detected in retained cells.
-        median_genes_per_cell: Median number of genes per retained cell.
-        mapping_rate: Fraction of reads mapped to reference, or None.
-        seq_saturation_value: Sequencing saturation percentage.
+    Parameters
+    ----------
+    raw_featuredump_data
+        Feature dump data including read counts and barcodes.
+    valid_bcs
+        Barcodes retained after filtering.
+    total_detected_genes
+        Total number of genes detected in retained cells.
+    median_genes_per_cell
+        Median number of genes detected per retained cell.
+    mapping_rate
+        Fraction of reads mapped to the reference transcriptome, or None.
+    seq_saturation_value
+        Percentage of sequencing saturation.
 
     Returns
     -------
-        HTML string for the summary table.
-        summary dictionary with summary metrics.
+    tuple
+        - An HTML string representing the summary table.
+        - summary metrics.
     """
     total_cells = len(raw_featuredump_data["corrected_reads"])
     # filter with valid barcodes

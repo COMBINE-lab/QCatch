@@ -48,13 +48,12 @@ def standardize_feature_dump_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
     ----------
-    df : pd.DataFrame
+    df
         Input DataFrame containing feature dump columns.
 
     Returns
     -------
-    pd.DataFrame
-        DataFrame with standardized snake_case columns.
+    DataFrame with standardized snake_case columns.
     """
     # Check if already in standard snake_case format (allow extra columns)
     # NOTE: deprecated the 'num_expressed' column conversion. This input will not be supported in the future.
@@ -82,13 +81,15 @@ def load_json_txt_file(parent_dir: str) -> tuple[dict, dict, pd.DataFrame]:
 
     Parameters
     ----------
-    parent_dir : str
+    parent_dir
         Path to the directory containing the input files.
 
     Returns
     -------
-    Tuple[Dict, Dict, pd.DataFrame]
-        A tuple containing quant.json data, permit list data, and feature dump DataFrame.
+    Tuple containing:
+        - Dictionary of quant.json data.
+        - Dictionary of permit_list.json data.
+        - DataFrame of feature dump.
     """
     quant_json_data_path = Path(os.path.join(parent_dir, "quant.json"))
     permit_list_path = Path(os.path.join(parent_dir, "generate_permit_list.json"))
@@ -122,7 +123,7 @@ def load_json_txt_file(parent_dir: str) -> tuple[dict, dict, pd.DataFrame]:
 
 # from https://ga4gh.github.io/refget/seqcols/
 def canonical_str(item: [list, dict]) -> bytes:
-    """Convert a list or dict into a canonicalized UTF8-encoded bytestring representation"""
+    """Convert a list or dict into a canonicalized UTF-8 encoded bytestring."""
     return json.dumps(item, separators=(",", ":"), ensure_ascii=False, allow_nan=False, sort_keys=True).encode("utf8")
 
 
@@ -132,13 +133,12 @@ def sha512t24u_digest(seq: bytes) -> str:
 
     Parameters
     ----------
-    seq : bytes
+    seq
         Input bytes sequence.
 
     Returns
     -------
-    str
-        Truncated base64 URL-safe digest.
+    Truncated base64 URL-safe digest.
     """
     offset = 24
     digest = hashlib.sha512(seq).digest()
@@ -151,20 +151,20 @@ def get_name_digest(item: list) -> str:
     return sha512t24u_digest(canonical_str(item))
 
 
-def get_name_mapping_file_from_registry(seqcol_digest: str, output_dir: Path) -> Path | None:
+def get_name_mapping_file_from_registry(seqcol_digest, output_dir):
     """
     Fetch a gene ID-to-name mapping file from a remote registry.
 
     Parameters
     ----------
-    seqcol_digest : str
+    seqcol_digest
         Digest string for the sequence collection.
-    output_dir : Path
+    output_dir
         Directory to save the downloaded file.
 
     Returns
     -------
-    Path | None
+    Path or None
         Path to the downloaded file if successful, otherwise None.
     """
     output_file = output_dir / f"{seqcol_digest}.tsv"
@@ -194,17 +194,16 @@ def add_gene_symbol(adata: AnnData, gene_id2name_file: Path | None, output_dir: 
 
     Parameters
     ----------
-    adata : AnnData
+    adata
         Input AnnData object.
-    gene_id2name_file : Union[Path, None]
+    gene_id2name_file
         Path to the gene ID-to-name mapping file. If None, attempts to fetch from the registry.
-    output_dir : Path
+    output_dir
         Directory to save any downloaded mapping files.
 
     Returns
     -------
-    AnnData
-        Updated AnnData object with gene symbols added.
+    Updated AnnData object with gene symbols added.
     """
     if adata.var.index.names == ["gene_ids"]:
         # from mtx data

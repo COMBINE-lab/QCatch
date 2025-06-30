@@ -14,7 +14,14 @@ from qcatch.utils import get_input
 
 
 def load_template():
-    """Load and parse the HTML report template using BeautifulSoup."""
+    """
+    Load and parse the HTML report template using BeautifulSoup.
+
+    Returns
+    -------
+    soup
+        Parsed HTML template as a BeautifulSoup object.
+    """
     template_path = pkg_resources.files(templates) / "report_template.html"
     with open(template_path, encoding="utf-8") as file:
         soup = BeautifulSoup(file, "html.parser")
