@@ -8,13 +8,13 @@ and this project adheres to [Semantic Versioning][].
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
-## Ongoing
+## [0.2.6] 2025-06-29
 
 ### Added
 
 - Updated QCatch documentation and included an interactive demo page
 - Add tutorial scripts in the README.
-- Upgraded requests to ==2.32.4 to resolve CVE-2024-47081, which addressed a .netrc credentials leak vulnerability triggered by malicious URLs
+- Transitioned to uv for dependency resolution and adjusted dependency constraints for improved compatibility.
 
 ## [0.2.5] 2025-05-19
 
