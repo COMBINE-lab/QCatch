@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning][].
 
 - Updated QCatch documentation and included an interactive demo page
 - Add tutorial scripts in the README.
-- Transitioned to uv for dependency resolution and adjusted dependency constraints for improved compatibility.
+- Transitioned to uv for building and package management and relaxed dependencies for compatibility.
 
 ## [0.2.5] 2025-05-19
 
