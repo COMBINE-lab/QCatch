@@ -26,6 +26,7 @@ buck-out/
 ### scvere  ---------> ####
 
 ### <-------- QCatch - Ignore local shell scripts
+release_scripts.sh
 run_main.sh
 tutorial.sh
 create_env.sh

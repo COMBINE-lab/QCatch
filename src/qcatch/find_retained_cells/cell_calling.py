@@ -78,13 +78,14 @@ def compute_empty_drops_bounds(
         n_partitions = 9000
     elif chemistry_description in ["10X_3p_v2", "10X_3p_v3"]:
         n_partitions = 90000
-        # TODO: logging info
     else:
-        n_partitions = 90000
+        # invalid chemistry description
+        logger.error(f"Invalid chemistry description: {chemistry_description}. Exiting.")
+        raise SystemExit(1)
     return (n_partitions // 2, n_partitions)
 
 
-def get_fdr_threshold_by_chemistry(chemistry_name: str) -> float:
+def get_fdr_threshold_by_chemistry(chemistry_name: str | None) -> float:
     """
     Return the maximum adjusted p-value (FDR threshold) for calling a barcode as non-ambient, based on the chemistry used.
 
@@ -99,6 +100,10 @@ def get_fdr_threshold_by_chemistry(chemistry_name: str) -> float:
         FDR threshold (e.g., 0.001 or 0.01)
     """
     high_gem_chemistries = {"10X_3p_v3", "10X_3p_v4", "10X_5p_v3", "10X_HT"}
+    if not chemistry_name:
+        # chemistry is None or empty string
+        logger.warning("Chemistry not specified. Using default FDR threshold (0.01).")
+        return 0.01
     return 0.001 if chemistry_name in high_gem_chemistries else 0.01
 
 
@@ -253,11 +258,9 @@ def initial_filtering_OrdMag(
         return []
 
     # Determine the maximum number of cells to examine based on the empty drops range.
-    if chemistry_description is None and n_partitions is None:
-        max_expected_cells = MAX_RECOVERED_CELLS
-    else:
-        lower_bound, _ = compute_empty_drops_bounds(chemistry_description, n_partitions)
-        max_expected_cells = min(lower_bound, MAX_RECOVERED_CELLS)
+
+    lower_bound, _ = compute_empty_drops_bounds(chemistry_description, n_partitions)
+    max_expected_cells = min(lower_bound, MAX_RECOVERED_CELLS)
     logger.debug(f"max_expected_cells: {max_expected_cells}")
     # Initialize a reproducible random state.
     rs = np.random.RandomState(0)
@@ -454,7 +457,7 @@ def est_background_profile_sgt(matrix: csc_matrix, use_bcs: np.ndarray) -> tuple
 def find_nonambient_barcodes(
     matrix: csc_matrix,
     orig_cell_bcs: list[str],
-    chemistry_description: str,
+    chemistry_description: str | None,
     n_partitions: int,
     max_mem_gb: float = MAX_MEM_GB,
     min_umi_frac_of_median: float = MIN_UMI_FRAC_OF_MEDIAN,

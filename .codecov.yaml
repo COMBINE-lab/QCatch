@@ -6,10 +6,13 @@ coverage:
   status:
     project:
       default:
-        # Require 1% coverage, i.e., always succeed
-        target: 1
-    patch: false
-    changes: false
+        target: 10%
+        threshold: 2%
+    patch:
+      default:
+        target: 50%
+        threshold: 5%
+        only_pulls: true
 
 comment:
   layout: diff, flags, files

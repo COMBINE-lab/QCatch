@@ -9,6 +9,7 @@ import shutil
 import numpy as np
 
 from qcatch.logger import QCatchLogger
+from qcatch.utils import parse_saved_chem
 
 from .cell_calling import NonAmbientBarcodeResult, find_nonambient_barcodes, initial_filtering_OrdMag
 from .matrix import CountMatrix
@@ -36,7 +37,20 @@ def internal_cell_calling(args, save_for_quick_test, quick_test_mode):
     chemistry = args.chemistry
     n_partitions = args.n_partitions
     verbose = args.verbose
-
+    if chemistry is None and n_partitions is None:
+        # infer chemistry from metadata
+        map_json_data = args.input.map_json_data
+        known_chemistry = parse_saved_chem(map_json_data) if map_json_data else None
+        if known_chemistry is None:
+            msg = (
+                "❌ Required parameter missing: at least one of 'chemistry' or 'n_partitions' must be provided.\n"
+                "Please specify either the chemistry version (via --chemistry / -c) "
+                "or the number of partitions (via --n_partitions / -n)."
+            )
+            logger.error(msg)
+            raise SystemExit(1)
+        else:
+            chemistry = known_chemistry
     # # cell calling step1 - empty drop
     logger.info("🧬 Starting cell calling...")
     filtered_bcs = initial_filtering_OrdMag(matrix, chemistry, n_partitions, verbose)
@@ -129,7 +143,7 @@ def save_results(args, version, intermediate_result, valid_bcs):
             )
 
         else:
-            # Update the hs5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
+            # Update the h5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
             args.input.mtx_data.obs["initial_filtered_cell"] = args.input.mtx_data.obs["barcodes"].isin(
                 converted_filtered_bcs
             )

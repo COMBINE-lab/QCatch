@@ -5,8 +5,8 @@ requires = [ "hatchling" ]
 
 [project]
 name = "qcatch"
-version = "0.2.6"
-description = "QCatch: Quality Control downstream of alevin-fry / simpleaf."
+version = "0.2.7"
+description = "QCatch: Automated quality control of single-cell quantifications from `alevin-fry` and `simpleaf`."
 readme = "README.md"
 authors = [
   { name = "Yuan Gao" },
@@ -76,10 +76,18 @@ python = "3.12"
 features = [ "test" ]
 installer = "virtual"
 
+[tool.hatch.envs."hatch-test-3.13"]
+python = "3.13"
+features = [ "test" ]
+installer = "virtual"
+
 [tool.hatch.envs."hatch-test-3.11".scripts]
 run-cov = "pytest --cov=qcatch --cov-report=term-missing tests"
 
 [tool.hatch.envs."hatch-test-3.12".scripts]
+run-cov = "pytest --cov=qcatch --cov-report=term-missing tests"
+
+[tool.hatch.envs."hatch-test-3.13".scripts]
 run-cov = "pytest --cov=qcatch --cov-report=term-missing tests"
 
 # [tool.hatch.envs.hatch-test.overrides]

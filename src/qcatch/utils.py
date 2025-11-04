@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import shlex
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def load_hdf5(
     hdf5_path: Path,
-) -> tuple[sc.AnnData, dict, dict, dict | None, pd.DataFrame, bool]:
+) -> tuple[sc.AnnData, dict, dict, dict | None, pd.DataFrame, bool, str | None]:
     """
     Load an h5ad file and extract quantification, mapping, and feature dump information.
 
@@ -46,12 +47,78 @@ def load_hdf5(
         json.loads(mtx_data.uns["gpl_info"]),
     )
     map_json_data = json.loads(mtx_data.uns["simpleaf_map_info"]) if "simpleaf_map_info" in mtx_data.uns else None
-
     feature_dump_data = pd.DataFrame(mtx_data.obs)
     feature_dump_data = standardize_feature_dump_columns(feature_dump_data)
     usa_mode = quant_json_data["usa_mode"]
 
     return mtx_data, quant_json_data, permit_list_json_data, map_json_data, feature_dump_data, usa_mode
+
+
+def parse_saved_chem(map_info: str) -> str | None:
+    """Parse and standardize chemistry name from simpleaf_map_info output."""
+    logger.info("💡 Inferring chemistry from simpleaf_map_info...")
+    try:
+        cmdline = map_info.get("cmdline")
+        mapper = map_info.get("mapper")
+        if not cmdline or not mapper:
+            raise ValueError("Invalid: map_info must contain 'cmdline' and 'mapper' keys.")
+
+        # Tokenize safely
+        try:
+            tokens = shlex.split(cmdline)
+        except ValueError:
+            tokens = cmdline.split()
+
+        # Define allowed and conversion maps
+        PISCEM_ALLOWED = {"chromium_v2", "chromium_v3", "chromium_v3_5p", "chromium_v4_3p"}
+        SALMON_ALLOWED_FLAGS = {"--chromium"}
+
+        # TODO: 10xv3 and 10xv4-3p both use "--chromiumV3" flag in salmon. but they require different n-partitions in cell calling.
+        # SALMON_ALLOWED_FLAGS = {"--chromium", "--chromiumV3"}
+
+        CHEM_CONVERT_MAP = {
+            "--chromium": "10X_3p_v2",
+            # "--chromiumV3": "10X_3p_v3",
+            "chromium_v2": "10X_3p_v2",
+            "chromium_v3": "10X_3p_v3",
+            "chromium_v3_5p": "10X_5p_v3",
+            "chromium_v4_3p": "10X_3p_v4",
+        }
+
+        mapper_lower = mapper.lower()
+        saved_chem = None
+
+        # piscem parsing
+        if mapper_lower == "piscem":
+            for i, tok in enumerate(tokens):
+                if tok in ("-g", "--geometry") and i + 1 < len(tokens):
+                    candidate = tokens[i + 1]
+                    if candidate in PISCEM_ALLOWED:
+                        saved_chem = candidate
+                        break
+
+        # salmon parsing
+        elif mapper_lower == "salmon":
+            present = [flag for flag in SALMON_ALLOWED_FLAGS if flag in tokens]
+            if len(present) == 1:
+                saved_chem = present[0]
+            elif len(present) > 1:
+                raise ValueError(f"Multiple chemistry flags found: {present}")
+
+        else:
+            raise ValueError(f"Unknown mapper '{mapper}'.")
+
+        # Convert to standardized label if found
+        standardized = CHEM_CONVERT_MAP.get(saved_chem)
+        logger.info(
+            f"✅ Successfully identified valid chemistry type: {standardized}. "
+            "Using this chemistry for subsequent cell calling steps."
+        )
+        return standardized
+
+    except (ValueError, TypeError, AttributeError) as e:
+        logger.warning(f"Failed to identify valid chemistry from simpleaf_map_info: {e}")
+        return None
 
 
 @dataclass
@@ -90,7 +157,7 @@ class QuantInput:
         self.provided = Path(input_str)
         if not self.provided.exists():
             raise ValueError(f"The provided input path {self.provided} did not exist")
-        # it exists
+        # it quant output exists
         if self.provided.is_file():
             self.file = self.provided
             self.dir = self.file.parent
@@ -106,10 +173,6 @@ class QuantInput:
                 self.feature_dump_data,
                 self.usa_mode,
             ) = load_hdf5(self.file)
-
-            # TODO: deprecated later, when h5ad has the mapping info
-            if self.map_json_data is None:
-                self.map_json_data = find_mapping_info(self.dir.parent)
 
         else:
             self.dir = self.provided
@@ -156,10 +219,6 @@ class QuantInput:
                     self.feature_dump_data,
                     self.usa_mode,
                 ) = load_hdf5(self.file)
-                # TODO: deprecated later, when h5ad has the mapping info
-                if self.map_json_data is None:
-                    self.map_json_data = find_mapping_info(self.dir)
-
             else:
                 logger.info("Not finding quants.h5ad file, loading from mtx directory...")
                 try:
@@ -185,6 +244,7 @@ class QuantInput:
 
                 # detect usa_mode
                 self.usa_mode = self.quant_json_data["usa_mode"]
+                self.known_chemistry = None
 
 
 def get_input(input_str: str) -> QuantInput:
@@ -193,33 +253,3 @@ def get_input(input_str: str) -> QuantInput:
         return QuantInput(input_str)
     except Exception as e:
         raise argparse.ArgumentTypeError(f"invalid get_input value: {input_str}\n→ {e}") from e
-
-
-def find_mapping_info(parent_quant_dir: Path) -> dict | None:
-    """
-    Search for and load mapping information JSON file from a quantification directory.
-
-    Parameters
-    ----------
-    parent_quant_dir
-        Path to the parent quantification directory.
-
-    Returns
-    -------
-        Dictionary containing mapping information if found, otherwise None.
-    """
-    # find the map_json file
-    map_json_path_1 = os.path.join(parent_quant_dir, "af_map", "aux_info", "map.json")
-    map_json_path_2 = os.path.join(parent_quant_dir, "af_map", "map_info.json")
-    if os.path.exists(map_json_path_1):
-        map_json_path = map_json_path_1
-    elif os.path.exists(map_json_path_2):
-        map_json_path = map_json_path_2
-    else:
-        logger.warning("⚠️  Mapping log file not found. Mapping rate will not be displayed in the summary table.")
-        return None
-
-    with open(map_json_path) as f:
-        map_json_data = json.load(f)
-
-    return map_json_data

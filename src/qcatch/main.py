@@ -54,7 +54,7 @@ def main():
         "--chemistry",
         "-c",
         type=str,
-        help="Specifies the chemistry used in the experiment, which determines the range for the empty_drops step. Options: '10X_3p_v2', '10X_3p_v3', '10X_3p_v4', '10X_5p_v3', '10X_3p_LT', '10X_HT'. If not provided, we'll use the default range (which is the range used for '10X_3p_v2' and '10X_3p_v3').",
+        help="Specifies the chemistry used in the experiment, which determines the range for the empty_drops step. Supported options: '10X_3p_v2', '10X_3p_v3', '10X_3p_v4', '10X_5p_v3', '10X_3p_LT', '10X_HT'. If you used a standard 10X chemistry (e.g., '10X_3p_v2', '10X_3p_v3') and performed quantification with `simpleaf`(v0.19.5 or later), QCatch can usually infer the correct chemistry automatically from the metadata. If inference fails, QCatch will stop and prompt you to provide the chemistry explicitly via this flag. ",
     )
     parser.add_argument(
         "--save_filtered_h5ad",
@@ -82,7 +82,7 @@ def main():
         "-n",
         type=int,
         default=None,
-        help="Number of partitions (max number of barcodes to consider for ambient estimation). Skip this step if you already specify the chemistry. Otherwise, you can specify the desired `n_partitions`. ",
+        help="Number of partitions (max number of barcodes to consider for ambient estimation). Use `--n_partitions` only when working with a custom or unsupported chemistry. When provided, this value will override the chemistry-based configuration during the cell-calling step.",
     )
     parser.add_argument(
         "--skip_umap_tsne", "-u", action="store_true", help="If provided, skips generation of UMAP and t-SNE plots."
@@ -114,6 +114,7 @@ def main():
 
     version = __version__
 
+    # ****  ------------------------------- *****
     # **** only for development and testing *****
     save_for_quick_test = False  # if True, will save the non_ambient_result.pkl file for quick test
     quick_test_mode = False  # If True, will skip the cell calling step2

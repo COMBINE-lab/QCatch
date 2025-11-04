@@ -34,11 +34,8 @@ plugins:
   - search
 nav:
   - Home: index.md
-  # - Demo:
-  #   - Overview: demo/demo.md
-  #   - Static Demo: demo/demo.html
   - Static Demo: demo/demo.html
-  - API: api.md
+  # - API: api.md
   - Changelog: changelog.md
   # - Contributing: contributing.md
   # - References: references.md
