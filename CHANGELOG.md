@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning][].
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
+## [0.2.8] 2025-12
+### Added
+- - Doublet detection functionality using `Scrublet`, with an optional flag to remove detected doublets from retained cells after two-step cell calling.
+- Mitochondrial percentage (`pct_counts_mt`) is added to `adata.obs` by default.
+
+### NOTE:
+- Metadata for doublet detection (Scrublet) and mitochondrial QC metrics are stored only when the input is an H5AD file.
+- For matrix-based (MTX) inputs (e.g. legacy alevin-fry outputs), doublet removal and mitochondrial QC plotting are supported; however, these metadata are not written to additional text files.
+
+### Fix
+- Logger set up.
+
 ## [0.2.7] 2025-11-04
 ### Added
 - Support python 3.13.

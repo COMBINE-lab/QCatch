@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.graph_objs as go
 
+from qcatch.input_processing import parse_user_valid_cell_list
 from qcatch.plots_tables import (
     generate_gene_histogram,
     generate_seq_saturation,
@@ -51,3 +52,15 @@ def test_umi_dedup_smoke():
     assert isinstance(fig, go.Figure)
     assert isinstance(mean_rate, float)
     assert 0 <= mean_rate <= 100
+
+
+def test_parse_user_valid_cell_list_basic(tmp_path):
+    p = tmp_path / "valid_cells.tsv"
+    p.write_text("AAAC-1\nAAAG-1\nAAAC-1\n", encoding="utf-8")
+    assert parse_user_valid_cell_list(p) == ["AAAC-1", "AAAG-1"]
+
+
+def test_parse_user_valid_cell_list_skips_header(tmp_path):
+    p = tmp_path / "valid_cells.tsv"
+    p.write_text("barcodes\nAAAC-1\n", encoding="utf-8")
+    assert parse_user_valid_cell_list(p) == ["AAAC-1"]

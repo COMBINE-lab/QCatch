@@ -1,1 +1,1 @@
-from .run_cell_calling import run_cell_calling
+from .run_cell_calling import internal_cell_calling

@@ -126,12 +126,12 @@ def create_plotly_plots(
     fig_hist_genes = generate_gene_histogram(data, is_all_cells=True)
     fig_hist_genes_filtered = generate_gene_histogram(retained_data, is_all_cells=False)
     # if our adata object doesn't already contain the gene symbol, then skip the mitochondrial plot.
-    if "gene_symbol" not in adata.var.columns:
-        fig_mt = None
-        fig_mt_filtered = None
-    else:
+    if "gene_symbol" in adata.var.columns:
         fig_mt = mitochondria_plot(adata, is_all_cells=True)
         fig_mt_filtered = mitochondria_plot(filtered_adata, is_all_cells=False)
+    else:
+        fig_mt = None
+        fig_mt_filtered = None
 
     # ---------------- Tab5 - SUA plots ---------------
     if usa_mode:

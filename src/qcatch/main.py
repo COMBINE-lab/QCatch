@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 
 from qcatch import __version__, templates
 from qcatch.convert_to_html import create_plotly_plots, modify_html_with_plots
-from qcatch.find_retained_cells.run_cell_calling import run_cell_calling
+from qcatch.find_retained_cells.run_cell_calling import internal_cell_calling
+from qcatch.input_processing import parse_user_valid_cell_list, remove_doublets, save_results
 from qcatch.logger import generate_warning_html, setup_logger
 from qcatch.plots_tables import show_quant_log_table
 from qcatch.utils import get_input
@@ -85,6 +86,12 @@ def main():
         help="Number of partitions (max number of barcodes to consider for ambient estimation). Use `--n_partitions` only when working with a custom or unsupported chemistry. When provided, this value will override the chemistry-based configuration during the cell-calling step.",
     )
     parser.add_argument(
+        "--remove_doublets",
+        "-d",
+        action="store_true",
+        help="If enabled, QCatch will perform doublet detection(use `Scrublet` tool) and remove detected doublets from the cells retained after cell calling.",
+    )
+    parser.add_argument(
         "--skip_umap_tsne", "-u", action="store_true", help="If provided, skips generation of UMAP and t-SNE plots."
     )
     parser.add_argument(
@@ -119,14 +126,35 @@ def main():
     save_for_quick_test = False  # if True, will save the non_ambient_result.pkl file for quick test
     quick_test_mode = False  # If True, will skip the cell calling step2
     # ****  ------------------------------- *****
+    valid_bcs = None
+    intermediate_result = None
+    logger.info(f"DEBUG args.valid_cell_list = {args.valid_cell_list!r}")
+    if args.valid_cell_list:
+        # if the user provided a valid cell list, we will skip the cell calling step
+        logger.info("🍻 Using user-specified valid cell list. SKIP cell calling step.")
+        valid_bcs = parse_user_valid_cell_list(args.valid_cell_list)
+        logger.info(f"🧃 Number of cells found in provided valid cell list : {len(valid_bcs)}")
+        logger.info(
+            "🗂️ Get 'retained cells list' based on the user-specified barcode list to the modified .h5ad file. Check the newly added column in adata.obs."
+        )
+    else:
+        # Run the cell calling process. We will either modify the input file(change the args.input) or save the results in the output directory
+        valid_bcs, intermediate_result = internal_cell_calling(args, save_for_quick_test, quick_test_mode)
 
-    # Run the cell calling process. We will either modify the input file(change the args.input) or save the results in the output directory
-    valid_bcs = run_cell_calling(args, version, save_for_quick_test, quick_test_mode)
-    logger.info("🎨 Generating plots and tables...")
+    # Calculate mitochondria%
+
     if len(valid_bcs) == 0:
         msg = "❗️ Error: No valid barcodes found. Skip QC report HTML generation."
         logger.error(msg)
         return
+
+    if args.remove_doublets:
+        valid_bcs = remove_doublets(args.input.mtx_data, valid_bcs)
+
+    # Save results
+    save_results(args, version, intermediate_result, valid_bcs)
+
+    logger.info("🎨 Generating plots and tables...")
     # plots and log, summary tables
     plot_text_elements, code_texts = create_plotly_plots(args, valid_bcs)
 

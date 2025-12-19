@@ -1,6 +1,6 @@
 # QCatch
 
-[![PyPI version][badge-pypi]][pypi]
+[![PyPI version](https://img.shields.io/pypi/v/qcatch?cacheSeconds=3600&logo=pypi&label=PyPI)](https://pypi.org/project/qcatch/)
 [![Tests][badge-tests]][tests]
 [![Documentation][badge-docs]][documentation]
 

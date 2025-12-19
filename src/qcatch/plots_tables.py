@@ -478,24 +478,19 @@ def mitochondria_plot(adata: sc.AnnData, is_all_cells: bool) -> go.Figure:
     scatter_color = "#4F69C2"  # Change color of the scatter plot
 
     sc.settings.verbosity = 0
-    # # we have to filter out cells with less than 1 genes detected, otherwise will will have many cells with high mitochondrial content, which may be misleading of the distribution for valid data.
+    # # we have to filter out cells with less than 20 genes detected, otherwise will will have many cells with high mitochondrial content, which may be misleading of the distribution for valid data.
     if is_all_cells:
         sc.pp.filter_cells(adata, min_genes=20)
 
     # Identify mitochondrial genes
     # make it case insensitive, to avoid the NaN issue
-    adata.var["mt"] = adata.var["gene_symbol"].str.startswith("MT-") | adata.var["gene_symbol"].str.startswith("mt-")
-    if adata.var["mt"].sum() > 0:
-        # Compute QC metrics
-        sc.pp.calculate_qc_metrics(adata, qc_vars=["mt"], inplace=True, percent_top=[20], log1p=True)
+    if "pct_counts_mt" in adata.obs.columns:
         df = adata.obs[["pct_counts_mt"]].copy()
     else:
-        logger.warning("No mitochondrial genes found.")
         # Create an empty DataFrame to generate a blank violin plot
-        df = pd.DataFrame({"pct_counts_mt": [], "Sample": []})
+        df = pd.DataFrame({"pct_counts_mt": []})
 
     # Convert to Pandas DataFrame
-
     df["sample"] = "Cells"  # Ensure a single category for violin plot
     df["sample"] = df["sample"].astype(str)  # Ensure categorical behavior
 

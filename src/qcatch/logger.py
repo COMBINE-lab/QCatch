@@ -1,4 +1,5 @@
 import logging
+import sys
 
 
 class QCatchLogger(logging.Logger):
@@ -39,23 +40,34 @@ def setup_logger(name: str, verbose: bool) -> QCatchLogger:
     QCatchLogger
         The configured logger instance.
     """
-    # Forcefully create a new QCatchLogger and assign it in the loggerDict
-    new_logger = QCatchLogger(name)
-    logging.Logger.manager.loggerDict[name] = new_logger
+    level = logging.DEBUG if verbose else logging.INFO
 
-    # Remove all existing handlers from the root logger
-    for handler in logging.getLogger().handlers[:]:
-        logging.getLogger().removeHandler(handler)
+    # get or create a logger with the same name, ensure the type is QCatchLogger
+    logger = logging.getLogger(name)
+    if not isinstance(logger, QCatchLogger):
+        logger = QCatchLogger(name)
+        logging.Logger.manager.loggerDict[name] = logger
 
-    # Suppress noisy third-party libraries
+    logger.setLevel(level)
+    logger.propagate = False
+
+    # clear old handlers to avoid duplicate printing
+    logger.handlers.clear()
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(level)  # important: set the level for the handler
+    handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s - %(levelname)s : %(message)s",
+            datefmt="%H:%M:%S",
+        )
+    )
+    logger.addHandler(handler)
+
+    # optional: suppress third-party noise
     logging.getLogger("numba").setLevel(logging.WARNING)
 
-    # Set logging level based on the verbose flag
-    logging.basicConfig(
-        level=logging.DEBUG if verbose else logging.INFO, format="%(asctime)s - %(levelname)s :\n %(message)s"
-    )
-
-    return new_logger
+    return logger
 
 
 def generate_warning_html(warning_list: list[str]) -> str:
