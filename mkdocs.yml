@@ -34,7 +34,10 @@ plugins:
   - search
 nav:
   - Home: index.md
-  - Static Demo: demo/demo.html
+  - Demos:
+    - Overview: demo/demo.md
+    - Demo(1k PBMC): demo/demo.html
+    - Demo(1k PBMC-Low depth): demo/demo_low_depth.html
   # - API: api.md
   - Changelog: changelog.md
   # - Contributing: contributing.md
