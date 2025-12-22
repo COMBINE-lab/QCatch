@@ -178,7 +178,8 @@ def get_name_mapping_file_from_registry(seqcol_digest, output_dir):
         reg = r.json()
         if seqcol_digest in reg:
             file_url = reg[seqcol_digest]["url"]
-            logger.info(f"✅ found entry for {seqcol_digest} in registry; fetching file from {file_url}")
+            logger.info(f"Found entry for {seqcol_digest} in registry; fetching file from {file_url}")
+
             r = requests.get(file_url, stream=True)
             with open(output_file, mode="wb") as file:
                 for chunk in r.iter_content(chunk_size=10 * 1024):
@@ -209,6 +210,7 @@ def add_gene_symbol(adata: AnnData, gene_id2name_file: Path | None, output_dir: 
     -------
     Updated AnnData object with gene symbols added.
     """
+    logger.info("🥨 Trying to add gene symbols based on the gene id to name mapping.")
     if adata.var.index.names == ["gene_ids"]:
         # from mtx data
         all_gene_ids = adata.var.index
@@ -249,6 +251,7 @@ def add_gene_symbol(adata: AnnData, gene_id2name_file: Path | None, output_dir: 
         return adata
     # add the gene symbol, based on the gene id to symbol mapping
     gene_id_to_symbol = pd.read_csv(gene_id2name_path, sep="\t", header=None, names=["gene_id", "gene_name"])
+    logger.info("✅ Added the gene symbol!")
     # Identify missing gene symbols
 
     missing_symbols_count = gene_id_to_symbol["gene_name"].isna().sum()
@@ -404,103 +407,90 @@ def save_results(args, version, intermediate_result, valid_bcs):
     }
     output_dir = args.output
     # Save the cell calling result
-    if args.input.is_h5ad:
-        # Always compute mitochondrial percentage (in-place) when possible
-        if "gene_symbol" in args.input.mtx_data.var.columns:
-            compute_mito_percent(args.input.mtx_data)
-        # check if any result columns already exist
-        existing_cols = {
-            "initial_filtered_cell",
-            "potential_non_ambient_cell",
-            "non_ambient_pvalue",
-            "is_retained_cells",
-        }
-        if existing_cols.intersection(args.input.mtx_data.obs.columns):
-            logger.warning(
-                "⚠️ Cell calling result columns already exist in the h5ad file will be removed before being overwritten with new QCatch analyis."
+
+    # Always compute mitochondrial percentage (in-place) when possible
+    if "gene_symbol" in args.input.mtx_data.var.columns:
+        compute_mito_percent(args.input.mtx_data)
+    # check if any result columns already exist
+    existing_cols = {
+        "initial_filtered_cell",
+        "potential_non_ambient_cell",
+        "non_ambient_pvalue",
+        "is_retained_cells",
+    }
+    if existing_cols.intersection(args.input.mtx_data.obs.columns):
+        logger.warning(
+            "⚠️ Cell calling result columns already exist in the h5ad file will be removed before being overwritten with new QCatch analyis."
+        )
+        # remove the existing columns
+        args.input.mtx_data.obs.drop(columns=existing_cols.intersection(args.input.mtx_data.obs.columns), inplace=True)
+
+    if not args.valid_cell_list:
+        # Update the h5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
+        args.input.mtx_data.obs["initial_filtered_cell"] = args.input.mtx_data.obs["barcodes"].isin(
+            converted_filtered_bcs
+        )
+        # save the non-ambient cells, if available
+        if non_ambient_result is not None:
+            args.input.mtx_data.obs["potential_non_ambient_cell"] = args.input.mtx_data.obs["barcodes"].isin(
+                non_ambient_result.eval_bcs
             )
-            # remove the existing columns
-            args.input.mtx_data.obs.drop(
-                columns=existing_cols.intersection(args.input.mtx_data.obs.columns), inplace=True
+            # Create a mapping from barcodes to p-values
+            barcode_to_pval = dict(zip(non_ambient_result.eval_bcs, non_ambient_result.pvalues, strict=False))
+            # Assign p-values only where 'is_nonambient' is True, otherwise fill with NaN
+            args.input.mtx_data.obs["non_ambient_pvalue"] = (
+                args.input.mtx_data.obs["barcodes"].map(barcode_to_pval).astype("float")
             )
+        logger.info("🗂️ Add 'cell calling result' to the h5ad file, check the new added columns in adata.obs .")
 
-        if not args.valid_cell_list:
-            # Update the h5ad file with the final retain cells, contains original filtered cells and passed non-ambient cells
-            args.input.mtx_data.obs["initial_filtered_cell"] = args.input.mtx_data.obs["barcodes"].isin(
-                converted_filtered_bcs
-            )
-            # save the non-ambient cells, if available
-            if non_ambient_result is not None:
-                args.input.mtx_data.obs["potential_non_ambient_cell"] = args.input.mtx_data.obs["barcodes"].isin(
-                    non_ambient_result.eval_bcs
-                )
-                # Create a mapping from barcodes to p-values
-                barcode_to_pval = dict(zip(non_ambient_result.eval_bcs, non_ambient_result.pvalues, strict=False))
-                # Assign p-values only where 'is_nonambient' is True, otherwise fill with NaN
-                args.input.mtx_data.obs["non_ambient_pvalue"] = (
-                    args.input.mtx_data.obs["barcodes"].map(barcode_to_pval).astype("float")
-                )
-            logger.info("🗂️ Add 'cell calling result' to the h5ad file, check the new added columns in adata.obs .")
+    args.input.mtx_data.obs["is_retained_cells"] = args.input.mtx_data.obs["barcodes"].isin(valid_bcs)
 
-        args.input.mtx_data.obs["is_retained_cells"] = args.input.mtx_data.obs["barcodes"].isin(valid_bcs)
+    args.input.mtx_data.uns["qc_info"] = qcatch_log
 
-        args.input.mtx_data.uns["qc_info"] = qcatch_log
+    if "gene_symbol" in args.input.mtx_data.var.index.name:
+        logger.info(
+            "✅ The gene symbol is already in the adata.var.index.name, rename the 'gene_symbol' column in adata.var to 'gene_symbol_added'"
+        )
+        args.input.mtx_data.var.rename(columns={"gene_symbol": "gene_symbol_added"}, inplace=True)
 
-        if output_dir == args.input.dir:
-            # Inplace overwrite: same location as original
-            temp_file = os.path.join(output_dir, "quants_after_QC.h5ad")
-            args.input.mtx_data.write_h5ad(temp_file, compression="gzip")
-            input_h5ad_file = args.input.file
-            os.remove(input_h5ad_file)
-            shutil.move(temp_file, input_h5ad_file)
-            logger.info("📋 Overwrote the original h5ad file with the new cell calling result.")
-        else:
-            # Save to separate file in specified output dir
-            output_h5ad_file = os.path.join(output_dir, "quants_after_QC.h5ad")
-            args.input.mtx_data.write_h5ad(output_h5ad_file, compression="gzip")
-            logger.info(f"📋 Saved modified h5ad file to: {output_h5ad_file}")
-
-        if args.save_filtered_h5ad:
-            # filter the anndata , only keep the cells in valid_bcs
-            filter_mtx_data = args.input.mtx_data[args.input.mtx_data.obs["is_retained_cells"].values, :].copy()
-            # Save the filtered anndata to a new file
-            filter_mtx_data_filename = os.path.join(output_dir, "filtered_quants.h5ad")
-            filter_mtx_data.write_h5ad(filter_mtx_data_filename, compression="gzip")
-            logger.info(f"📋 Saved the filtered h5ad file to {filter_mtx_data_filename}.")
-
+    if args.input.is_h5ad and output_dir == args.input.dir:
+        # Inplace overwrite: same location as original
+        temp_file = os.path.join(output_dir, "quants.h5ad")
+        args.input.mtx_data.write_h5ad(temp_file, compression="gzip")
+        input_h5ad_file = args.input.file
+        os.remove(input_h5ad_file)
+        shutil.move(temp_file, input_h5ad_file)
+        logger.info("📋 Overwrote the original h5ad file with the new cell calling result.")
     else:
-        # Not h5ad file, write cell calling results to new files
-        if not args.valid_cell_list:
-            # 1- original filtered cells
-            initial_filtered_cells_filename = os.path.join(output_dir, "initial_filtered_cells.txt")
-            type_list = []
-            for bc in converted_filtered_bcs:
-                type_list.append(type(bc))
+        # Save to a new h5ad
+        output_h5ad_file = os.path.join(output_dir, "quants.h5ad")
+        args.input.mtx_data.write_h5ad(output_h5ad_file, compression="gzip")
+        logger.info(f"📋 Saved h5ad file with new metadata to: {output_h5ad_file}")
+        if not args.input.is_h5ad:
+            logger.info(
+                "Since the input is a mtx directory, the new quants.h5ad file only contains the metadata updated by QCatch. Other metadata are still in the original alevin output directory."
+            )
 
-            print(f"set type of initial c b list {set(type_list)}")
-            with open(initial_filtered_cells_filename, "w") as f:
-                for bc in converted_filtered_bcs:
-                    f.write(f"{bc}\n")
+    if args.save_filtered_h5ad:
+        # filter the anndata, only keep the cells in valid_bcs
+        filter_mtx_data = args.input.mtx_data[args.input.mtx_data.obs["is_retained_cells"].values, :].copy()
+        # Save the filtered anndata to a new file
+        filter_mtx_data_filename = os.path.join(output_dir, "filtered_quants.h5ad")
+        filter_mtx_data.write_h5ad(filter_mtx_data_filename, compression="gzip")
+        logger.info(f"📋 Saved the filtered h5ad file to {filter_mtx_data_filename}.")
 
-            # 2- additional non-ambient cells results
-            if non_ambient_result is not None:
-                # Save barcode and adjusted p-values to a txt file
-                pval_output_file = os.path.join(output_dir, "potential_nonambient_result.txt")
-                with open(pval_output_file, "w") as f:
-                    f.write("barcodes\tadj_pval\n")
-                    for bc, pval in zip(non_ambient_result.eval_bcs, non_ambient_result.pvalues, strict=False):
-                        f.write(f"{bc}\t{pval}\n")
+    # # mtx dir input -->
 
-            # Save the total retained cells to a txt file
-            total_retained_cell_file = os.path.join(output_dir, "total_retained_cells.txt")
-            with open(total_retained_cell_file, "w") as f:
-                for bc in valid_bcs:
-                    f.write(f"{bc}\n")
-            # Logging the cell calling result path
-            logger.info(f"🗂️ Saved cell calling result and qcatch log file in the output directory: {output_dir}")
-        # Save the qcatch log file. abou the version
-        qcatch_log_file = os.path.join(output_dir, "qcatch_log.txt")
-        with open(qcatch_log_file, "w") as f:
-            for key, value in qcatch_log.items():
-                f.write(f"{key}: {value}\n")
-        logger.info(f"🗂️ Saved qcatch log file in the output directory: {output_dir}")
+    #     # Save the total retained cells to a txt file
+    #     final_retained_cell_file = os.path.join(output_dir, "final_retained_cells.txt")
+    #     with open(final_retained_cell_file, "w") as f:
+    #         for bc in valid_bcs:
+    #             f.write(f"{bc}\n")
+    #     # Logging the cell calling result path
+    #     logger.info(f"🗂️ Saved cell calling result and qcatch log file in the output directory: {output_dir}")
+    #     # Save the qcatch log file. abou the version
+    #     qcatch_log_file = os.path.join(output_dir, "qcatch_log.txt")
+    #     with open(qcatch_log_file, "w") as f:
+    #         for key, value in qcatch_log.items():
+    #             f.write(f"{key}: {value}\n")
+    #     logger.info(f"🗂️ Saved qcatch log file in the output directory: {output_dir}")

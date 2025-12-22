@@ -61,7 +61,7 @@ def main():
         "--save_filtered_h5ad",
         "-s",
         action="store_true",
-        help="If enabled with an h5ad input, QCatch will save a separate `.h5ad` file containing only the retained cells.",
+        help="If enabled, QCatch will save a separate `.h5ad` file containing only the retained cells.",
     )
 
     parser.add_argument(
@@ -120,7 +120,7 @@ def main():
     args.input.add_geneid_2_name_if_absent(args.gene_id2name_file, args.output)
 
     version = __version__
-
+    logger.info(f"QCatch version: {version}")
     # ****  ------------------------------- *****
     # **** only for development and testing *****
     save_for_quick_test = False  # if True, will save the non_ambient_result.pkl file for quick test

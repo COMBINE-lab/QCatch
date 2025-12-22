@@ -56,8 +56,10 @@ qcatch \
     --output path/to/desired/QC/output/folder \ # if you want another folder for output
     --chemistry 10X_3p_v3
     --save_filtered_h5ad
-
 ```
+For details on how to configure chemistries,
+See [chemistry section](#3--chemistry).
+
 ## Tutorial: Run QCatch on Example data
 ### Step 1 — Download Dataset
 ```bash
@@ -95,7 +97,7 @@ qcatch --input ${TUTORIAL_DIR}/test_data/simpleaf_with_map/quants.h5ad \
        --output ${OUT_DIR} \
 ```
 ### Tips
-**1- Input path:**
+#### 1- Input path:
 
 Provide either:
 
@@ -108,53 +110,53 @@ QCatch will automatically detect the input type:
 
 See the example directory structures at the end of the Tips section for reference:
 
-**2- Output path:**
+#### 2- Output path:
 
 If you do not want any modifications in your input folder/files, speaficy the output path, we will save any new results and QC HTML report there.
 
-**_By default_**, QCatch saves the QC report and all output files in your input directory. Therefore, specifying an output path is optional. Specifically,
-- If QCatch finds the `.h5ad` file from input path, it will modify the original `.h5ad` file in place by appending cell filtering results to `anndata.obs` and create a separate QC report in HTML in the input folder.
-- For `mtx-based` results, QCatch will generate text files for the cell calling reuslts as well as the QC report in the input folder."
+**_By default_**, QCatch saves the QC report and all output files in the input directory by default. If you prefer a different output location, you may specify an output path; however, this is optional.
 
-**3- Chemistry:**
+Specifically:
+- If QCatch detects an existing `quants.h5ad` file in the input directory and the output path is the same as the input path, QCatch will modify the original .h5ad file _in place_ by appending cell-filtering results to `anndata.obs`. In addition, it will generate a separate HTML QC report in the input directory.
+- For **MTX-based** inputs (i.e., when not using simpleaf v0.19.5 or newer), QCatch will generate a new `.h5ad` file containing metadata produced during QCatch processing. This file does **NOT** include metadata from the original alevin-fry quantification, which remains stored in the original files.
 
-If you used a standard 10X chemistry (e.g. 10X 3' v2 and v3) and performed quantification with `simpleaf`(v0.19.5 or later), QCatch can usually infer the correct chemistry automatically from the metadata.
+#### 3- Chemistry:
+The `--chemistry` information is used to estimate `--n_partitions`, which represents the total partition capacity (i.e., the total number of physical droplets or wells generated in an experiment, regardless of whether they contain a cell). This value is critical for accurately defining the "ambient pool" used to model empty droplets. (_NOTE_: this is distinct from the --chemistry argument in alevin-fry, which refers to the barcode/UMI geometry.)
 
-If this inference fails, QCatch will stop and prompt you to explicitly provide the chemistry version using the `--chemistry (-c)` argument before rerunning the command. The chemistry version you provide should be one of QCatch’s supported chemistries: '10X_3p_v2', '10X_3p_v3', '10X_3p_v4', '10X_3p_LT', '10X_5p_v3', or '10X_HT'.
+If you used a **standard 10X** chemistry, QCatch will first attempt to infer the chemistry from the metadata and use the internal database to get the corresponding number of partitions; If this inference fails, QCatch will stop and prompt you to explicitly provide the chemistry version using the `--chemistry` argument before rerunning the command. **Supported chemistries currently include: '10X_3p_v2', '10X_3p_v3', '10X_3p_v4', '10X_3p_LT', '10X_5p_v3', or '10X_HT'**.
 
-In rare cases where you need a custom or unsupported chemistry, you can instead specify the number of partitions manually via the `--n_partitions (-n)` flag.
-This option will override any chemistry-based setting and ensures accurate estimation for cell-calling.
+For **non-10x or custom** assays (e.g., sci-RNA-seq3, Drop-seq), users can manually specify the capacity using `--n_partitions`. We recommend setting this value by rounding the number of processed barcodes (found in the _alevin-fry/simpleaf_ log or the number of rows in the `.h5ad` file) up to the next 10% increment of the current order of magnitude. For example, If 79,000 barcodes are detected, n_partitions should be set to 80,000; If 144,000 barcodes are detected, n_partitions should be set to 150,000. This option will override any chemistry-based setting for cell-calling.
 
-**3- Gene gene mapping file:**
+#### 4- Gene gene mapping file:
 
 If you are using simpleaf v0.19.3 or later, the generated .h5ad file already includes gene names. In this case, you do not need to specify the --gene_id2name_file option.
 
 To provide a 'gene id to name mapping' info, the file should be a **TSV** containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)— **without** header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed, but will not affect the QC report.
 
-**4- Save filtered h5ad file:**
+#### 5- Save filtered h5ad file:
 
 If you want to save filtered h5ad file separately, you can specify `--save_filtered_h5ad`, which is only applicable when QCatch detects the h5ad file as the input.
 
-**5- Specify your desired cell list:**
+#### 6- Specify your desired cell list:
 
 If you want to use a specified list of valid cell barcodes, you can provide the file path with `--valid_cell_list`. QCatch will then skip the default cell calling step and use the supplied list instead. The updated .h5ad file will include only one additional column, 'is_retained_cells', containing boolean values based on the specified list.
 
-**6- Skip clustering plots:**
+#### 7- Skip clustering plots:
 
 To reduce runtime, you may enable the `--skip_umap_tsne` option to bypass dimensionality reduction and visualization steps.
 
-**7- Export the summary metrics**
+#### 8- Export the summary metrics
 
 To export the summary metrics, enable the `--export_summary_table` flag. The summary table will be saved as a separate CSV file in the output directory.
 
-**8- Debug-level message**
+#### 9- Debug-level message
 
 To get debug-level messages and more intermediate computation in cell calling step, you can specify `--verbose`
 
-**9- Re-run QCatch on modified h5ad file**
+#### 10- Re-run QCatch on modified h5ad file
 If you re-run QCatch analysis on a modified `.h5ad` file (i.e., an `.h5ad` file with additional columns added for cell calling results), the existing cell calling-related columns will be removed and then replaced with new results. The new cell calling can be generated either through QCatch's internal method or based on a user-specified list of valid cell barcodes.
 
-**Example directory structures:**
+#### Example directory structures:
 
 ```bash
 # simpleaf
@@ -187,10 +189,10 @@ For more advanced options and usage details, see the sections below.
 
 | Flag | Short | Type | Description |
 |------|-------|------|-------------|
-| `--input`  | `-i` | `str` (Required) | Path to the input directory containing the quantification output files or to the HDF5 file itself. |
+| `--input`  | `-i` | `str` (Required) | Path to the input directory containing the quantification output files or to the H5AD file itself. |
 | `--output` | `-o` | `str`(Required)  | Path to the output directory.|
-| `--chemistry` | `-c` | `str`(Recommended) | Specifies the chemistry used in the experiment, which determines the range for the empty_drops step. **Supported options**: '10X_3p_v2', '10X_3p_v3', '10X_3p_v4', '10X_5p_v3', '10X_3p_LT', '10X_HT'. If you used a standard 10X chemistry (e.g., '10X_3p_v2', '10X_3p_v3') and performed quantification with `simpleaf`(v0.19.5 or later), QCatch can usually **infer** the correct chemistry automatically from the metadata. If inference fails, QCatch will stop and prompt you to provide the chemistry explicitly via this flag.|
-| `--save_filtered_h5ad` | `-s` | `flag` (Optional) |If enabled, `qcatch` will save a separate `.h5ad` file containing only the retained cells.|
+| `--chemistry` | `-c` | `str`(Recommended) | Specifies the chemistry used in the experiment, which determines the partition range for the empty_drops step. **Supported options**: '10X_3p_v2', '10X_3p_v3', '10X_3p_v4', '10X_5p_v3', '10X_3p_LT', '10X_HT'. If you used a standard 10X chemistry (e.g., '10X_3p_v2', '10X_3p_v3') and performed quantification with `simpleaf`(v0.19.5 or later), QCatch will try to **infer** the correct chemistry from the metadata. If inference fails, QCatch will stop and prompt you to provide the chemistry explicitly via this flag.|
+| `--save_filtered_h5ad` | `-s` | `flag` (Optional) |If enabled, `qcatch` will save a separate `.h5ad` file containing only the final retained cells.|
 | `--gene_id2name_file` | `-g` | `str` (Optional) |File provides a mapping from gene IDs to gene names. The file must be a TSV containing two columns—‘gene_id’ (e.g., ENSG00000284733) and ‘gene_name’ (e.g., OR4F29)—without a header row. If not provided, the program will attempt to retrieve the mapping from a remote registry. If that lookup fails, mitochondria plots will not be displayed.|
 | `--valid_cell_list` | `-l` | `str` (Optional) |File provides a user-specified list of valid cell barcode. The file must be a TSV containing one column with cell barcodes without a header row. If provided, qcatch will skip the internal cell calling steps and and use the supplied list instead|
 | `--n_partitions` | `-n` | `int` (Optional) | Number of partitions (max number of barcodes to consider for ambient estimation). Use `--n_partitions` only when working with a custom or unsupported chemistry. When provided, this value will override the chemistry-based configuration during the cell-calling step.|

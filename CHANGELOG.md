@@ -17,8 +17,13 @@ and this project adheres to [Semantic Versioning][].
 - Metadata for doublet detection (Scrublet) and mitochondrial QC metrics are stored only when the input is an H5AD file.
 - For matrix-based (MTX) inputs (e.g. legacy alevin-fry outputs), doublet removal and mitochondrial QC plotting are supported; however, these metadata are not written to additional text files.
 
+### Modified
+- Extend `.h5ad` output support to **mtx-based** inputs, enabling QCatch to save both the full and filtered .h5ad files for all input types (MTX and .h5ad, simpleaf v0.19.5+).
+- For **mtx-based** input, save the intermediat results in `.h5ad`, No longer save to separate `.txt` files.
+
 ### Fix
 - Logger set up.
+- gene-symbol name duplicates for write mtx-based h5ad
 
 ## [0.2.7] 2025-11-04
 ### Added
