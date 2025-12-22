@@ -45,6 +45,8 @@ MIN_UMI_FRAC_OF_MEDIAN = 0.01
 
 MAX_MEM_GB = 0.3
 
+RNG = np.random.default_rng(seed=42)
+
 NonAmbientBarcodeResult = namedtuple(
     "NonAmbientBarcodeResult",
     [
@@ -360,7 +362,7 @@ def simulate_multinomial_loglikelihoods(
         logger.debug("Range of N: %d", num_all_n)
         logger.debug("Number of features: %d", len(profile_p))
 
-    sampled_features = np.random.choice(len(profile_p), size=n_sample_feature_block, p=profile_p, replace=True)
+    sampled_features = RNG.choice(len(profile_p), size=n_sample_feature_block, p=profile_p, replace=True)
     k = 0
 
     log_profile_p = np.log(profile_p)
@@ -368,7 +370,7 @@ def simulate_multinomial_loglikelihoods(
     for sim_idx in range(num_sims):
         if verbose and sim_idx % 1000 == 999:
             logger.debug("Simulation progress: completed %d/%d simulations", sim_idx + 1, num_sims)
-        curr_counts = np.ravel(sp_stats.multinomial.rvs(distinct_n[0], profile_p, size=1))
+        curr_counts = np.ravel(sp_stats.multinomial.rvs(distinct_n[0], profile_p, size=1, random_state=RNG))
 
         curr_loglk = sp_stats.multinomial.logpmf(curr_counts, distinct_n[0], p=profile_p)
 
@@ -378,7 +380,7 @@ def simulate_multinomial_loglikelihoods(
             step = distinct_n[i] - distinct_n[i - 1]
             if step >= jump:
                 # Instead of iterating for each n, sample the intermediate ns all at once
-                curr_counts += np.ravel(sp_stats.multinomial.rvs(step, profile_p, size=1))
+                curr_counts += np.ravel(sp_stats.multinomial.rvs(step, profile_p, size=1, random_state=RNG))
                 curr_loglk = sp_stats.multinomial.logpmf(curr_counts, distinct_n[i], p=profile_p)
                 assert not np.isnan(curr_loglk)
             else:
@@ -388,7 +390,7 @@ def simulate_multinomial_loglikelihoods(
                     k += 1
                     if k >= n_sample_feature_block:
                         # Amortize this operation
-                        sampled_features = np.random.choice(
+                        sampled_features = RNG.choice(
                             len(profile_p), size=n_sample_feature_block, p=profile_p, replace=True
                         )
                         k = 0
@@ -555,6 +557,7 @@ def find_nonambient_barcodes(
         return None
 
     assert not np.any(np.isin(eval_bcs, orig_cells))
+
     logger.debug(f"Number of candidate bcs: {len(eval_bcs)}")
     logger.debug(f"Range candidate bc umis: {umis_per_bc[eval_bcs].min()}, {umis_per_bc[eval_bcs].max()}")
 
