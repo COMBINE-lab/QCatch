@@ -194,9 +194,39 @@ def create_plotly_plots(
         sc.tl.tsne(adata_with_doublets)
         sc.tl.leiden(adata_with_doublets, flavor="igraph", n_iterations=2)
 
-        # View 1: Filter to singlets, color by Leiden
-        singlet_mask = adata_with_doublets.obs["predicted_doublet"] == False
-        # View 2: All cells, color by doublet status
+        # View 1: "Retained Cells Only" - Filter to singlets, color by Leiden clusters
+        singlet_mask = ~adata_with_doublets.obs["predicted_doublet"].fillna(True)
+        adata_singlets = adata_with_doublets[singlet_mask, :]
+
+        umap_df_singlets = pd.DataFrame(adata_singlets.obsm["X_umap"], columns=["UMAP1", "UMAP2"])
+        umap_df_singlets["leiden"] = adata_singlets.obs["leiden"].values
+        fig_umap_singlets = px.scatter(umap_df_singlets, x="UMAP1", y="UMAP2", color="leiden",
+                                        title="UMAP with Leiden Clusters (Retained Cells Only)")
+
+        tsne_df_singlets = pd.DataFrame(adata_singlets.obsm["X_tsne"], columns=["TSNE1", "TSNE2"])
+        tsne_df_singlets["leiden"] = adata_singlets.obs["leiden"].values
+        fig_tsne_singlets = px.scatter(tsne_df_singlets, x="TSNE1", y="TSNE2", color="leiden",
+                                        title="t-SNE with Leiden Clusters (Retained Cells Only)")
+
+        # View 2: "With Doublets" - All cells, color by doublet status
+        adata_with_doublets.obs["doublet_label"] = adata_with_doublets.obs["predicted_doublet"].map(
+            {True: "Doublet", False: "Singlet"}).astype(str)
+
+        umap_df_all = pd.DataFrame(adata_with_doublets.obsm["X_umap"], columns=["UMAP1", "UMAP2"])
+        umap_df_all["doublet_label"] = adata_with_doublets.obs["doublet_label"].values
+        umap_df_all["doublet_score"] = adata_with_doublets.obs["doublet_score"].values
+        fig_umap_doublets = px.scatter(umap_df_all, x="UMAP1", y="UMAP2", color="doublet_label",
+                                        hover_data=["doublet_score"],
+                                        color_discrete_map={"Singlet": "#3498db", "Doublet": "#e74c3c"},
+                                        title="UMAP with Doublet Classification (With Doublets)")
+
+        tsne_df_all = pd.DataFrame(adata_with_doublets.obsm["X_tsne"], columns=["TSNE1", "TSNE2"])
+        tsne_df_all["doublet_label"] = adata_with_doublets.obs["doublet_label"].values
+        tsne_df_all["doublet_score"] = adata_with_doublets.obs["doublet_score"].values
+        fig_tsne_doublets = px.scatter(tsne_df_all, x="TSNE1", y="TSNE2", color="doublet_label",
+                                        hover_data=["doublet_score"],
+                                        color_discrete_map={"Singlet": "#3498db", "Doublet": "#e74c3c"},
+                                        title="t-SNE with Doublet Classification (With Doublets)")
         """
         else:
             # ===== STANDARD MODE (current behavior) =====

@@ -210,7 +210,8 @@
                     <div class="collapse" id="helpText-Summary">
                       <div class="card card-body">
                         <p class="mb-0">
-                          <b>Number of retained cells</b>: The number of valid and high quality cells that passed the cell calling step. This includes cells identified during the initial filtering and additional cells identified by the EmptyDrops step, whose expression profiles are significantly distinct from the ambient background.<br>
+                          <b>Number of retained cells</b>: The number of valid, high-quality cells that passed the 2-step cell calling process and optional doublet removal. The 2-step cell calling identifies cells through: (1) initial filtering, and (2) the EmptyDrops method, which detects additional cells whose expression profiles are significantly distinct from the ambient background. The doublet removal step is optional, enabled by the user, and implemented using the Scrublet package.
+                          <br>
                           <b>Number of all processed cells</b>: The total number of cell barcodes observed in the processed sample. Cells with zero reads have been excluded. <br>
                           <b>Mean reads per retained cell</b>: The total number of reads assigned to the retained cell barcodes, including the mapped and unmapped reads, divided by the number of retained cells. <br>
                           <b>Median UMI per retained cell</b>: The median number of deduplicated reads (UMIs) per retained cell.<br>
