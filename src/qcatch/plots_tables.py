@@ -478,9 +478,11 @@ def mitochondria_plot(adata: sc.AnnData, is_all_cells: bool) -> go.Figure:
     scatter_color = "#4F69C2"  # Change color of the scatter plot
 
     sc.settings.verbosity = 0
-    # # we have to filter out cells with less than 20 genes detected, otherwise will will have many cells with high mitochondrial content, which may be misleading of the distribution for valid data.
+    # # we have to filter out cells with less than 10 genes detected, otherwise will will have many cells with high mitochondrial content, which may be misleading of the distribution for valid data.
     if is_all_cells:
-        sc.pp.filter_cells(adata, min_genes=20)
+        # Use a mask to filter cells without modifying the original adata
+        mask = adata.obs["n_genes"] >= 10 if "n_genes" in adata.obs.columns else adata.obs["num_genes_expressed"] >= 10
+        adata = adata[mask, :]
 
     # Identify mitochondrial genes
     # make it case insensitive, to avoid the NaN issue
@@ -526,23 +528,24 @@ def mitochondria_plot(adata: sc.AnnData, is_all_cells: bool) -> go.Figure:
     return apply_uniform_style(fig_mito)
 
 
-def umap_tsne_plot(
+def generate_embeddings(
     adata: sc.AnnData,
-) -> tuple[go.Figure, go.Figure, str]:
+    run_clustering: bool = True,
+) -> sc.AnnData:
     """
-    Perform dimensionality reduction and clustering, and generate UMAP and t-SNE plots.
+    Perform preprocessing, dimensionality reduction, and optionally clustering.
 
     Parameters
     ----------
     adata
-        AnnData object for gene expression mtx.
+        AnnData object for gene expression matrix.
+    run_clustering
+        Whether to run Leiden clustering.
 
     Returns
     -------
-    tuple
-        - A Plotly Figure for the UMAP plot.
-        - A Plotly Figure for the t-SNE plot.
-        - A string containing a code snippet for preprocessing and visualization.
+    adata
+        Same AnnData object with embeddings stored in obsm["X_umap"], obsm["X_tsne"], and optionally obs["leiden"].
     """
     sc.settings.set_figure_params(dpi=200, facecolor="white")
 
@@ -551,19 +554,16 @@ def umap_tsne_plot(
     # Logarithmize the data
     sc.pp.log1p(adata)
 
-    # feature selection
+    # Feature selection
     n_valid = adata.X.shape[1]
     sc.pp.highly_variable_genes(adata, n_top_genes=min(2000, n_valid))
-    # dimensionality Reduction
+
+    # Dimensionality reduction
     sc.tl.pca(adata)
-    # nearest neighbor graph constuction and visualization
     sc.pp.neighbors(adata)
     sc.tl.umap(adata)
 
-    # clustering
-    # Using the igraph implementation and a fixed number of iterations can be significantly faster, especially for larger datasets
-    sc.tl.leiden(adata, flavor="igraph", n_iterations=2)
-
+    # t-SNE
     n_cells = adata.n_obs
     perplexity = min(30, max(2, (n_cells - 1) // 3))
     if perplexity < 30:
@@ -580,43 +580,146 @@ def umap_tsne_plot(
         else:
             raise
 
-    # Create a Plotly-based UMAP scatter plot with Leiden clusters
-    umap_df = pd.DataFrame(adata.obsm["X_umap"], columns=["UMAP1", "UMAP2"])
-    umap_df["leiden"] = adata.obs["leiden"].values
+    # Clustering (optional)
+    if run_clustering:
+        sc.tl.leiden(adata, flavor="igraph", n_iterations=2)
 
-    # UMAP in plotly
+    return adata
+
+
+def create_plots_from_embedding(
+    adata: sc.AnnData,
+    color_by: str = "leiden",
+    plot_label: str = "(Retained Cells Only)",
+) -> tuple[go.Figure, go.Figure]:
+    """
+    Create UMAP and t-SNE plots from pre-computed embeddings in adata.obsm.
+
+    Parameters
+    ----------
+    adata
+        AnnData object with pre-computed embeddings in obsm["X_umap"] and obsm["X_tsne"].
+    color_by
+        Coloring scheme: "leiden" or "doublet_status".
+    plot_label
+        Suffix for plot titles.
+
+    Returns
+    -------
+    tuple
+        - A Plotly Figure for the UMAP plot.
+        - A Plotly Figure for the t-SNE plot.
+    """
+    # Determine color column
+    if color_by == "leiden":
+        if "leiden" not in adata.obs.columns:
+            raise ValueError("Leiden clustering not found in adata.obs. Run clustering first.")
+        color_column = "leiden"
+    elif color_by == "doublet_status":
+        if "predicted_doublet" not in adata.obs.columns:
+            raise ValueError("Doublet annotations not found in adata.obs")
+        adata.obs["doublet_label"] = adata.obs["predicted_doublet"].map({True: "Doublet", False: "Singlet"}).astype(str)
+        color_column = "doublet_label"
+    else:
+        raise ValueError(f"Invalid color_by value: {color_by}")
+
+    # Create UMAP plot
+    umap_df = pd.DataFrame(adata.obsm["X_umap"], columns=["UMAP1", "UMAP2"])
+    umap_df[color_column] = adata.obs[color_column].values
+
+    # Add doublet score to hover data if coloring by doublet status
+    if color_by == "doublet_status":
+        umap_df["doublet_score"] = adata.obs["doublet_score"].values
+        hover_data = ["doublet_score"]
+        color_discrete_map = {"Singlet": "#3498db", "Doublet": "#e74c3c"}
+    else:
+        hover_data = None
+        color_discrete_map = None
+
     opacity = 0.7
-    # modify dot size
     dot_size = 3
+
     fig_umap = px.scatter(
         umap_df,
         x="UMAP1",
         y="UMAP2",
-        color="leiden",
-        title="UMAP with Leiden Clusters (Retained Cells Only)",
+        color=color_column,
+        title=f"UMAP with {'Leiden Clusters' if color_by == 'leiden' else 'Doublet Classification'} {plot_label}",
         width=width,
         height=height,
         opacity=opacity,
-    ).update_traces(marker={"size": dot_size})  # Set the dot size
+        hover_data=hover_data,
+        color_discrete_map=color_discrete_map,
+    ).update_traces(marker={"size": dot_size})
 
-    # Center title and reduce margin
     fig_umap.update_layout(title_x=0.5, margin={"t": 30, "l": 10, "r": 10, "b": 20})
-    # t-SNE plot in plotly
+
+    # Create t-SNE plot
     tsne_df = pd.DataFrame(adata.obsm["X_tsne"], columns=["TSNE1", "TSNE2"])
-    tsne_df["leiden"] = adata.obs["leiden"].values
+    tsne_df[color_column] = adata.obs[color_column].values
+
+    if color_by == "doublet_status":
+        tsne_df["doublet_score"] = adata.obs["doublet_score"].values
 
     fig_tsne = px.scatter(
         tsne_df,
         x="TSNE1",
         y="TSNE2",
-        color="leiden",
-        title="t-SNE with Leiden Clusters (Retained Cells Only)",
+        color=color_column,
+        title=f"t-SNE with {'Leiden Clusters' if color_by == 'leiden' else 'Doublet Classification'} {plot_label}",
         width=480,
         height=360,
         opacity=0.7,
+        hover_data=hover_data if color_by == "doublet_status" else None,
+        color_discrete_map=color_discrete_map if color_by == "doublet_status" else None,
     ).update_traces(marker={"size": 3})
-    # set up the code block
-    code_text = """
+
+    fig_tsne.update_layout(title_x=0.5, margin={"t": 30, "l": 10, "r": 10, "b": 20})
+
+    return apply_uniform_style(fig_umap), apply_uniform_style(fig_tsne)
+
+
+def umap_tsne_plot(
+    adata: sc.AnnData,
+    color_by: str = "leiden",
+    plot_label: str = "(Retained Cells Only)",
+) -> tuple[go.Figure, go.Figure, str]:
+    """
+    Wrapper function that maintains backward compatibility.
+
+    Generates embeddings and creates plots in one call.
+
+    Parameters
+    ----------
+    adata
+        AnnData object for gene expression mtx.
+    color_by
+        Coloring scheme for plots. Either "leiden" for Leiden clustering or "doublet_status" for doublet classification.
+    plot_label
+        Suffix label for plot titles, e.g., "(Retained Cells Only)" or "(With Doublets)".
+
+    Returns
+    -------
+    tuple
+        - A Plotly Figure for the UMAP plot.
+        - A Plotly Figure for the t-SNE plot.
+        - A string containing a code snippet for preprocessing and visualization.
+    """
+    # Generate embeddings
+    adata = generate_embeddings(adata, run_clustering=(color_by == "leiden"))
+
+    # Handle doublet status labeling if needed
+    if color_by == "doublet_status" and "doublet_label" not in adata.obs.columns:
+        if "predicted_doublet" not in adata.obs.columns:
+            logger.error("Cannot color by doublet status: 'predicted_doublet' column missing from adata.obs")
+            raise ValueError("Doublet annotations not found in AnnData object")
+
+    # Create plots
+    fig_umap, fig_tsne = create_plots_from_embedding(adata, color_by, plot_label)
+
+    # Generate code text
+    if color_by == "leiden":
+        code_text = """
         # Pre-processing for UMAP and t-SNE
 
         sc.settings.set_figure_params(dpi=200, facecolor="white")
@@ -635,15 +738,14 @@ def umap_tsne_plot(
         # UMAP
         sc.tl.umap(adata)
 
+        # t-SNE
+        n_cells = adata.n_obs
+        perplexity = min(30, max(2, (n_cells - 1) // 3))
+        sc.tl.tsne(adata, perplexity=perplexity)
+
         # clustering
         # Using the igraph implementation and a fixed number of iterations can be significantly faster, especially for larger datasets
         sc.tl.leiden(adata, flavor="igraph", n_iterations=2)
-
-        n_cells = adata.n_obs
-        perplexity = min(30, max(2, (n_cells - 1) // 3))
-
-        # t-SNE
-        sc.tl.tsne(adata, perplexity=perplexity)
 
         # Create a Plotly-based UMAP scatter plot with Leiden clusters
         umap_df = pd.DataFrame(adata.obsm["X_umap"], columns=["UMAP1", "UMAP2"])
@@ -682,9 +784,76 @@ def umap_tsne_plot(
             opacity=0.7,
         ).update_traces(marker={"size": 3})
         """
+    else:  # color_by == "doublet_status"
+        code_text = """
+        # Pre-processing for UMAP and t-SNE (With Doublets)
+        # Color cells by doublet status instead of Leiden clusters
 
-    fig_tsne.update_layout(title_x=0.5, margin={"t": 30, "l": 10, "r": 10, "b": 20})
-    return apply_uniform_style(fig_umap), apply_uniform_style(fig_tsne), code_text
+        sc.settings.set_figure_params(dpi=200, facecolor="white")
+        # Normalizing to median total counts
+        sc.pp.normalize_total(adata)
+        # Logarithmize the data
+        sc.pp.log1p(adata)
+
+        # feature selection
+        n_valid = adata.X.shape[1]
+        sc.pp.highly_variable_genes(adata, n_top_genes=min(2000, n_valid))
+        # dimensionality Reduction
+        sc.tl.pca(adata)
+        # nearest neighbor graph constuction and visualization
+        sc.pp.neighbors(adata)
+        # UMAP
+        sc.tl.umap(adata)
+
+        # t-SNE
+        n_cells = adata.n_obs
+        perplexity = min(30, max(2, (n_cells - 1) // 3))
+        sc.tl.tsne(adata, perplexity=perplexity)
+
+        # Color by doublet status
+        adata.obs["doublet_label"] = adata.obs["predicted_doublet"].map({
+            True: "Doublet",
+            False: "Singlet"
+        }).astype(str)
+
+        # Create UMAP plot colored by doublet status
+        umap_df = pd.DataFrame(adata.obsm["X_umap"], columns=["UMAP1", "UMAP2"])
+        umap_df["doublet_label"] = adata.obs["doublet_label"].values
+        umap_df["doublet_score"] = adata.obs["doublet_score"].values
+
+        fig_umap = px.scatter(
+            umap_df,
+            x="UMAP1",
+            y="UMAP2",
+            color="doublet_label",
+            hover_data=["doublet_score"],
+            color_discrete_map={"Singlet": "#3498db", "Doublet": "#e74c3c"},
+            title="UMAP with Doublet Classification (With Doublets)",
+            width=width,
+            height=height,
+            opacity=0.7,
+        ).update_traces(marker={"size": 3})
+
+        # Create t-SNE plot colored by doublet status
+        tsne_df = pd.DataFrame(adata.obsm["X_tsne"], columns=["TSNE1", "TSNE2"])
+        tsne_df["doublet_label"] = adata.obs["doublet_label"].values
+        tsne_df["doublet_score"] = adata.obs["doublet_score"].values
+
+        fig_tsne = px.scatter(
+            tsne_df,
+            x="TSNE1",
+            y="TSNE2",
+            color="doublet_label",
+            hover_data=["doublet_score"],
+            color_discrete_map={"Singlet": "#3498db", "Doublet": "#e74c3c"},
+            title="t-SNE with Doublet Classification (With Doublets)",
+            width=480,
+            height=360,
+            opacity=0.7,
+        ).update_traces(marker={"size": 3})
+        """
+
+    return fig_umap, fig_tsne, code_text
 
 
 def show_quant_log_table(quant_json_data: dict, permit_list_json_data: dict | None) -> tuple[str, str]:

@@ -370,7 +370,18 @@ def remove_doublets(adata, valid_bcs) -> list[str]:
     logger.info("👀 Detecting doublets (use `Scrublet` tool)...")
     # work on a copy to avoid view-related issues
     current_retained_cells = adata[adata.obs["barcodes"].isin(valid_bcs)].copy()
+
+    n_found = len(current_retained_cells)
+    logger.info(f"🔬 Running Scrublet on {n_found} cells...")
     sc.pp.scrublet(current_retained_cells)
+
+    # Check if Scrublet filtered any cells
+    n_after_scrublet = len(current_retained_cells)
+    if n_after_scrublet < n_found:
+        logger.warning(
+            f"⚠️ Scrublet filtered out {n_found - n_after_scrublet} cells (had {n_found}, now {n_after_scrublet})"
+        )
+
     # fill with NA for all cells
     adata.obs["doublet_score"] = np.nan
     adata.obs["predicted_doublet"] = pd.Series(

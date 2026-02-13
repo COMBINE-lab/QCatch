@@ -149,11 +149,25 @@ To reduce runtime, you may enable the `--skip_umap_tsne` option to bypass dimens
 
 To export the summary metrics, enable the `--export_summary_table` flag. The summary table will be saved as a separate CSV file in the output directory.
 
-#### 9- Debug-level message
+#### 9- Visualize doublets
+
+To visualize doublets alongside singlets in UMAP and t-SNE plots, use both `--remove_doublets` and `--visualize_doublets` flags together. This generates two plot views:
+- **Retained Cells Only**: Shows singlets colored by Leiden clusters (default view)
+- **With Doublets**: Shows both singlets and doublets colored by doublet status (red for doublets, blue for singlets)
+
+Toggle buttons in the HTML report allow switching between these views. Both views use the same coordinate space, so singlets appear at identical positions in both plots for easy comparison.
+
+```bash
+qcatch --input path/to/quants.h5ad \
+       --remove_doublets \
+       --visualize_doublets
+```
+
+#### 10- Debug-level message
 
 To get debug-level messages and more intermediate computation in cell calling step, you can specify `--verbose`
 
-#### 10- Re-run QCatch on modified h5ad file
+#### 11- Re-run QCatch on modified h5ad file
 If you re-run QCatch analysis on a modified `.h5ad` file (i.e., an `.h5ad` file with additional columns added for cell calling results), the existing cell calling-related columns will be removed and then replaced with new results. The new cell calling can be generated either through QCatch's internal method or based on a user-specified list of valid cell barcodes.
 
 #### Example directory structures:
@@ -197,6 +211,7 @@ For more advanced options and usage details, see the sections below.
 | `--valid_cell_list` | `-l` | `str` (Optional) |File provides a user-specified list of valid cell barcode. The file must be a TSV containing one column with cell barcodes without a header row. If provided, qcatch will skip the internal cell calling steps and and use the supplied list instead|
 | `--n_partitions` | `-n` | `int` (Optional) | Number of partitions (max number of barcodes to consider for ambient estimation). Use `--n_partitions` only when working with a custom or unsupported chemistry. When provided, this value will override the chemistry-based configuration during the cell-calling step.|
 | `--remove_doublets` | `-d` | `flag` (Optional) | If enabled, QCatch will perform doublet detection(use `Scrublet` tool) and remove detected doublets from the cells retained after cell calling. |
+| `--visualize_doublets` | `-vd` | `flag` (Optional) | If enabled (requires `--remove_doublets`), generates additional UMAP and t-SNE plots showing both singlets and doublets. Toggle buttons allow switching between "Retained Cells Only" (singlets) and "With Doublets" views. |
 | `--skip_umap_tsne` | `-u` | `flag` (Optional) | If provided, skips generation of UMAP and t-SNE plots. |
 | `--export_summary_table` | `-x` | `flag` (Optional) | If enabled, QCatch will export the summary metrics as a separate CSV file. |
 | `--verbose` | `-b` | `flag` (Optional) | Enable verbose logging with debug-level messages. |

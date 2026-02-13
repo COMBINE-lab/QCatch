@@ -95,6 +95,12 @@ def main():
         "--skip_umap_tsne", "-u", action="store_true", help="If provided, skips generation of UMAP and t-SNE plots."
     )
     parser.add_argument(
+        "--visualize_doublets",
+        "-vd",
+        action="store_true",
+        help="If set, generates additional UMAP and t-SNE plots that include doublets (alongside the standard doublet-free plots).",
+    )
+    parser.add_argument(
         "--export_summary_table",
         "-e",
         action="store_true",
@@ -133,7 +139,7 @@ def main():
         # if the user provided a valid cell list, we will skip the cell calling step
         logger.info("🍻 Using user-specified valid cell list. SKIP cell calling step.")
         valid_bcs = parse_user_valid_cell_list(args.valid_cell_list)
-        logger.info(f"🧃 Number of cells found in provided valid cell list : {len(valid_bcs)}")
+        logger.info(f"🧃 Number of cells in provided valid cell list : {len(valid_bcs)}")
         logger.info(
             "🗂️ Get 'retained cells list' based on the user-specified barcode list to the modified .h5ad file. Check the newly added column in adata.obs."
         )
@@ -148,15 +154,43 @@ def main():
         logger.error(msg)
         return
 
+    # Validate doublet visualization flag
+    if args.visualize_doublets and not args.remove_doublets:
+        logger.warning(
+            "⚠️ --visualize_doublets requires --remove_doublets to be enabled. Doublet visualization will be skipped."
+        )
+        args.visualize_doublets = False
+
+    # Initialize bcs_with_doublets
+    bcs_with_doublets = None
+
     if args.remove_doublets:
-        valid_bcs = remove_doublets(args.input.mtx_data, valid_bcs)
+        # Get intersection of user's cell list with actual cells in h5ad
+        actual_bcs_in_data = set(args.input.mtx_data.obs["barcodes"])
+        valid_bcs_set = set(valid_bcs)
+        intersection_bcs = list(valid_bcs_set & actual_bcs_in_data)
+
+        # Log warning if some barcodes are missing
+        if len(intersection_bcs) < len(valid_bcs):
+            missing_count = len(valid_bcs) - len(intersection_bcs)
+            logger.warning(f"⚠️ {missing_count}/{len(valid_bcs)} barcodes from cell list not found in h5ad")
+            missing_bcs = valid_bcs_set - actual_bcs_in_data
+            logger.warning(f"   Missing barcodes (first 5): {list(missing_bcs)[:5]}")
+
+        logger.info(f"🔬 Processing {len(intersection_bcs)} cells found in h5ad (out of {len(valid_bcs)} provided)")
+
+        # Use intersection for all downstream processing
+        if args.visualize_doublets:
+            bcs_with_doublets = intersection_bcs.copy()
+
+        valid_bcs = remove_doublets(args.input.mtx_data, intersection_bcs)
 
     # Save results
     save_results(args, version, intermediate_result, valid_bcs)
 
     logger.info("🎨 Generating plots and tables...")
     # plots and log, summary tables
-    plot_text_elements, code_texts = create_plotly_plots(args, valid_bcs)
+    plot_text_elements, code_texts = create_plotly_plots(args, valid_bcs, bcs_with_doublets)
 
     table_htmls = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
 

@@ -7,10 +7,20 @@ and this project adheres to [Semantic Versioning][].
 
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
+## [0.2.9] 2026-2
+### Added
+- `--visualize_doublets` flag to generate toggle-able UMAP/t-SNE plots showing singlets and doublets with shared coordinate space
+
+### Changed
+- Mitochondrial plot gene threshold reduced from 20 to 10 detected genes for "All Cells" view
+
+### Fixed
+- `mitochondria_plot()` no longer modifies input AnnData in place; now uses a mask
+- Intersection handling for user-provided cell lists with missing barcodes
 
 ## [0.2.8] 2025-12
 ### Added
-- - Doublet detection functionality using `Scrublet`, with an optional flag to remove detected doublets from retained cells after two-step cell calling.
+- Doublet detection functionality using `Scrublet`, with an optional flag to remove detected doublets from retained cells after two-step cell calling.
 - Mitochondrial percentage (`pct_counts_mt`) is added to `adata.obs` by default.
 
 ### NOTE:

@@ -11,6 +11,8 @@ from qcatch.logger import QCatchLogger
 # from qcatch.input_processing import
 from qcatch.plots_tables import (
     barcode_frequency_plots,
+    create_plots_from_embedding,
+    generate_embeddings,
     generate_gene_histogram,
     generate_knee_plots,
     generate_seq_saturation,
@@ -28,6 +30,7 @@ assert isinstance(logger, QCatchLogger), "Logger is not a QCatchLogger. Call set
 def create_plotly_plots(
     args: Namespace,
     valid_bcs: list[str],
+    bcs_with_doublets: list[str] | None = None,
 ) -> tuple[dict[str, str], str]:
     """
     Generate interactive Plotly plots and summary tables from Alevin-fry quantification data.
@@ -36,7 +39,9 @@ def create_plotly_plots(
     ----------
         args: An object containing input data and parameters including feature dump data, map JSON data,
               mtx data (AnnData object), usa_mode flag, and skip_umap_tsne flag.
-        valid_bcs: A list or set of valid barcodes to filter cells.
+        valid_bcs: A list or set of valid barcodes to filter cells (singlets after doublet removal).
+        bcs_with_doublets: Optional list of barcodes before doublet removal (includes both singlets and doublets).
+                          Used when visualize_doublets flag is enabled.
 
     Returns
     -------
@@ -139,10 +144,70 @@ def create_plotly_plots(
         fig_SUA_bar_filtered_html, fig_S_ratio_filtered_html = generate_SUA_plots(filtered_adata, is_all_cells=False)
     # ---------------- Tab6 - UMAP ---------------
     if not args.skip_umap_tsne:
-        fig_umap, fig_tsne, code_text = umap_tsne_plot(filtered_adata)
+        if bcs_with_doublets is not None and args.visualize_doublets:
+            # ===== SHARED EMBEDDING MODE =====
+            logger.info("🔬 Generating shared embeddings for doublet visualization...")
+            # Use full dataset with doublets for embedding generation
+            # Use "barcodes" column (same as remove_doublets) instead of obs_names
+            doublet_mask = adata.obs["barcodes"].isin(bcs_with_doublets)
+            adata_with_doublets = adata[doublet_mask, :].copy()
+
+            # Count actual doublets from data (accounting for NA values)
+            n_doublets = int(adata_with_doublets.obs["predicted_doublet"].sum())
+            n_singlets = int((~adata_with_doublets.obs["predicted_doublet"]).sum())
+            n_na = int(adata_with_doublets.obs["predicted_doublet"].isna().sum())
+
+            if n_na > 0:
+                logger.warning(f"⚠️ Found {n_na} cells with NA doublet status (not evaluated by Scrublet)")
+            logger.info(
+                f"📊 Processing {adata_with_doublets.n_obs} cells ({n_singlets} singlets + {n_doublets} doublets{f' + {n_na} NA' if n_na > 0 else ''})..."
+            )
+
+            # Generate embeddings ONCE on all cells (including doublets)
+            adata_embedded = generate_embeddings(adata_with_doublets, run_clustering=True)
+            logger.info("✅ Embeddings generated. Creating plots...")
+
+            # View 1: "Retained Cells" - filter to singlets only, same coordinates
+            # Convert to numpy array to avoid pandas BooleanArray indexing issues
+            singlet_mask = ~adata_embedded.obs["predicted_doublet"].fillna(True).to_numpy()
+            # Use view instead of copy for better performance
+            adata_singlets_view = adata_embedded[singlet_mask, :]
+            fig_umap, fig_tsne = create_plots_from_embedding(
+                adata_singlets_view, color_by="leiden", plot_label="(Retained Cells Only)"
+            )
+
+            # View 2: "With Doublets" - all cells, same coordinates
+            fig_umap_doublets, fig_tsne_doublets = create_plots_from_embedding(
+                adata_embedded, color_by="doublet_status", plot_label="(With Doublets)"
+            )
+
+            # Code text for shared embedding mode
+            code_text = """
+        # Shared embedding for doublet visualization
+        # Preprocessing on all cells (singlets + doublets)
+        sc.pp.normalize_total(adata_with_doublets)
+        sc.pp.log1p(adata_with_doublets)
+        sc.pp.highly_variable_genes(adata_with_doublets, n_top_genes=min(2000, n_valid))
+        sc.tl.pca(adata_with_doublets)
+        sc.pp.neighbors(adata_with_doublets)
+        sc.tl.umap(adata_with_doublets)
+        sc.tl.tsne(adata_with_doublets)
+        sc.tl.leiden(adata_with_doublets, flavor="igraph", n_iterations=2)
+
+        # View 1: Filter to singlets, color by Leiden
+        singlet_mask = adata_with_doublets.obs["predicted_doublet"] == False
+        # View 2: All cells, color by doublet status
+        """
+        else:
+            # ===== STANDARD MODE (current behavior) =====
+            # Only use singlets for embedding
+            fig_umap, fig_tsne, code_text = umap_tsne_plot(filtered_adata)
+            fig_umap_doublets = None
+            fig_tsne_doublets = None
 
     else:
         fig_umap = fig_tsne = None
+        fig_umap_doublets = fig_tsne_doublets = None
         code_text = ""
         logger.info("🦦 Skipping UMAP and t-SNE plots as per user request.")
 
@@ -165,8 +230,14 @@ def create_plotly_plots(
         # ---tab6----
     }
     if fig_umap and fig_tsne:
-        plots["umap_plot6-1"] = fig_umap.to_html(full_html=False, include_plotlyjs="cdn")
-        plots["tsne_plot6-2"] = fig_tsne.to_html(full_html=False, include_plotlyjs="cdn")
+        # Standard plots (retained cells only)
+        plots["umap_plot_filtered_6-1"] = fig_umap.to_html(full_html=False, include_plotlyjs="cdn")
+        plots["tsne_plot_filtered_6-2"] = fig_tsne.to_html(full_html=False, include_plotlyjs="cdn")
+
+        # Doublet plots (if available)
+        if fig_umap_doublets and fig_tsne_doublets:
+            plots["umap_plot_doublets_6-1"] = fig_umap_doublets.to_html(full_html=False, include_plotlyjs="cdn")
+            plots["tsne_plot_doublets_6-2"] = fig_tsne_doublets.to_html(full_html=False, include_plotlyjs="cdn")
 
     if fig_mt or fig_mt_filtered:
         #  2nd plot in tab3

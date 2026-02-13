@@ -351,7 +351,7 @@
                               <div class="card card-body">
                                 <p class="mb-0">
                                   The <b>left plot</b> depicts the distribution of detected gene counts.<br>
-                                  The <b>right plot</b> shows the distribution of mitochondrial gene expression percentages across cells. Note: The “All Cells” plot does not display every processed cell. To improve visualization and reduce clutter from very low-quality cells, we excluded cells with fewer than 20 detected genes—these are typically considered nearly empty. In contrast, the “Retained Cells” plot includes all retained cells, without applying this gene count filter.
+                                  The <b>right plot</b> shows the distribution of mitochondrial gene expression percentages across cells. Note: The "All Cells" plot does not display every processed cell. To improve visualization and reduce clutter from very low-quality cells, we excluded cells with fewer than 10 detected genes—these are typically considered nearly empty. In contrast, the "Retained Cells" plot includes all retained cells, without applying this gene count filter.
 
                                 </p>
                               </div>
@@ -431,7 +431,7 @@
                               <div class="card card-body">
                                 <p class="mb-0">
                                   These plots are low-dimensional projections of high-dimensional gene expression data. Each point represents a single cell. Cells that appear close together in the plot are inferred to have similar transcriptomic profiles, indicating potential similarity in cell type or state. <br>
-                                  <b>Note</b>: Only retained cells are included in these visualizations. All retained cells are shown without further filtering. Standard preprocessing steps were applied using `Scanpy`, including normalization, log transformation, feature selection, and dimensionality reduction.<br>
+                                  <b>Note</b>: By default, only final retained cells (singlets) are shown after doublet removal. Use the toggle buttons above to view doublets if doublet visualization was enabled with the --visualize_doublets flag. Standard preprocessing steps were applied using `Scanpy`, including normalization, log transformation, feature selection, and dimensionality reduction.<br>
                                   <br>
                                   See the source python code for the plots below:
                                 </p>
@@ -442,14 +442,25 @@
                             </div>
 
                             <div class="mt-3">
+                              <!-- Toggle buttons for UMAP/t-SNE variants -->
+                              <div id="umap_controls" class="btn-group mb-2" role="group" aria-label="UMAP Plot Toggle">
+                                <button type="button" class="btn btn-outline-primary" onclick="toggleUMAP('umap_plot_filtered_6-1', 'tsne_plot_filtered_6-2')">Retained Cells</button>
+                                <button type="button" class="btn btn-outline-primary" onclick="toggleUMAP('umap_plot_doublets_6-1', 'tsne_plot_doublets_6-2')">With Doublets</button>
+                              </div>
                             </div>
                           </div>
                           <div class="row">
                             <div class="col col-md-6">
-                              <div id="umap_plot6-1"></div>
+                              <!-- Retained cells UMAP (default visible) -->
+                              <div id="umap_plot_filtered_6-1"></div>
+                              <!-- Doublets UMAP (hidden by default) -->
+                              <div id="umap_plot_doublets_6-1" style="display: none;"></div>
                             </div>
                             <div class="col col-md-6">
-                              <div id="tsne_plot6-2"></div>
+                              <!-- Retained cells t-SNE (default visible) -->
+                              <div id="tsne_plot_filtered_6-2"></div>
+                              <!-- Doublets t-SNE (hidden by default) -->
+                              <div id="tsne_plot_doublets_6-2" style="display: none;"></div>
                             </div>
                           </div>
 
@@ -661,6 +672,41 @@
             togglePlot(showId, ['S_ratio5-2', 'S_ratio_filtered_5-2'], 'SUA');
         }
     }
+
+    function toggleUMAP(umapId, tsneId) {
+        const umapIds = ['umap_plot_filtered_6-1', 'umap_plot_doublets_6-1'];
+        const tsneIds = ['tsne_plot_filtered_6-2', 'tsne_plot_doublets_6-2'];
+
+        // Hide all plots
+        umapIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        tsneIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // Show selected plots
+        const umapEl = document.getElementById(umapId);
+        const tsneEl = document.getElementById(tsneId);
+        if (umapEl) umapEl.style.display = 'block';
+        if (tsneEl) tsneEl.style.display = 'block';
+
+        // Update button styles
+        const buttons = document.querySelectorAll('[onclick^="toggleUMAP"]');
+        buttons.forEach(btn => {
+            if (btn.getAttribute('onclick').includes(umapId)) {
+                btn.classList.add('active');
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-custom-selected');
+            } else {
+                btn.classList.remove('active');
+                btn.classList.remove('btn-custom-selected');
+                btn.classList.add('btn-outline-primary');
+            }
+        });
+    }
   </script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -669,6 +715,7 @@
       { controls: "hist_gene_controls", ids: ["hist_gene3-1", "hist_gene_filtered_3-1"] },
       { controls: "SUA_bar_controls", ids: ["SUA_bar5-1", "SUA_bar_filtered_5-1"] },
       { controls: "SUA_ratio_controls", ids: ["S_ratio5-2", "S_ratio_filtered_5-2"] },
+      { controls: "umap_controls", ids: ["umap_plot_doublets_6-1", "tsne_plot_doublets_6-2"] },
     ];
 
     groups.forEach(({ controls, ids }) => {
