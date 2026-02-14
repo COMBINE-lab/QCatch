@@ -134,6 +134,17 @@ def main():
     # ****  ------------------------------- *****
     valid_bcs = None
     intermediate_result = None
+
+    # Initialize pipeline info for report generation
+    pipeline_info = {
+        "cell_calling_method": None,
+        "initial_cells": 0,
+        "doublet_removal_enabled": args.remove_doublets,
+        "n_doublets_removed": None,
+        "n_singlets_retained": None,
+        "final_retained_cells": 0,
+    }
+
     logger.info(f"DEBUG args.valid_cell_list = {args.valid_cell_list!r}")
     if args.valid_cell_list:
         # if the user provided a valid cell list, we will skip the cell calling step
@@ -143,9 +154,15 @@ def main():
         logger.info(
             "🗂️ Get 'retained cells list' based on the user-specified barcode list to the modified .h5ad file. Check the newly added column in adata.obs."
         )
+        # Update pipeline info
+        pipeline_info["cell_calling_method"] = "user_provided"
+        pipeline_info["initial_cells"] = len(valid_bcs)
     else:
         # Run the cell calling process. We will either modify the input file(change the args.input) or save the results in the output directory
         valid_bcs, intermediate_result = internal_cell_calling(args, save_for_quick_test, quick_test_mode)
+        # Update pipeline info
+        pipeline_info["cell_calling_method"] = "internal"
+        pipeline_info["initial_cells"] = len(valid_bcs)
 
     # Calculate mitochondria%
 
@@ -183,14 +200,25 @@ def main():
         if args.visualize_doublets:
             bcs_with_doublets = intersection_bcs.copy()
 
+        # Store count before doublet removal
+        initial_count = len(intersection_bcs)
         valid_bcs = remove_doublets(args.input.mtx_data, intersection_bcs)
+
+        # Update pipeline info with doublet removal results
+        pipeline_info["n_doublets_removed"] = initial_count - len(valid_bcs)
+        pipeline_info["n_singlets_retained"] = len(valid_bcs)
 
     # Save results
     save_results(args, version, intermediate_result, valid_bcs)
 
+    # Update final retained cells count
+    pipeline_info["final_retained_cells"] = len(valid_bcs)
+
     logger.info("🎨 Generating plots and tables...")
     # plots and log, summary tables
-    plot_text_elements, code_texts = create_plotly_plots(args, valid_bcs, bcs_with_doublets)
+    plot_text_elements, code_texts, pipeline_summary_html = create_plotly_plots(
+        args, valid_bcs, bcs_with_doublets, pipeline_info
+    )
 
     table_htmls = show_quant_log_table(args.input.quant_json_data, args.input.permit_list_json_data)
 
@@ -205,6 +233,7 @@ def main():
         code_texts,
         warning_html,
         args.input.usa_mode,
+        pipeline_summary_html,
     )
 
 

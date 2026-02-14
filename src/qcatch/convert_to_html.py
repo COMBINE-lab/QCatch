@@ -27,11 +27,101 @@ logger = logging.getLogger("qcatch")
 assert isinstance(logger, QCatchLogger), "Logger is not a QCatchLogger. Call setup_logger() in main.py first."
 
 
+def generate_pipeline_summary_html(pipeline_info: dict | None) -> str:
+    """
+    Generate HTML for the cell filtering pipeline summary section.
+
+    Parameters
+    ----------
+    pipeline_info
+        Dictionary containing pipeline metadata with keys:
+        - cell_calling_method: 'user_provided' or 'internal'
+        - initial_cells: int
+        - doublet_removal_enabled: bool
+        - n_doublets_removed: int or None
+        - n_singlets_retained: int or None
+        - final_retained_cells: int
+
+    Returns
+    -------
+    str
+        HTML string for the pipeline summary alert box
+    """
+    if not pipeline_info:
+        return ""
+
+    # Step 1: Cell Calling
+    if pipeline_info["cell_calling_method"] == "user_provided":
+        step1_html = f"""
+          <div class="text-center">
+            <div class="mb-1"><strong style="font-size: 0.95rem;">🧬 Step 1: Cell Calling</strong></div>
+            <div style="font-size: 0.85rem;">User-provided cell list</div>
+            <div class="fw-bold text-primary" style="font-size: 1.1rem;">{pipeline_info["initial_cells"]:,} cells</div>
+          </div>
+        """
+    else:  # internal
+        step1_html = f"""
+          <div class="text-center">
+            <div class="mb-1"><strong style="font-size: 0.95rem;">🧬 Step 1: Cell Calling</strong></div>
+            <div style="font-size: 0.85rem;">Internal 2-step filtering<br>(OrdMag + EmptyDrops)</div>
+            <div class="fw-bold text-primary" style="font-size: 1.1rem;">{pipeline_info["initial_cells"]:,} cells</div>
+          </div>
+        """
+
+    # Step 2: Doublet Removal
+    if pipeline_info["doublet_removal_enabled"] and pipeline_info["n_doublets_removed"] is not None:
+        step2_html = f"""
+          <div class="text-center">
+            <div class="mb-1"><strong style="font-size: 0.95rem;">🔍 Step 2: Doublet Removal</strong></div>
+            <div class="text-danger" style="font-size: 0.85rem;">- {pipeline_info["n_doublets_removed"]:,} doublets</div>
+            <div class="fw-bold text-primary" style="font-size: 1.1rem;">{pipeline_info["n_singlets_retained"]:,} singlets</div>
+          </div>
+        """
+    else:
+        step2_html = """
+          <div class="text-center">
+            <div class="mb-1"><strong style="font-size: 0.95rem;">⊝ Step 2: Doublet Removal</strong></div>
+            <div class="text-muted" style="font-size: 0.85rem;">Not applied</div>
+            <div class="fw-bold text-muted" style="font-size: 1.1rem;">—</div>
+          </div>
+        """
+
+    # Final result
+    final_html = f"""
+          <div class="text-center">
+            <div class="mb-1"><strong style="font-size: 0.95rem;">✨ Final Result</strong></div>
+            <div style="font-size: 0.85rem;">Retained cells</div>
+            <div class="fw-bold text-primary" style="font-size: 1.3rem;">{pipeline_info["final_retained_cells"]:,}</div>
+          </div>
+    """
+
+    # Combine all parts in horizontal layout (3 columns)
+    full_html = f"""
+    <div class="alert alert-info my-2 py-2 px-3" role="alert">
+      <h6 class="text-center mb-2 pb-2 border-bottom fw-bold" style="font-size: 1.05rem;">🔬 Cell Filtering Pipeline</h6>
+      <div class="row g-0">
+        <div class="col-md-4 border-end px-2">
+          {step1_html}
+        </div>
+        <div class="col-md-4 border-end px-2">
+          {step2_html}
+        </div>
+        <div class="col-md-4 px-2">
+          {final_html}
+        </div>
+      </div>
+    </div>
+    """
+
+    return full_html
+
+
 def create_plotly_plots(
     args: Namespace,
     valid_bcs: list[str],
     bcs_with_doublets: list[str] | None = None,
-) -> tuple[dict[str, str], str]:
+    pipeline_info: dict | None = None,
+) -> tuple[dict[str, str], str, str]:
     """
     Generate interactive Plotly plots and summary tables from Alevin-fry quantification data.
 
@@ -268,6 +358,16 @@ def create_plotly_plots(
         if fig_umap_doublets and fig_tsne_doublets:
             plots["umap_plot_doublets_6-1"] = fig_umap_doublets.to_html(full_html=False, include_plotlyjs="cdn")
             plots["tsne_plot_doublets_6-2"] = fig_tsne_doublets.to_html(full_html=False, include_plotlyjs="cdn")
+    elif args.skip_umap_tsne:
+        # If UMAP/t-SNE is skipped, add skip message
+        skip_message = """
+        <div class="alert alert-warning text-center my-4" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong>UMAP and t-SNE plots skipped</strong>
+            <p class="mb-0 mt-2 small">Clustering visualization was disabled with <code>--skip_umap_tsne</code> flag.</p>
+        </div>
+        """
+        plots["umap_skip_message"] = skip_message
 
     if fig_mt or fig_mt_filtered:
         #  2nd plot in tab3
@@ -282,7 +382,11 @@ def create_plotly_plots(
         plots["SUA_bar_filtered_5-1"] = fig_SUA_bar_filtered_html
         plots["S_ratio_filtered_5-2"] = fig_S_ratio_filtered_html
     plot_text_elements = (plots, summary_table_html)
-    return plot_text_elements, code_text
+
+    # Generate pipeline summary HTML
+    pipeline_summary_html = generate_pipeline_summary_html(pipeline_info)
+
+    return plot_text_elements, code_text, pipeline_summary_html
 
 
 def modify_html_with_plots(
@@ -293,6 +397,7 @@ def modify_html_with_plots(
     code_texts: str,
     warning_html: str,
     usa_mode: bool,
+    pipeline_summary_html: str = "",
 ) -> None:
     """
     Modify an existing HTML document by inserting Plotly plots, updating summary and log info tables, optionally removing SUA tab content, and adding warning messages.
@@ -380,6 +485,16 @@ def modify_html_with_plots(
             updated_sections.append("qc-warning-container")
         else:
             missing_sections.append("Warning section with id='qc-warning-container'")
+
+    # Add pipeline summary section
+    if pipeline_summary_html and pipeline_summary_html.strip():
+        pipeline_container = soup.find("div", id="pipeline-summary-container")
+        if pipeline_container:
+            pipeline_container.clear()
+            pipeline_container.append(BeautifulSoup(pipeline_summary_html, "html.parser"))
+            updated_sections.append("pipeline-summary-container")
+        else:
+            missing_sections.append("Pipeline summary section with id='pipeline-summary-container'")
 
     # Write the updated HTML to a new file
     with open(output_html_path, "w", encoding="utf-8") as file:
