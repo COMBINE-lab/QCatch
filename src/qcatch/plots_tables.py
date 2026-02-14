@@ -652,7 +652,24 @@ def create_plots_from_embedding(
         color_discrete_map=color_discrete_map,
     ).update_traces(marker={"size": dot_size})
 
-    fig_umap.update_layout(title_x=0.5, margin={"t": 30, "l": 10, "r": 10, "b": 20})
+    fig_umap.update_layout(
+        title_x=0.5,
+        autosize=False,
+        margin={"t": 30, "l": 50, "r": 10, "b": 40},
+        xaxis={"domain": [0, 0.82]},
+        yaxis={"domain": [0, 1]},
+        legend={
+            "title": {"text": "Label" if color_by == "doublet_status" else color_column},
+            "orientation": "v",
+            "yanchor": "top",
+            "y": 1,
+            "xanchor": "left",
+            "x": 0.84,
+            "bgcolor": "rgba(255, 255, 255, 0.8)",
+            "bordercolor": "rgba(0, 0, 0, 0.2)",
+            "borderwidth": 1,
+        },
+    )
 
     # Create t-SNE plot
     tsne_df = pd.DataFrame(adata.obsm["X_tsne"], columns=["TSNE1", "TSNE2"])
@@ -674,7 +691,24 @@ def create_plots_from_embedding(
         color_discrete_map=color_discrete_map if color_by == "doublet_status" else None,
     ).update_traces(marker={"size": 3})
 
-    fig_tsne.update_layout(title_x=0.5, margin={"t": 30, "l": 10, "r": 10, "b": 20})
+    fig_tsne.update_layout(
+        title_x=0.5,
+        autosize=False,
+        margin={"t": 30, "l": 50, "r": 10, "b": 40},
+        xaxis={"domain": [0, 0.82]},
+        yaxis={"domain": [0, 1]},
+        legend={
+            "title": {"text": "Label" if color_by == "doublet_status" else color_column},
+            "orientation": "v",
+            "yanchor": "top",
+            "y": 1,
+            "xanchor": "left",
+            "x": 0.84,
+            "bgcolor": "rgba(255, 255, 255, 0.8)",
+            "bordercolor": "rgba(0, 0, 0, 0.2)",
+            "borderwidth": 1,
+        },
+    )
 
     return apply_uniform_style(fig_umap), apply_uniform_style(fig_tsne)
 
