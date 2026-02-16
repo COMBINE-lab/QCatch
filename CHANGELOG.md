@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning][].
 
 ### Changed
 - Mitochondrial plot gene threshold reduced from 20 to 10 detected genes for "All Cells" view
+- H5AD output files now have observations (barcodes) and variables (genes) sorted alphabetically for reproducible, consistent ordering across runs
 
 ### Fixed
 - `mitochondria_plot()` no longer modifies input AnnData in place; now uses a mask

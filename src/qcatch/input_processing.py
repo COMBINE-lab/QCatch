@@ -464,6 +464,11 @@ def save_results(args, version, intermediate_result, valid_bcs):
         )
         args.input.mtx_data.var.rename(columns={"gene_symbol": "gene_symbol_added"}, inplace=True)
 
+    # Sort adata column- and row-wise to avoid positional differences
+    args.input.mtx_data = args.input.mtx_data[
+        args.input.mtx_data.obs_names.sort_values(), args.input.mtx_data.var_names.sort_values()
+    ].copy()
+
     if args.input.is_h5ad and output_dir == args.input.dir:
         # Inplace overwrite: same location as original
         temp_file = os.path.join(output_dir, "quants.h5ad")
@@ -484,7 +489,11 @@ def save_results(args, version, intermediate_result, valid_bcs):
 
     if args.save_filtered_h5ad:
         # filter the anndata, only keep the cells in valid_bcs
-        filter_mtx_data = args.input.mtx_data[args.input.mtx_data.obs["is_retained_cells"].values, :].copy()
+        filter_mtx_data = args.input.mtx_data[args.input.mtx_data.obs["is_retained_cells"].values, :]
+        # Sort adata column- and row-wise to avoid positional differences
+        filter_mtx_data = filter_mtx_data[
+            filter_mtx_data.obs_names.sort_values(), filter_mtx_data.var_names.sort_values()
+        ].copy()
         # Save the filtered anndata to a new file
         filter_mtx_data_filename = os.path.join(output_dir, "filtered_quants.h5ad")
         filter_mtx_data.write_h5ad(filter_mtx_data_filename, compression="gzip")
