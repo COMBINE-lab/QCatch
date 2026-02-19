@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning][].
 
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
+## [0.2.10] 2026-2
+
+### Changed
+- H5AD output layers are now sorted alphabetically for deterministic output
+
 ## [0.2.9] 2026-2
 ### Added
 - `--visualize_doublets` flag to generate toggle-able UMAP/t-SNE plots showing singlets and doublets with shared coordinate space

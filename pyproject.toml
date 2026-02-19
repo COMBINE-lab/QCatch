@@ -5,7 +5,7 @@ requires = [ "hatchling" ]
 
 [project]
 name = "qcatch"
-version = "0.2.9"
+version = "0.2.10"
 description = "QCatch: Automated quality control of single-cell quantifications from `alevin-fry` and `simpleaf`."
 readme = "README.md"
 authors = [
