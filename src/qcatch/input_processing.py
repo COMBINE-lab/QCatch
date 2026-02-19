@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import shutil
+from collections import OrderedDict
 from pathlib import Path
 
 import numpy as np
@@ -469,6 +470,9 @@ def save_results(args, version, intermediate_result, valid_bcs):
         args.input.mtx_data.obs_names.sort_values(), args.input.mtx_data.var_names.sort_values()
     ].copy()
 
+    # Sort layers alphabetically for deterministic h5ad output
+    args.input.mtx_data.layers = OrderedDict(sorted(args.input.mtx_data.layers.items()))
+
     if args.input.is_h5ad and output_dir == args.input.dir:
         # Inplace overwrite: same location as original
         temp_file = os.path.join(output_dir, "quants.h5ad")
@@ -494,6 +498,8 @@ def save_results(args, version, intermediate_result, valid_bcs):
         filter_mtx_data = filter_mtx_data[
             filter_mtx_data.obs_names.sort_values(), filter_mtx_data.var_names.sort_values()
         ].copy()
+        # Sort layers alphabetically for deterministic h5ad output
+        filter_mtx_data.layers = OrderedDict(sorted(filter_mtx_data.layers.items()))
         # Save the filtered anndata to a new file
         filter_mtx_data_filename = os.path.join(output_dir, "filtered_quants.h5ad")
         filter_mtx_data.write_h5ad(filter_mtx_data_filename, compression="gzip")
