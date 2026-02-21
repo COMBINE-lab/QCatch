@@ -29,6 +29,7 @@ dependencies = [
   "plotly>=6",
   "requests>=2.32.4",
   "scanpy>=1.10.4,<2",
+  "scikit-image>=0.24",
   "scipy>=1.15.2,<2",
   "session-info2>=0.1,<0.2",
 ]
