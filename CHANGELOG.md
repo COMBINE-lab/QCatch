@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning][].
 
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
+## [0.2.11] 2026-2
+
+### Fixed
+- Added `scanpy[scrublet]` as dependency to ensure `scikit-image` is automatically installed for doublet detection (`--remove_doublets`)
+
 ## [0.2.10] 2026-2
 
 ### Changed
