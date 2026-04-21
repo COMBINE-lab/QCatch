@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning][].
 
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
+
+## [0.2.12] 2026-04-21
+
+### Fixed
+- Removed upper bound on igraph to resolve dependency conflicts
+
+### Changed
+- Relaxed lower bounds on anndata, beautifulsoup4, requests,
+  scanpy, scipy, and session-info2 for broader compatibility
+
 ## [0.2.11] 2026-2
 
 ### Fixed
