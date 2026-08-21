@@ -10,6 +10,7 @@ from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
 import scipy.stats as sp_stats
+from numba import njit
 from scipy.sparse import csc_matrix
 
 from qcatch.logger import QCatchLogger
@@ -37,8 +38,8 @@ MAX_OCCUPIED_PARTITIONS_FRAC = 0.5
 # *M* Minimum number of UMIS per barcode to consider after the initial cell calling
 MIN_UMIS = 500
 
-# Default number of background simulations to make
-NUM_SIMS = 100000
+# Number of background simulations for EmptyDrops (matches upstream nh3/emptydrops, num_sims=10000)
+NUM_SIMS = 10000
 
 # Minimum ratio of UMIs to the median (initial cell call UMI) to consider after the initial cell calling
 MIN_UMI_FRAC_OF_MEDIAN = 0.01
@@ -339,6 +340,53 @@ def eval_multinomial_loglikelihoods(matrix: csc_matrix, profile_p: np.ndarray, m
     return loglk
 
 
+@njit(cache=True)
+def _walk_small_steps(
+    distinct_n: np.ndarray,
+    log_profile_p: np.ndarray,
+    curr_counts: np.ndarray,
+    sampled_features: np.ndarray,
+    k: int,
+    curr_loglk: float,
+    loglk_col: np.ndarray,
+    i: int,
+    n: int,
+    jump: int,
+    block_size: int,
+) -> tuple[int, float, int, int, int]:
+    """
+    Compiled inner loop of simulate_multinomial_loglikelihoods.
+
+    Walks N upward one UMI at a time, starting at distinct_n index ``i`` (and, when resuming
+    after a refill, at UMI value ``n``). Returns ``(k, curr_loglk, i, n, reason)`` where reason is
+    0 = reached the end of distinct_n,
+    1 = distinct_n[i] - distinct_n[i-1] >= jump, the caller must do the block sample for index i,
+    2 = the sampled_features buffer is exhausted; the caller must refill it and resume at (i, n).
+
+    The arithmetic and the order in which sampled_features are consumed are identical to the
+    original pure-Python loop, so results are bit-for-bit reproducible for a given RNG state.
+    """
+    num_distinct = distinct_n.shape[0]
+    while i < num_distinct:
+        step = distinct_n[i] - distinct_n[i - 1]
+        if step >= jump:
+            return k, curr_loglk, i, n, 1
+        if n == 0:
+            n = distinct_n[i - 1] + 1
+        while n <= distinct_n[i]:
+            j = sampled_features[k]
+            k += 1
+            curr_counts[j] += 1
+            curr_loglk += log_profile_p[j] + np.log(n / curr_counts[j])
+            n += 1
+            if k >= block_size:
+                return k, curr_loglk, i, n, 2
+        loglk_col[i] = curr_loglk
+        i += 1
+        n = 0
+    return k, curr_loglk, -1, 0, 0
+
+
 def simulate_multinomial_loglikelihoods(
     profile_p: np.ndarray,
     umis_per_bc: np.ndarray,
@@ -351,8 +399,12 @@ def simulate_multinomial_loglikelihoods(
     Simulate draws from a multinomial distribution for various values of N.
 
     Uses the approximation from Lun et al. (https://www.biorxiv.org/content/biorxiv/early/2018/04/04/234872.full.pdf)
+
+    The per-UMI inner loop is compiled with numba (see ``_walk_small_steps``); RNG consumption and
+    floating-point accumulation order are unchanged from the reference pure-Python implementation,
+    so the returned log-likelihoods are bit-identical to it for the same RNG state.
     """
-    distinct_n = np.flatnonzero(np.bincount(umis_per_bc.astype(int)))
+    distinct_n = np.flatnonzero(np.bincount(umis_per_bc.astype(int))).astype(np.int64)
 
     loglk = np.zeros((len(distinct_n), num_sims), dtype=float)
     num_all_n = np.max(distinct_n) - np.min(distinct_n)
@@ -370,34 +422,45 @@ def simulate_multinomial_loglikelihoods(
     for sim_idx in range(num_sims):
         if verbose and sim_idx % 1000 == 999:
             logger.debug("Simulation progress: completed %d/%d simulations", sim_idx + 1, num_sims)
-        curr_counts = np.ravel(sp_stats.multinomial.rvs(distinct_n[0], profile_p, size=1, random_state=RNG))
+        curr_counts = np.ravel(sp_stats.multinomial.rvs(distinct_n[0], profile_p, size=1, random_state=RNG)).astype(
+            np.int64
+        )
 
-        curr_loglk = sp_stats.multinomial.logpmf(curr_counts, distinct_n[0], p=profile_p)
+        curr_loglk = float(sp_stats.multinomial.logpmf(curr_counts, distinct_n[0], p=profile_p))
 
-        loglk[0, sim_idx] = curr_loglk
+        loglk_col = loglk[:, sim_idx]
+        loglk_col[0] = curr_loglk
 
-        for i in range(1, len(distinct_n)):
-            step = distinct_n[i] - distinct_n[i - 1]
-            if step >= jump:
-                # Instead of iterating for each n, sample the intermediate ns all at once
-                curr_counts += np.ravel(sp_stats.multinomial.rvs(step, profile_p, size=1, random_state=RNG))
-                curr_loglk = sp_stats.multinomial.logpmf(curr_counts, distinct_n[i], p=profile_p)
-                assert not np.isnan(curr_loglk)
-            else:
-                # Iteratively sample between the two distinct values of n
-                for n in range(distinct_n[i - 1] + 1, distinct_n[i] + 1):
-                    j = sampled_features[k]
-                    k += 1
-                    if k >= n_sample_feature_block:
-                        # Amortize this operation
-                        sampled_features = RNG.choice(
-                            len(profile_p), size=n_sample_feature_block, p=profile_p, replace=True
-                        )
-                        k = 0
-                    curr_counts[j] += 1
-                    curr_loglk += log_profile_p[j] + np.log(float(n) / curr_counts[j])
-
-            loglk[i, sim_idx] = curr_loglk
+        i, n = 1, 0
+        while True:
+            k, curr_loglk, i, n, reason = _walk_small_steps(
+                distinct_n,
+                log_profile_p,
+                curr_counts,
+                sampled_features,
+                k,
+                curr_loglk,
+                loglk_col,
+                i,
+                n,
+                jump,
+                n_sample_feature_block,
+            )
+            if reason == 0:
+                break
+            if reason == 2:
+                # Amortize this operation
+                sampled_features = RNG.choice(len(profile_p), size=n_sample_feature_block, p=profile_p, replace=True)
+                k = 0
+                continue
+            # Instead of iterating for each n, sample the intermediate ns all at once
+            step = int(distinct_n[i] - distinct_n[i - 1])
+            curr_counts += np.ravel(sp_stats.multinomial.rvs(step, profile_p, size=1, random_state=RNG))
+            curr_loglk = float(sp_stats.multinomial.logpmf(curr_counts, distinct_n[i], p=profile_p))
+            assert not np.isnan(curr_loglk)
+            loglk_col[i] = curr_loglk
+            i += 1
+            n = 0
 
     return distinct_n, loglk
 
@@ -575,7 +638,7 @@ def find_nonambient_barcodes(
 
     # Simulate log likelihoods
     distinct_ns, sim_loglk = simulate_multinomial_loglikelihoods(
-        ambient_profile_p, umis_per_bc[eval_bcs], num_sims=10000, verbose=verbose
+        ambient_profile_p, umis_per_bc[eval_bcs], num_sims=NUM_SIMS, verbose=verbose
     )
 
     # Compute p-values
