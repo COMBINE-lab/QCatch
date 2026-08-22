@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning][].
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
+## [0.2.13] 2026-08-21
+
+### Added
+- `numba` dependency, and regression tests asserting the compiled simulation
+  stays bit-identical to the reference pure-Python implementation
+
+### Changed
+- EmptyDrops background simulation is JIT-compiled with `numba`: bit-identical
+  results, ~7.5x faster. Matters most when candidate barcodes span a wide UMI
+  range, which dominates runtime in the second step of cell calling.
+- `NUM_SIMS` is now the single setting controlling the number of background
+  simulations. It read 100000 but was shadowed by a hard-coded 10000 at the
+  call site; the effective value is unchanged at 10000.
+
 ## [0.2.12] 2026-04-21
 
 ### Fixed
