@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning][].
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
+## [0.2.14] 2026-09-06
+
+### Fixed
+- Install and register HDF5 compression filters before loading H5AD input, so
+  Blosc-compressed files from simpleaf can be read without system plugin setup
+  (issue #15).
+
 ## [0.2.13] 2026-08-21
 
 ### Added
