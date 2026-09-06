@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning][].
 - Install and register HDF5 compression filters before loading H5AD input, so
   Blosc-compressed files from simpleaf can be read without system plugin setup
   (issue #15).
+- Preserve the primary count matrix when sorting output layers with AnnData
+  0.13, which exposes that matrix under the `None` layer key.
 
 ## [0.2.13] 2026-08-21
 
