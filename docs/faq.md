@@ -1,3 +1,23 @@
+## HDF5 compression plugin errors
+
+Some simpleaf H5AD files use Blosc compression. QCatch installs `hdf5plugin`
+and registers its filters before reading H5AD input. No files need to be copied
+into `/usr/local/lib/hdf5/plugin`.
+
+For older installations, including the Bioconda container
+`qcatch:0.2.13--pyhdfd78af_0`, install the plugin in the same Python environment
+and point HDF5 to its plugin directory before running QCatch:
+
+```bash
+python -m pip install hdf5plugin
+export HDF5_PLUGIN_PATH="$(python -c 'import hdf5plugin; print(hdf5plugin.PLUGINS_PATH)')${HDF5_PLUGIN_PATH:+:$HDF5_PLUGIN_PATH}"
+qcatch --input quants.h5ad --output qc_output -e
+```
+
+Installing `hdf5plugin` alone does not register the filters in an older QCatch
+process. The environment variable above supplies the plugin search path for
+that process. See the [hdf5plugin documentation](https://hdf5plugin.readthedocs.io/en/stable/usage.html).
+
 ## 🥐 Documentation for FeatureDump/ Column names in Anndata.obs
 | **Term** | **Description** |
 |------------|-----------------|

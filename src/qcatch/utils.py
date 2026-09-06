@@ -41,6 +41,10 @@ def load_hdf5(
         - Feature dump data.
         - whether USA mode was used.
     """
+    # Register compression filters (including simpleaf's Blosc) with h5py's
+    # HDF5 library without relying on a system-wide plugin directory.
+    import hdf5plugin  # noqa: F401
+
     mtx_data = sc.read_h5ad(hdf5_path)
     quant_json_data, permit_list_json_data = (
         json.loads(mtx_data.uns["quant_info"]),
